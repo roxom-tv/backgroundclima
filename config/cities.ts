@@ -1,5 +1,5 @@
 
-export const ROTATION_SECONDS = 15;
+export const ROTATION_SECONDS = 35;
 
 export type CityConfig = {
   name: string;           // "Hong Kong"
