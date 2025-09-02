@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import RotatingBackground from './components/RotatingBackground';
 import WeatherBar from './components/WeatherBar';
+import CenteredLogo from './components/CenteredLogo';
 import { CITIES, ROTATION_SECONDS } from '@/config/cities';
 
 export default function Home() {
@@ -24,6 +25,9 @@ export default function Home() {
 
   return (
     <main className="h-screen w-screen overflow-hidden relative">
+      {/* Centered Logo with Black Background */}
+      <CenteredLogo />
+      
       {/* YouTube Live Background */}
       <RotatingBackground 
         activeIndex={activeIndex} 
@@ -32,10 +36,6 @@ export default function Home() {
       
       {/* Weather Overlay */}
       <WeatherBar activeIndex={activeIndex} />
-      
-
-      
-
     </main>
   );
 }
