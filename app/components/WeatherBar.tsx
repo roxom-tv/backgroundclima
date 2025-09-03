@@ -139,7 +139,7 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
                   />
                 )}
               </AnimatePresence>
-              <div className="tile-title">Weather</div>
+              <div className="weather-title">Weather</div>
             </div>
           </div>
         </div>
