@@ -18,7 +18,7 @@ const RATE_LIMIT = {
   calls: [] as number[]
 };
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds (reduces API calls from 60/min to 12/min)
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds (reduces API calls to 1,440/day - within free tier limit)
 const weatherCache = new Map<string, CacheEntry>();
 
 export async function fetchCurrentWeather(query: string): Promise<WeatherData | null> {
@@ -40,7 +40,13 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
   const cityCoordinates: { [key: string]: { lat: number; lon: number } } = {
     'Hong Kong,HK': { lat: 22.3193, lon: 114.1694 },
     'London,GB': { lat: 51.5074, lon: -0.1278 },
-    'San Francisco,US': { lat: 37.7749, lon: -122.4194 }
+    'San Francisco,US': { lat: 37.7749, lon: -122.4194 },
+    'New York,US': { lat: 40.7128, lon: -74.0060 },
+    'Dubai,AE': { lat: 25.2048, lon: 55.2708 },
+    'Tokyo,JP': { lat: 35.6762, lon: 139.6503 },
+    'Sydney,AU': { lat: -33.8688, lon: 151.2093 },
+    'Amsterdam,NL': { lat: 52.3676, lon: 4.9041 },
+    'Rio de Janeiro,BR': { lat: -22.9068, lon: -43.1729 }
   };
 
   // Check cache first

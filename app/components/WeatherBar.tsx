@@ -35,7 +35,7 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
     <div className="weather-bar">
       <div className="weather-content">
         <div className="weather-details">
-          {/* Área A: Ciudad */}
+          {/* Columna 1: Ciudad y País (ocupa 2 filas) */}
           <div className="city-country">
             <AnimatePresence mode="wait">
               <motion.div
@@ -50,7 +50,6 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
               </motion.div>
             </AnimatePresence>
             
-            {/* Área B: País */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={`country-${activeIndex}`}
@@ -65,10 +64,9 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
             </AnimatePresence>
           </div>
 
-          {/* Área C: Tile de Temperatura */}
+          {/* Columna 2: Temperatura - Fila 1: Valores, Fila 2: Título */}
           <div className="weather-item">
             <div className="weather-tile">
-                             <div className="tile-title">🌡️ Temperature</div>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`temp-${activeIndex}`}
@@ -91,13 +89,13 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
                   )}
                 </motion.div>
               </AnimatePresence>
+              <div className="tile-title">Temperature</div>
             </div>
           </div>
 
-          {/* Área D: Tile de Viento */}
+          {/* Columna 3: Viento - Fila 1: Valores, Fila 2: Título */}
           <div className="weather-item">
             <div className="weather-tile">
-                             <div className="tile-title">💨 Wind</div>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={`wind-${activeIndex}`}
@@ -120,13 +118,13 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
                   )}
                 </motion.div>
               </AnimatePresence>
+              <div className="tile-title">Wind</div>
             </div>
           </div>
 
-          {/* Área E: Icono del Clima */}
+          {/* Columna 4: Clima - Fila 1: Icono, Fila 2: Título */}
           <div className="weather-item">
-            <div className="weather-tile">
-                             <div className="tile-title">🌤️ Weather</div>
+            <div className="weather-tile-weather">
               <AnimatePresence mode="wait">
                 {weatherData?.conditionIconUrl && (
                   <motion.img
@@ -141,6 +139,7 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
                   />
                 )}
               </AnimatePresence>
+              <div className="tile-title">Weather</div>
             </div>
           </div>
         </div>

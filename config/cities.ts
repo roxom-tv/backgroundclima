@@ -1,34 +1,76 @@
 
-export const ROTATION_SECONDS = 35;
+export interface CityConfig {
+  name: string;
+  country: string;
+  ytLiveUrl: string;
+  openWeatherQuery: string;
+  tz: string;
+}
 
-export type CityConfig = {
-  name: string;           // "Hong Kong"
-  country: string;        // "Hong Kong"
-  ytLiveUrl: string;      // YouTube Live embed URL with parameters
-  openWeatherQuery: string; // "Hong Kong,HK"
-  tz: string;             // "Asia/Hong_Kong"
-};
+export const ROTATION_SECONDS = 35;
 
 export const CITIES: CityConfig[] = [
   { 
     name: "Hong Kong", 
     country: "Hong Kong",
-    ytLiveUrl: "https://www.youtube.com/embed/7XT3EY_1NPU?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=7XT3EY_1NPU&showinfo=0&iv_load_policy=3&disablekb=1&fs=0", 
+    ytLiveUrl: "https://www.youtube.com/embed/7XT3EY_1NPU?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=7XT3EY_1NPU&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
     openWeatherQuery: "Hong Kong,HK", 
     tz: "Asia/Hong_Kong" 
   },
   { 
     name: "London", 
     country: "United Kingdom",
-    ytLiveUrl: "https://www.youtube.com/embed/57w2gYXjRic?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=57w2gYXjRic&showinfo=0&iv_load_policy=3&disablekb=1&fs=0", 
+    ytLiveUrl: "https://www.youtube.com/embed/57w2gYXjRic?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=57w2gYXjRic&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
     openWeatherQuery: "London,GB", 
     tz: "Europe/London" 
   },
   { 
     name: "San Francisco", 
     country: "United States",
-    ytLiveUrl: "https://www.youtube.com/embed/CXYr04BWvmc?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=CXYr04BWvmc&showinfo=0&iv_load_policy=3&disablekb=1&fs=0", 
+    ytLiveUrl: "https://www.youtube.com/embed/CXYr04BWvmc?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=CXYr04BWvmc&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
     openWeatherQuery: "San Francisco,US", 
     tz: "America/Los_Angeles" 
+  },
+  { 
+    name: "New York", 
+    country: "United States",
+    ytLiveUrl: "https://www.youtube.com/embed/rnXIjl_Rzy4?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=rnXIjl_Rzy4&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
+    openWeatherQuery: "New York,US", 
+    tz: "America/New_York" 
+  },
+  { 
+    name: "Dubai", 
+    country: "United Arab Emirates",
+    ytLiveUrl: "https://www.youtube.com/embed/7dE4IjDQJmE?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=7dE4IjDQJmE&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
+    openWeatherQuery: "Dubai,AE", 
+    tz: "Asia/Dubai" 
+  },
+  { 
+    name: "Tokyo", 
+    country: "Japan",
+    ytLiveUrl: "https://www.youtube.com/embed/_k-5U7IeK8g?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=_k-5U7IeK8g&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
+    openWeatherQuery: "Tokyo,JP", 
+    tz: "Asia/Tokyo" 
+  },
+  { 
+    name: "Sydney", 
+    country: "Australia",
+    ytLiveUrl: "https://www.youtube.com/embed/5uZa3-RMFos?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=5uZa3-RMFos&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
+    openWeatherQuery: "Sydney,AU", 
+    tz: "Australia/Sydney" 
+  },
+  { 
+    name: "Amsterdam", 
+    country: "Netherlands",
+    ytLiveUrl: "https://www.youtube.com/embed/1phWWCgzXgM?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=1phWWCgzXgM&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
+    openWeatherQuery: "Amsterdam,NL", 
+    tz: "Europe/Amsterdam" 
+  },
+  { 
+    name: "Rio de Janeiro", 
+    country: "Brazil",
+    ytLiveUrl: "https://www.youtube.com/embed/6QoLEltTzIM?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=6QoLEltTzIM&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
+    openWeatherQuery: "Rio de Janeiro,BR", 
+    tz: "America/Sao_Paulo" 
   },
 ];
