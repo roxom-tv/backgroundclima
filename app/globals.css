@@ -39,7 +39,7 @@
   }
 
   .live-dot {
-    @apply w-4 h-4 bg-red-500 rounded-full;
+    @apply w-6 h-6 bg-red-500 rounded-full;
     animation: live-pulse 2s ease-in-out infinite;
   }
 
@@ -99,7 +99,7 @@
   .city-name {
     @apply text-white font-normal;
     font-family: var(--font-pixel);
-    font-size: 72px;
+    font-size: 70px;
     text-shadow: 
       -1px -1px 0 #000,
        1px -1px 0 #000,
@@ -112,7 +112,7 @@
   .country-name {
     @apply text-white font-normal mt-2;
     font-family: var(--font-pixel);
-    font-size: 40px;
+    font-size: 38px;
     text-shadow: 
       -1px -1px 0 #000,
        1px -1px 0 #000,
@@ -128,7 +128,7 @@
   }
 
   .weather-info-content {
-    @apply flex items-center gap-8 justify-start;
+    @apply flex items-center gap-10 justify-start;
   }
 
   /* Sponsor Separator - Vertical line between weather and sponsor */
@@ -145,7 +145,7 @@
   .weather-values {
     @apply flex items-center gap-3 text-white font-normal;
     font-family: var(--font-pixel);
-    font-size: 48px;
+    font-size: 46px;
     text-shadow: 
       -1px -1px 0 #000,
        1px -1px 0 #000,
@@ -158,7 +158,7 @@
   .weather-label {
     @apply text-white font-normal mt-3 text-left;
     font-family: var(--font-pixel);
-    font-size: 32px;
+    font-size: 30px;
     text-shadow: 
       -1px -1px 0 #000,
        1px -1px 0 #000,
@@ -309,44 +309,44 @@
   z-index: 101;
 }
 
-/* Animación del efecto de televisión - Lluvia caótica y random MUY INTENSA */
+/* Animación del efecto de televisión - Linear y Granular */
 @keyframes tv-static-animation {
   0% {
     background: 
-      linear-gradient(23deg, transparent 0%, #fff 4px, transparent 6px, #fff 8px, transparent 10px, #fff 12px, transparent 14px, #fff 16px, transparent 18px),
-      linear-gradient(67deg, transparent 0%, #fff 5px, transparent 7px, #fff 10px, transparent 12px, #fff 15px, transparent 17px, #fff 20px, transparent 22px),
-      linear-gradient(134deg, transparent 0%, #fff 3px, transparent 6px, #fff 9px, transparent 12px, #fff 15px, transparent 18px, #fff 21px, transparent 24px),
-      linear-gradient(89deg, transparent 0%, #fff 6px, transparent 9px, #fff 12px, transparent 15px, #fff 18px, transparent 21px, #fff 24px, transparent 27px),
-      linear-gradient(45deg, transparent 0%, #fff 4px, transparent 7px, #fff 10px, transparent 13px, #fff 16px, transparent 19px),
-      linear-gradient(156deg, transparent 0%, #fff 5px, transparent 8px, #fff 11px, transparent 14px, #fff 17px, transparent 20px),
+      linear-gradient(0deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
+      linear-gradient(90deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
+      linear-gradient(180deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
+      linear-gradient(270deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
+      linear-gradient(45deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px),
+      linear-gradient(135deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px),
       #000;
-    background-size: 0.5px 0.5px, 0.6px 0.6px, 0.55px 0.55px, 0.65px 0.65px, 0.5px 0.5px, 0.6px 0.6px;
+    background-size: 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px;
     opacity: 1;
   }
   
   50% {
     background: 
-      linear-gradient(156deg, transparent 0%, #fff 6px, transparent 8px, #fff 12px, transparent 14px, #fff 18px, transparent 20px, #fff 24px, transparent 26px),
-      linear-gradient(78deg, transparent 0%, #fff 7px, transparent 9px, #fff 13px, transparent 15px, #fff 19px, transparent 21px, #fff 25px, transparent 27px),
-      linear-gradient(45deg, transparent 0%, #fff 5px, transparent 7px, #fff 11px, transparent 13px, #fff 17px, transparent 19px, #fff 23px, transparent 25px),
-      linear-gradient(112deg, transparent 0%, #fff 8px, transparent 10px, #fff 16px, transparent 18px, #fff 24px, transparent 26px, #fff 30px, transparent 32px),
-      linear-gradient(167deg, transparent 0%, #fff 6px, transparent 8px, #fff 12px, transparent 14px, #fff 18px, transparent 20px),
-      linear-gradient(23deg, transparent 0%, #fff 4px, transparent 6px, #fff 10px, transparent 12px, #fff 16px, transparent 18px),
+      linear-gradient(0deg, transparent 0%, #fff 2px, transparent 3px, #fff 4px, transparent 5px, #fff 6px, transparent 7px, #fff 8px, transparent 9px),
+      linear-gradient(90deg, transparent 0%, #fff 2px, transparent 3px, #fff 4px, transparent 5px, #fff 6px, transparent 7px, #fff 8px, transparent 9px),
+      linear-gradient(180deg, transparent 0%, #fff 2px, transparent 3px, #fff 4px, transparent 5px, #fff 6px, transparent 7px, #fff 8px, transparent 9px),
+      linear-gradient(270deg, transparent 0%, #fff 2px, transparent 3px, #fff 4px, transparent 5px, #fff 6px, transparent 7px, #fff 8px, transparent 9px),
+      linear-gradient(45deg, transparent 0%, #fff 2px, transparent 3px, #fff 4px, transparent 5px, #fff 6px, transparent 7px),
+      linear-gradient(135deg, transparent 0%, #fff 2px, transparent 3px, #fff 4px, transparent 5px, #fff 6px, transparent 7px),
       #000;
-    background-size: 0.4px 0.4px, 0.5px 0.5px, 0.45px 0.45px, 0.55px 0.55px, 0.4px 0.4px, 0.5px 0.5px;
+    background-size: 0.2px 0.2px, 0.2px 0.2px, 0.2px 0.2px, 0.2px 0.2px, 0.2px 0.2px, 0.2px 0.2px;
     opacity: 1;
   }
   
   100% {
     background: 
-      linear-gradient(23deg, transparent 0%, #fff 4px, transparent 6px, #fff 8px, transparent 10px, #fff 12px, transparent 14px, #fff 16px, transparent 18px),
-      linear-gradient(67deg, transparent 0%, #fff 5px, transparent 7px, #fff 10px, transparent 12px, #fff 15px, transparent 17px, #fff 20px, transparent 22px),
-      linear-gradient(134deg, transparent 0%, #fff 3px, transparent 6px, #fff 9px, transparent 12px, #fff 15px, transparent 18px, #fff 21px, transparent 24px),
-      linear-gradient(89deg, transparent 0%, #fff 6px, transparent 9px, #fff 12px, transparent 15px, #fff 18px, transparent 21px, #fff 24px, transparent 27px),
-      linear-gradient(45deg, transparent 0%, #fff 4px, transparent 7px, #fff 10px, transparent 13px, #fff 16px, transparent 19px),
-      linear-gradient(156deg, transparent 0%, #fff 5px, transparent 8px, #fff 11px, transparent 14px, #fff 17px, transparent 20px),
+      linear-gradient(0deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
+      linear-gradient(90deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
+      linear-gradient(180deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
+      linear-gradient(270deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
+      linear-gradient(45deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px),
+      linear-gradient(135deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px),
       #000;
-    background-size: 0.5px 0.5px, 0.6px 0.6px, 0.55px 0.55px, 0.65px 0.65px, 0.5px 0.5px, 0.6px 0.6px;
+    background-size: 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px;
     opacity: 1;
   }
 }
