@@ -211,8 +211,9 @@
   }
 
   .sponsor-text {
-    @apply text-white text-base font-normal;
+    @apply text-white font-normal;
     font-family: var(--font-pixel);
+    font-size: 18px;
     text-shadow: 
       -1px -1px 0 #000,
        1px -1px 0 #000,
@@ -458,7 +459,14 @@
   }
 
   .sponsor-text {
-    @apply text-sm;
+    @apply text-sm text-white;
+    font-family: var(--font-pixel);
+    text-shadow: 
+      -1px -1px 0 #000,
+       1px -1px 0 #000,
+      -1px  1px 0 #000,
+       1px  1px 0 #000;
+    letter-spacing: 1px;
   }
 
   .xapo-logo {
