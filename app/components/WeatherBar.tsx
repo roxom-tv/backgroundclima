@@ -38,32 +38,21 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
         <AnimatePresence mode="wait">
           <motion.div
             key={`location-${activeIndex}`}
-            initial={{ opacity: 0, x: -30, y: 10 }}
-            animate={{ opacity: 1, x: 0, y: 0 }}
-            exit={{ opacity: 0, x: -30, y: -10 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ 
-              duration: 0.6, 
-              ease: [0.25, 0.46, 0.45, 0.94],
-              delay: 0.1
+              duration: 0.4,
+              ease: "easeInOut"
             }}
             className="location-content"
           >
-            <motion.div 
-              className="city-name"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-            >
+            <div className="city-name">
               {currentCity.name.toUpperCase()}
-            </motion.div>
-            <motion.div 
-              className="country-name"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-            >
+            </div>
+            <div className="country-name">
               {currentCity.country.toUpperCase()}
-            </motion.div>
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -76,42 +65,26 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
             <AnimatePresence mode="wait">
               <motion.div
                 key={`temp-${activeIndex}`}
-                initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -15, scale: 1.05 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ 
-                  duration: 0.5, 
-                  ease: [0.25, 0.46, 0.45, 0.94],
-                  delay: 0.2
+                  duration: 0.4,
+                  ease: "easeInOut"
                 }}
                 className="weather-values"
               >
                 {weatherData ? (
                   <>
-                    <motion.span 
-                      className="temp-fahrenheit"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: 0.3 }}
-                    >
+                    <span className="temp-fahrenheit">
                       {Math.round(weatherData.tempC * 9/5 + 32)}°F
-                    </motion.span>
-                    <motion.span 
-                      className="temp-separator"
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.2, delay: 0.4 }}
-                    >
+                    </span>
+                    <span className="temp-separator">
                       |
-                    </motion.span>
-                    <motion.span 
-                      className="temp-celsius"
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: 0.5 }}
-                    >
+                    </span>
+                    <span className="temp-celsius">
                       {weatherData.tempC}°C
-                    </motion.span>
+                    </span>
                   </>
                 ) : (
                   <>
@@ -122,69 +95,39 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
                 )}
               </motion.div>
             </AnimatePresence>
-            <motion.div 
-              className="weather-label"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.6 }}
-            >
+            <div className="weather-label">
               Temperature
-            </motion.div>
+            </div>
           </div>
 
           {/* Separator */}
-          <motion.div 
-            className="weather-separator"
-            initial={{ scaleY: 0, opacity: 0 }}
-            animate={{ scaleY: 1, opacity: 1 }}
-            transition={{ 
-              duration: 0.4, 
-              delay: 0.4,
-              ease: [0.25, 0.46, 0.45, 0.94]
-            }}
-          ></motion.div>
+          <div className="weather-separator"></div>
 
           {/* Wind Section */}
           <div className="weather-section">
             <AnimatePresence mode="wait">
               <motion.div
                 key={`wind-${activeIndex}`}
-                initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -15, scale: 1.05 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ 
-                  duration: 0.5, 
-                  ease: [0.25, 0.46, 0.45, 0.94],
-                  delay: 0.3
+                  duration: 0.4,
+                  ease: "easeInOut"
                 }}
                 className="weather-values"
               >
                 {weatherData ? (
                   <>
-                    <motion.span 
-                      className="wind-kmh"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: 0.4 }}
-                    >
+                    <span className="wind-kmh">
                       {weatherData.windKmh} km/h
-                    </motion.span>
-                    <motion.span 
-                      className="wind-separator"
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.2, delay: 0.5 }}
-                    >
+                    </span>
+                    <span className="wind-separator">
                       |
-                    </motion.span>
-                    <motion.span 
-                      className="wind-mph"
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: 0.6 }}
-                    >
+                    </span>
+                    <span className="wind-mph">
                       {Math.round(weatherData.windKmh * 0.621371)} mph
-                    </motion.span>
+                    </span>
                   </>
                 ) : (
                   <>
@@ -195,14 +138,9 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
                 )}
               </motion.div>
             </AnimatePresence>
-            <motion.div 
-              className="weather-label"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.7 }}
-            >
+            <div className="weather-label">
               Wind
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

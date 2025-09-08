@@ -86,19 +86,14 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
       <AnimatePresence mode="wait">
         <motion.div
           key={activeIndex}
-          initial={{ opacity: 0, scale: 1.1, filter: "blur(4px)" }}
+          initial={{ opacity: 0 }}
           animate={{ 
-            opacity: showOverlay ? 0 : 1, 
-            scale: showOverlay ? 1.05 : 1,
-            filter: showOverlay ? "blur(8px)" : "blur(0px)"
+            opacity: showOverlay ? 0 : 1
           }}
-          exit={{ opacity: 0, scale: 0.95, filter: "blur(4px)" }}
+          exit={{ opacity: 0 }}
           transition={{ 
-            duration: 0.6, 
-            ease: [0.25, 0.46, 0.45, 0.94],
-            opacity: { duration: 0.4 },
-            scale: { duration: 0.6 },
-            filter: { duration: 0.5 }
+            duration: 0.4,
+            ease: "easeInOut"
           }}
           className="w-full h-full"
         >
