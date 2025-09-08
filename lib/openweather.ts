@@ -107,10 +107,10 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
       updatedAt: new Date(),
     },
     'ISS,SPACE': {
-      tempC: -270,
+      tempC: -157,
       conditionText: 'Space Environment',
       conditionIconUrl: 'https://openweathermap.org/img/wn/01d@2x.png',
-      windKmh: 0,
+      windKmh: 27720,
       updatedAt: new Date(),
     }
   };

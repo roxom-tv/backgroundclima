@@ -100,8 +100,6 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
             </div>
           </div>
 
-          {/* Separator */}
-          <div className="weather-separator"></div>
 
           {/* Wind Section */}
           <div className="weather-section">
