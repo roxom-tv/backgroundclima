@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
-import { Inter, Press_Start_2P } from 'next/font/google'
+import { Inter } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
-const pixelFont = Press_Start_2P({ 
-  subsets: ['latin'],
-  weight: '400',
-  variable: '--font-pixel'
+const pixelFont = localFont({
+  src: '../public/VCR_OSD_MONO_1.001.ttf',
+  variable: '--font-pixel',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {

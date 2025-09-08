@@ -15,14 +15,15 @@
 @layer components {
   /* ===== TOP INFORMATION BAR ===== */
   .top-info-bar {
-    @apply fixed top-0 left-0 right-0 z-50 flex items-center px-8 py-8;
+    @apply fixed top-0 left-0 right-0 z-[110] flex items-center px-8 py-8;
     pointer-events: none;
   }
 
   /* Date Display - Top Left */
   .date-display {
-    @apply text-white text-3xl font-normal;
+    @apply text-white font-normal;
     font-family: var(--font-pixel);
+    font-size: 60px;
     text-shadow: 
       -1px -1px 0 #000,
        1px -1px 0 #000,
@@ -43,8 +44,9 @@
   }
 
   .live-text {
-    @apply text-white text-3xl font-normal;
+    @apply text-white font-normal;
     font-family: var(--font-pixel);
+    font-size: 60px;
     text-shadow: 
       -1px -1px 0 #000,
        1px -1px 0 #000,
@@ -81,7 +83,7 @@
 
   /* ===== BOTTOM INFORMATION BAR ===== */
   .bottom-info-bar {
-    @apply fixed bottom-0 left-0 right-0 z-50 flex justify-between items-end px-8 py-10;
+    @apply fixed bottom-0 left-0 right-0 z-[110] flex justify-between items-end px-8 py-10;
     pointer-events: none;
   }
 
@@ -95,8 +97,9 @@
   }
 
   .city-name {
-    @apply text-white text-5xl font-normal;
+    @apply text-white font-normal;
     font-family: var(--font-pixel);
+    font-size: 72px;
     text-shadow: 
       -1px -1px 0 #000,
        1px -1px 0 #000,
@@ -105,10 +108,11 @@
     letter-spacing: 3px;
     line-height: 1.1;
   }
-
+  
   .country-name {
-    @apply text-white text-3xl font-normal mt-2;
+    @apply text-white font-normal mt-2;
     font-family: var(--font-pixel);
+    font-size: 40px;
     text-shadow: 
       -1px -1px 0 #000,
        1px -1px 0 #000,
@@ -124,7 +128,7 @@
   }
 
   .weather-info-content {
-    @apply flex items-center gap-8;
+    @apply flex items-center gap-8 justify-start;
   }
 
   /* Sponsor Separator - Vertical line between weather and sponsor */
@@ -135,12 +139,13 @@
   }
 
   .weather-section {
-    @apply flex flex-col items-center;
+    @apply flex flex-col items-start;
   }
 
   .weather-values {
-    @apply flex items-center gap-3 text-white text-2xl font-normal;
+    @apply flex items-center gap-3 text-white font-normal;
     font-family: var(--font-pixel);
+    font-size: 48px;
     text-shadow: 
       -1px -1px 0 #000,
        1px -1px 0 #000,
@@ -149,10 +154,11 @@
     letter-spacing: 2px;
     line-height: 1.2;
   }
-
+  
   .weather-label {
-    @apply text-white text-base font-normal mt-3;
+    @apply text-white font-normal mt-3 text-left;
     font-family: var(--font-pixel);
+    font-size: 32px;
     text-shadow: 
       -1px -1px 0 #000,
        1px -1px 0 #000,
@@ -185,11 +191,11 @@
   .wind-kmh {
     @apply text-white;
   }
-
+  
   .wind-separator {
     @apply text-white opacity-70;
   }
-
+  
   .wind-mph {
     @apply text-white opacity-90;
   }
@@ -429,11 +435,11 @@
   .bottom-info-bar {
     @apply px-4 py-6;
   }
-
+  
   .city-name {
     @apply text-3xl;
   }
-
+  
   .country-name {
     @apply text-xl;
   }
@@ -443,11 +449,12 @@
   }
 
   .weather-values {
-    @apply text-lg;
+    font-size: 32px;
   }
 
   .weather-label {
-    @apply text-sm;
+    @apply text-left;
+    font-size: 24px;
   }
 
   .sponsor-text {
@@ -485,7 +492,7 @@
     @apply text-2xl;
     letter-spacing: 2px;
   }
-
+  
   .loading-dots span {
     width: 10px;
     height: 10px;
