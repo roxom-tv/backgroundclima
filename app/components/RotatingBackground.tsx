@@ -25,7 +25,7 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
     if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
 
     intervalRef.current = setInterval(() => {
-      // 1. Activar efecto de televisión (estática de TV - snow/rain)
+      // 1. Activar efecto de televisión (lluvia caótica y random)
       console.log('🎬 Activando efecto de TV...');
       setShowOverlay(true);
       setIsVideoLoaded(false);
@@ -64,7 +64,7 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
 
   return (
     <div className="youtube-container">
-      {/* Efecto de Televisión (Estática de TV - Snow/Rain) */}
+      {/* Efecto de Televisión (Lluvia Caótica y Random) */}
       <AnimatePresence>
         {showOverlay && (
           <motion.div
