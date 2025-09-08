@@ -5,7 +5,7 @@ import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 const pixelFont = localFont({
-  src: '../public/VCR_OSD_MONO_1.001.ttf',
+  src: './VCR_OSD_MONO_1.001.ttf',
   variable: '--font-pixel',
   display: 'swap',
 })
