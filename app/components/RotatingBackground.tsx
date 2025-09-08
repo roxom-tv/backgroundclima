@@ -13,9 +13,11 @@ interface RotatingBackgroundProps {
 export default function RotatingBackground({ activeIndex, onIndexChange }: RotatingBackgroundProps) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout>();
   const overlayTimerRef = useRef<NodeJS.Timeout>();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     // Limpiar timers anteriores
@@ -23,19 +25,17 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
     if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
 
     intervalRef.current = setInterval(() => {
-      // 1. Activar overlay para tapar el loading
+      // 1. Activar efecto de televisión (estática de TV - snow/rain)
+      console.log('🎬 Activando efecto de TV...');
       setShowOverlay(true);
+      setIsVideoLoaded(false);
       
-      // 2. Después de 1 segundo, cambiar la cámara
+      // 2. Después de 1.25 segundos, cambiar la cámara
       overlayTimerRef.current = setTimeout(() => {
         const nextIndex = (activeIndex + 1) % CITIES.length;
+        console.log('🔄 Cambiando a ciudad:', nextIndex);
         onIndexChange(nextIndex);
-        
-        // 3. Mantener overlay por 1.5 segundos más para asegurar que la nueva cámara esté lista
-        setTimeout(() => {
-          setShowOverlay(false);
-        }, 1500);
-      }, 1000);
+      }, 1250);
     }, ROTATION_SECONDS * 1000);
 
     return () => {
@@ -44,38 +44,40 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
     };
   }, [activeIndex, onIndexChange]);
 
+  // Efecto para manejar la carga del video
+  useEffect(() => {
+    if (showOverlay && isVideoLoaded) {
+      console.log('✅ Video cargado, desactivando efecto de TV...');
+      setShowOverlay(false);
+    }
+  }, [showOverlay, isVideoLoaded]);
+
   const currentCity = CITIES[activeIndex];
+
+  // Handler para detectar cuando el iframe ha cargado
+  const handleIframeLoad = () => {
+    console.log('📺 Iframe cargado completamente');
+    setIsVideoLoaded(true);
+  };
+
+  console.log('🎬 Estado del overlay:', showOverlay, 'Video cargado:', isVideoLoaded);
 
   return (
     <div className="youtube-container">
-      {/* Overlay de transición que tapa el loading */}
+      {/* Efecto de Televisión (Estática de TV - Snow/Rain) */}
       <AnimatePresence>
         {showOverlay && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="transition-overlay"
+            transition={{ 
+              duration: 2.5,
+              ease: "easeInOut"
+            }}
+            className="glitch-overlay"
           >
-            <div className="overlay-content">
-              <div className="logo-container">
-                <Image
-                  src="/isortv.png"
-                  alt="ISOR TV"
-                  width={200}
-                  height={100}
-                  className="overlay-logo"
-                />
-              </div>
-              <div className="loading-indicator">
-                <div className="loading-dots">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-            </div>
+            <div className="glitch-effect"></div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -84,19 +86,31 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
       <AnimatePresence mode="wait">
         <motion.div
           key={activeIndex}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: showOverlay ? 0 : 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+          initial={{ opacity: 0, scale: 1.1, filter: "blur(4px)" }}
+          animate={{ 
+            opacity: showOverlay ? 0 : 1, 
+            scale: showOverlay ? 1.05 : 1,
+            filter: showOverlay ? "blur(8px)" : "blur(0px)"
+          }}
+          exit={{ opacity: 0, scale: 0.95, filter: "blur(4px)" }}
+          transition={{ 
+            duration: 0.6, 
+            ease: [0.25, 0.46, 0.45, 0.94],
+            opacity: { duration: 0.4 },
+            scale: { duration: 0.6 },
+            filter: { duration: 0.5 }
+          }}
           className="w-full h-full"
         >
           <iframe
+            ref={iframeRef}
             src={currentCity.ytLiveUrl}
             className="youtube-iframe"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             loading="lazy"
+            onLoad={handleIframeLoad}
           />
         </motion.div>
       </AnimatePresence>

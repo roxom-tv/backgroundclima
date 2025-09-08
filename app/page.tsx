@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import RotatingBackground from './components/RotatingBackground';
 import WeatherBar from './components/WeatherBar';
-import CenteredLogo from './components/CenteredLogo';
+import DateDisplay from './components/DateDisplay';
+import LiveIndicator from './components/LiveIndicator';
+import SponsorDisplay from './components/SponsorDisplay';
 
 export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -15,17 +17,29 @@ export default function Home() {
 
   return (
     <main className="h-screen w-screen overflow-hidden relative">
-      {/* Centered Logo with Black Background */}
-      <CenteredLogo />
-      
       {/* YouTube Live Background */}
       <RotatingBackground 
         activeIndex={activeIndex} 
         onIndexChange={handleIndexChange}
       />
       
-      {/* Weather Overlay */}
-      <WeatherBar activeIndex={activeIndex} />
+      {/* Top Information Bar */}
+      <div className="top-info-bar">
+        {/* Date Display - Top Left */}
+        <DateDisplay />
+        
+        {/* Live Indicator - Top Center */}
+        <LiveIndicator />
+      </div>
+      
+      {/* Bottom Information Bar */}
+      <div className="bottom-info-bar">
+        {/* Weather and Location Information */}
+        <WeatherBar activeIndex={activeIndex} />
+        
+        {/* Sponsor Display - Bottom Right */}
+        <SponsorDisplay />
+      </div>
     </main>
   );
 }
