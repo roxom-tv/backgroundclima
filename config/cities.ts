@@ -87,11 +87,4 @@ export const CITIES: CityConfig[] = [
     openWeatherQuery: "Calgary,CA", 
     tz: "America/Edmonton" 
   },
-  { 
-    name: "ISS", 
-    country: "Space",
-    ytLiveUrl: "https://www.youtube.com/embed/0FBiyFpV__g?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=0FBiyFpV__g&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
-    openWeatherQuery: "ISS,SPACE", 
-    tz: "UTC" 
-  },
 ];
