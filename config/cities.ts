@@ -55,7 +55,7 @@ export const CITIES: CityConfig[] = [
   { 
     name: "Sydney", 
     country: "Australia",
-    ytLiveUrl: "https://www.youtube.com/embed/5uZa3-RMFos?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=5uZa3-RMFos&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
+    ytLiveUrl: "https://www.youtube.com/embed/jshwkG1ZpP8?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=jshwkG1ZpP8&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
     openWeatherQuery: "Sydney,AU", 
     tz: "Australia/Sydney" 
   },

@@ -100,7 +100,7 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
           <iframe
             ref={iframeRef}
             src={currentCity.ytLiveUrl}
-            className={`youtube-iframe ${currentCity.name === 'Necochea' ? 'necochea-zoom' : ''}`}
+            className={`youtube-iframe ${currentCity.name === 'Necochea' || currentCity.name === 'Sydney' ? 'necochea-zoom' : ''}`}
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
