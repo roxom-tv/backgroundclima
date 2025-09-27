@@ -145,24 +145,6 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
         ></div>
       </div>
 
-      {/* Debug info - Temporal para diagnosticar */}
-      <div style={{
-        position: 'fixed',
-        top: '10px',
-        right: '10px',
-        background: 'rgba(0,0,0,0.8)',
-        color: 'white',
-        padding: '10px',
-        fontSize: '12px',
-        zIndex: 1000,
-        fontFamily: 'monospace'
-      }}>
-        <div>Ciudad: {currentCity.name}</div>
-        <div>Index: {activeIndex}</div>
-        <div>Overlay: {showOverlay ? 'ON' : 'OFF'}</div>
-        <div>Efecto: {useSimpleFallback ? 'Simple' : 'Complejo'}</div>
-        <div>URL: {currentCity.ytLiveUrl.substring(0, 50)}...</div>
-      </div>
     </>
   );
 }
