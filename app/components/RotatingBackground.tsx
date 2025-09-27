@@ -12,23 +12,23 @@ interface RotatingBackgroundProps {
 
 export default function RotatingBackground({ activeIndex, onIndexChange }: RotatingBackgroundProps) {
   const [showOverlay, setShowOverlay] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
   
   const intervalRef = useRef<NodeJS.Timeout>();
   const overlayTimerRef = useRef<NodeJS.Timeout>();
-  const transitionTimerRef = useRef<NodeJS.Timeout>();
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     // Limpiar timers anteriores
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
-    if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
 
-    // Función para ejecutar la transición
+    // Función para ejecutar transición completa
     const executeTransition = () => {
-      console.log('🎬 Iniciando transición...');
+      console.log('🎬 Iniciando transición automática...');
       
-      // 1. Activar efecto de transición inmediatamente
+      // 1. Reiniciar animación y activar efecto de transición INMEDIATAMENTE
+      setAnimationKey(prev => prev + 1);
       setShowOverlay(true);
       
       // 2. Después de 0.5 segundos, cambiar la cámara
@@ -37,12 +37,6 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
         console.log('🔄 Cambiando a ciudad:', nextIndex);
         onIndexChange(nextIndex);
       }, 500);
-      
-      // 3. Después de 3 segundos, desactivar la transición
-      transitionTimerRef.current = setTimeout(() => {
-        console.log('✅ Transición completada, desactivando efecto...');
-        setShowOverlay(false);
-      }, 3000);
     };
 
     // Configurar el intervalo principal
@@ -51,35 +45,41 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
-      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
     };
   }, [activeIndex, onIndexChange]);
 
-  // Efecto adicional para asegurar que la transición se ejecute cuando cambie el activeIndex
+
+  // Efecto simple para desactivar overlay después de 3.5 segundos cuando se activa
   useEffect(() => {
-    // Si el activeIndex cambia y no hay transición activa, ejecutar una transición
-    if (!showOverlay) {
-      console.log('🔄 Cambio de ciudad detectado, ejecutando transición...');
-      setShowOverlay(true);
-      
-      // Desactivar después de 3 segundos
+    if (showOverlay) {
+      console.log('⏰ Overlay activado, programando desactivación en 3.5 segundos...');
       const timer = setTimeout(() => {
-        console.log('✅ Transición por cambio de ciudad completada');
+        console.log('✅ Desactivando overlay después de 3.5 segundos');
         setShowOverlay(false);
-      }, 3000);
+      }, 3500);
       
-      return () => clearTimeout(timer);
+      return () => {
+        console.log('🧹 Limpiando timer de desactivación');
+        clearTimeout(timer);
+      };
     }
-  }, [activeIndex, showOverlay]);
+  }, [showOverlay]);
 
   const currentCity = CITIES[activeIndex];
 
   // Handler para detectar cuando el iframe ha cargado (opcional, para logging)
   const handleIframeLoad = () => {
-    console.log('📺 Iframe cargado completamente');
+    console.log('📺 Iframe cargado completamente para:', currentCity.name);
+  };
+
+  // Handler para errores del iframe
+  const handleIframeError = () => {
+    console.error('❌ Error cargando iframe para:', currentCity.name, 'URL:', currentCity.ytLiveUrl);
   };
 
   console.log('🎬 Estado del overlay:', showOverlay);
+  console.log('🏙️ Ciudad actual:', currentCity.name, 'Index:', activeIndex);
+  console.log('🔗 URL YouTube:', currentCity.ytLiveUrl);
 
   return (
     <>
@@ -106,6 +106,7 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
               allowFullScreen
               loading="lazy"
               onLoad={handleIframeLoad}
+              onError={handleIframeError}
             />
           </motion.div>
         </AnimatePresence>
@@ -113,7 +114,25 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
 
       {/* Capa transparente siempre visible - Se convierte en transición cuando es necesario */}
       <div className={`transition-overlay ${showOverlay ? 'active' : ''}`}>
-        <div className="glitch-effect"></div>
+        <div key={animationKey} className="glitch-effect"></div>
+      </div>
+
+      {/* Debug info - Temporal para diagnosticar */}
+      <div style={{
+        position: 'fixed',
+        top: '10px',
+        right: '10px',
+        background: 'rgba(0,0,0,0.8)',
+        color: 'white',
+        padding: '10px',
+        fontSize: '12px',
+        zIndex: 1000,
+        fontFamily: 'monospace'
+      }}>
+        <div>Ciudad: {currentCity.name}</div>
+        <div>Index: {activeIndex}</div>
+        <div>Overlay: {showOverlay ? 'ON' : 'OFF'}</div>
+        <div>URL: {currentCity.ytLiveUrl.substring(0, 50)}...</div>
       </div>
     </>
   );

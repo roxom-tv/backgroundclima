@@ -315,7 +315,6 @@
   width: 100%;
   height: 100%;
   background: #000;
-  animation: thick-lines-transition 3s ease-in-out;
   opacity: 0;
   transition: opacity 0.1s ease-in-out;
 }
@@ -327,6 +326,7 @@
 
 .transition-overlay.active .glitch-effect {
   opacity: 1;
+  animation: thick-lines-transition 3.5s ease-in-out;
 }
 
 /* Animación de líneas gruesas y anchas - Transición limpia */
