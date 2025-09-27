@@ -13,10 +13,35 @@ interface RotatingBackgroundProps {
 export default function RotatingBackground({ activeIndex, onIndexChange }: RotatingBackgroundProps) {
   const [showOverlay, setShowOverlay] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
+  const [useSimpleFallback, setUseSimpleFallback] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout>();
   const overlayTimerRef = useRef<NodeJS.Timeout>();
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Detectar si el navegador soporta características modernas
+  useEffect(() => {
+    const supportsModernFeatures = () => {
+      // Verificar soporte para CSS Grid, Flexbox, y animaciones complejas
+      const testEl = document.createElement('div');
+      const style = testEl.style;
+      
+      // Verificar soporte para linear-gradient
+      style.background = 'linear-gradient(45deg, #000, #fff)';
+      const hasGradient = style.background.includes('gradient');
+      
+      // Verificar soporte para animaciones
+      const hasAnimations = 'animation' in style || 'webkitAnimation' in style;
+      
+      // Verificar soporte para viewport units
+      style.width = '100vw';
+      const hasViewportUnits = style.width === '100vw';
+      
+      return hasGradient && hasAnimations && hasViewportUnits;
+    };
+
+    setUseSimpleFallback(!supportsModernFeatures());
+  }, []);
 
   useEffect(() => {
     // Limpiar timers anteriores
@@ -114,7 +139,10 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
 
       {/* Capa transparente siempre visible - Se convierte en transición cuando es necesario */}
       <div className={`transition-overlay ${showOverlay ? 'active' : ''}`}>
-        <div key={animationKey} className="glitch-effect"></div>
+        <div 
+          key={animationKey} 
+          className={`glitch-effect ${useSimpleFallback ? 'simple-fallback' : ''}`}
+        ></div>
       </div>
 
       {/* Debug info - Temporal para diagnosticar */}
@@ -132,6 +160,7 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
         <div>Ciudad: {currentCity.name}</div>
         <div>Index: {activeIndex}</div>
         <div>Overlay: {showOverlay ? 'ON' : 'OFF'}</div>
+        <div>Efecto: {useSimpleFallback ? 'Simple' : 'Complejo'}</div>
         <div>URL: {currentCity.ytLiveUrl.substring(0, 50)}...</div>
       </div>
     </>
