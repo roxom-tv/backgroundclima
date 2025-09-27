@@ -234,7 +234,7 @@
 
   /* ===== YOUTUBE AND LOGO STYLES ===== */
   .youtube-container {
-    @apply fixed inset-0 z-20;
+    @apply fixed inset-0 z-10;
     background-color: #000;
   }
   
@@ -244,6 +244,7 @@
     transform-origin: center center;
     background-color: #000;
   }
+
 
   .youtube-iframe.necochea-zoom {
     transform: scale(1.6);
@@ -292,19 +293,21 @@
 
 /* ===== TV STATIC EFFECT ===== */
 
-/* Overlay principal del efecto de televisión */
-.glitch-overlay {
-  position: absolute;
+/* Capa transparente siempre visible - Se convierte en transición cuando es necesario */
+.transition-overlay {
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 100;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999;
   pointer-events: none;
   overflow: hidden;
+  background: transparent;
+  transition: background 0.1s ease-in-out;
 }
 
-/* Efecto de lluvia caótica y random con líneas granulares */
+/* Efecto de líneas gruesas y anchas - Transición de imagen a imagen */
 .glitch-effect {
   position: absolute;
   top: 0;
@@ -312,49 +315,80 @@
   width: 100%;
   height: 100%;
   background: #000;
-  animation: tv-static-animation 2s ease-in-out infinite;
-  z-index: 101;
+  animation: thick-lines-transition 3s ease-in-out;
+  opacity: 0;
+  transition: opacity 0.1s ease-in-out;
 }
 
-/* Animación del efecto de televisión - Linear y Granular */
-@keyframes tv-static-animation {
+/* Cuando hay transición activa */
+.transition-overlay.active {
+  background: #000;
+}
+
+.transition-overlay.active .glitch-effect {
+  opacity: 1;
+}
+
+/* Animación de líneas gruesas y anchas - Transición limpia */
+@keyframes thick-lines-transition {
   0% {
-    background: 
-      linear-gradient(0deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
-      linear-gradient(90deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
-      linear-gradient(180deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
-      linear-gradient(270deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
-      linear-gradient(45deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px),
-      linear-gradient(135deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px),
-      #000;
-    background-size: 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px;
+    background-image: 
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.9) 3px, transparent 6px, rgba(0,0,0,0.9) 9px, transparent 12px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
+    background-size: 100% 8px, 100% 10px, 100% 6px, 100% 12px, 100% 8px;
+    background-position: 0 0, 0 10px, 0 20px, 0 30px, 0 40px;
     opacity: 1;
+  }
+  
+  25% {
+    background-image: 
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.9) 3px, transparent 6px, rgba(0,0,0,0.9) 9px, transparent 12px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px);
+    background-size: 100% 10px, 100% 8px, 100% 12px, 100% 6px, 100% 10px;
+    background-position: 0 5px, 0 15px, 0 25px, 0 35px, 0 45px;
+    opacity: 0.9;
   }
   
   50% {
-    background: 
-      linear-gradient(0deg, transparent 0%, #fff 2px, transparent 3px, #fff 4px, transparent 5px, #fff 6px, transparent 7px, #fff 8px, transparent 9px),
-      linear-gradient(90deg, transparent 0%, #fff 2px, transparent 3px, #fff 4px, transparent 5px, #fff 6px, transparent 7px, #fff 8px, transparent 9px),
-      linear-gradient(180deg, transparent 0%, #fff 2px, transparent 3px, #fff 4px, transparent 5px, #fff 6px, transparent 7px, #fff 8px, transparent 9px),
-      linear-gradient(270deg, transparent 0%, #fff 2px, transparent 3px, #fff 4px, transparent 5px, #fff 6px, transparent 7px, #fff 8px, transparent 9px),
-      linear-gradient(45deg, transparent 0%, #fff 2px, transparent 3px, #fff 4px, transparent 5px, #fff 6px, transparent 7px),
-      linear-gradient(135deg, transparent 0%, #fff 2px, transparent 3px, #fff 4px, transparent 5px, #fff 6px, transparent 7px),
-      #000;
-    background-size: 0.2px 0.2px, 0.2px 0.2px, 0.2px 0.2px, 0.2px 0.2px, 0.2px 0.2px, 0.2px 0.2px;
-    opacity: 1;
+    background-image: 
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.9) 3px, transparent 6px, rgba(0,0,0,0.9) 9px, transparent 12px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
+    background-size: 100% 6px, 100% 12px, 100% 8px, 100% 10px, 100% 8px;
+    background-position: 0 10px, 0 20px, 0 30px, 0 40px, 0 50px;
+    opacity: 0.8;
+  }
+  
+  75% {
+    background-image: 
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.9) 3px, transparent 6px, rgba(0,0,0,0.9) 9px, transparent 12px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px);
+    background-size: 100% 12px, 100% 8px, 100% 10px, 100% 6px, 100% 12px;
+    background-position: 0 15px, 0 25px, 0 35px, 0 45px, 0 55px;
+    opacity: 0.6;
   }
   
   100% {
-    background: 
-      linear-gradient(0deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
-      linear-gradient(90deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
-      linear-gradient(180deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
-      linear-gradient(270deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px, #fff 7px, transparent 8px),
-      linear-gradient(45deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px),
-      linear-gradient(135deg, transparent 0%, #fff 1px, transparent 2px, #fff 3px, transparent 4px, #fff 5px, transparent 6px),
-      #000;
-    background-size: 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px, 0.3px 0.3px;
-    opacity: 1;
+    background-image: 
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.9) 3px, transparent 6px, rgba(0,0,0,0.9) 9px, transparent 12px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
+    background-size: 100% 10px, 100% 8px, 100% 12px, 100% 6px, 100% 8px;
+    background-position: 0 0, 0 10px, 0 20px, 0 30px, 0 40px;
+    opacity: 0;
   }
 }
 
