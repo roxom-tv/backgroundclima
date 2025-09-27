@@ -347,49 +347,64 @@
   animation: simple-flicker 3.5s ease-in-out;
 }
 
-/* Animación simple de parpadeo para navegadores antiguos */
+/* Animación simple de parpadeo para navegadores antiguos con fade in/out */
 @-webkit-keyframes simple-flicker {
-  0%, 100% { background: #000; }
-  10% { background: #00ff00; }
-  20% { background: #000; }
-  30% { background: #00ff00; }
-  40% { background: #000; }
-  50% { background: #00ff00; }
-  60% { background: #000; }
-  70% { background: #00ff00; }
-  80% { background: #000; }
-  90% { background: #00ff00; }
+  0% { background: #000; opacity: 0; }
+  10% { background: #00ff00; opacity: 1; }
+  20% { background: #000; opacity: 1; }
+  30% { background: #00ff00; opacity: 1; }
+  40% { background: #000; opacity: 1; }
+  50% { background: #00ff00; opacity: 1; }
+  60% { background: #000; opacity: 1; }
+  70% { background: #00ff00; opacity: 1; }
+  80% { background: #000; opacity: 1; }
+  90% { background: #000; opacity: 1; }
+  100% { background: #000; opacity: 0; }
 }
 
 @-moz-keyframes simple-flicker {
-  0%, 100% { background: #000; }
-  10% { background: #00ff00; }
-  20% { background: #000; }
-  30% { background: #00ff00; }
-  40% { background: #000; }
-  50% { background: #00ff00; }
-  60% { background: #000; }
-  70% { background: #00ff00; }
-  80% { background: #000; }
-  90% { background: #00ff00; }
+  0% { background: #000; opacity: 0; }
+  10% { background: #00ff00; opacity: 1; }
+  20% { background: #000; opacity: 1; }
+  30% { background: #00ff00; opacity: 1; }
+  40% { background: #000; opacity: 1; }
+  50% { background: #00ff00; opacity: 1; }
+  60% { background: #000; opacity: 1; }
+  70% { background: #00ff00; opacity: 1; }
+  80% { background: #000; opacity: 1; }
+  90% { background: #000; opacity: 1; }
+  100% { background: #000; opacity: 0; }
 }
 
 @keyframes simple-flicker {
-  0%, 100% { background: #000; }
-  10% { background: #00ff00; }
-  20% { background: #000; }
-  30% { background: #00ff00; }
-  40% { background: #000; }
-  50% { background: #00ff00; }
-  60% { background: #000; }
-  70% { background: #00ff00; }
-  80% { background: #000; }
-  90% { background: #00ff00; }
+  0% { background: #000; opacity: 0; }
+  10% { background: #00ff00; opacity: 1; }
+  20% { background: #000; opacity: 1; }
+  30% { background: #00ff00; opacity: 1; }
+  40% { background: #000; opacity: 1; }
+  50% { background: #00ff00; opacity: 1; }
+  60% { background: #000; opacity: 1; }
+  70% { background: #00ff00; opacity: 1; }
+  80% { background: #000; opacity: 1; }
+  90% { background: #000; opacity: 1; }
+  100% { background: #000; opacity: 0; }
 }
 
-/* Animación de líneas gruesas y anchas - Transición limpia */
+/* Animación de líneas gruesas y anchas - Transición sin frames negros */
 @-webkit-keyframes thick-lines-transition {
   0% {
+    background-image: 
+      -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
+      -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
+      -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.9) 3px, transparent 6px, rgba(0,0,0,0.9) 9px, transparent 12px),
+      -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
+      -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
+    background-size: 100% 8px, 100% 10px, 100% 6px, 100% 12px, 100% 8px;
+    background-position: 0 0, 0 10px, 0 20px, 0 30px, 0 40px;
+    opacity: 0;
+  }
+  
+  5% {
     background-image: 
       -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
       -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
@@ -410,7 +425,7 @@
       -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px);
     background-size: 100% 10px, 100% 8px, 100% 12px, 100% 6px, 100% 10px;
     background-position: 0 5px, 0 15px, 0 25px, 0 35px, 0 45px;
-    opacity: 0.9;
+    opacity: 1;
   }
   
   50% {
@@ -422,7 +437,7 @@
       -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
     background-size: 100% 6px, 100% 12px, 100% 8px, 100% 10px, 100% 8px;
     background-position: 0 10px, 0 20px, 0 30px, 0 40px, 0 50px;
-    opacity: 0.8;
+    opacity: 1;
   }
   
   75% {
@@ -434,17 +449,29 @@
       -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px);
     background-size: 100% 12px, 100% 8px, 100% 10px, 100% 6px, 100% 12px;
     background-position: 0 15px, 0 25px, 0 35px, 0 45px, 0 55px;
-    opacity: 0.6;
+    opacity: 1;
+  }
+  
+  95% {
+    background-image: 
+      -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
+      -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
+      -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.9) 3px, transparent 6px, rgba(0,0,0,0.9) 9px, transparent 12px),
+      -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
+      -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
+    background-size: 100% 8px, 100% 10px, 100% 6px, 100% 12px, 100% 8px;
+    background-position: 0 0, 0 10px, 0 20px, 0 30px, 0 40px;
+    opacity: 1;
   }
   
   100% {
     background-image: 
-      -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
       -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
-      -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
+      -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
       -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.9) 3px, transparent 6px, rgba(0,0,0,0.9) 9px, transparent 12px),
+      -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
       -webkit-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
-    background-size: 100% 10px, 100% 8px, 100% 12px, 100% 6px, 100% 8px;
+    background-size: 100% 8px, 100% 10px, 100% 6px, 100% 12px, 100% 8px;
     background-position: 0 0, 0 10px, 0 20px, 0 30px, 0 40px;
     opacity: 0;
   }
@@ -452,6 +479,18 @@
 
 @-moz-keyframes thick-lines-transition {
   0% {
+    background-image: 
+      -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
+      -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
+      -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.9) 3px, transparent 6px, rgba(0,0,0,0.9) 9px, transparent 12px),
+      -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
+      -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
+    background-size: 100% 8px, 100% 10px, 100% 6px, 100% 12px, 100% 8px;
+    background-position: 0 0, 0 10px, 0 20px, 0 30px, 0 40px;
+    opacity: 0;
+  }
+  
+  5% {
     background-image: 
       -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
       -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
@@ -472,7 +511,7 @@
       -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px);
     background-size: 100% 10px, 100% 8px, 100% 12px, 100% 6px, 100% 10px;
     background-position: 0 5px, 0 15px, 0 25px, 0 35px, 0 45px;
-    opacity: 0.9;
+    opacity: 1;
   }
   
   50% {
@@ -484,7 +523,7 @@
       -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
     background-size: 100% 6px, 100% 12px, 100% 8px, 100% 10px, 100% 8px;
     background-position: 0 10px, 0 20px, 0 30px, 0 40px, 0 50px;
-    opacity: 0.8;
+    opacity: 1;
   }
   
   75% {
@@ -496,17 +535,29 @@
       -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px);
     background-size: 100% 12px, 100% 8px, 100% 10px, 100% 6px, 100% 12px;
     background-position: 0 15px, 0 25px, 0 35px, 0 45px, 0 55px;
-    opacity: 0.6;
+    opacity: 1;
+  }
+  
+  95% {
+    background-image: 
+      -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
+      -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
+      -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.9) 3px, transparent 6px, rgba(0,0,0,0.9) 9px, transparent 12px),
+      -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
+      -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
+    background-size: 100% 8px, 100% 10px, 100% 6px, 100% 12px, 100% 8px;
+    background-position: 0 0, 0 10px, 0 20px, 0 30px, 0 40px;
+    opacity: 1;
   }
   
   100% {
     background-image: 
-      -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
       -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
-      -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
+      -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
       -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.9) 3px, transparent 6px, rgba(0,0,0,0.9) 9px, transparent 12px),
+      -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
       -moz-linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
-    background-size: 100% 10px, 100% 8px, 100% 12px, 100% 6px, 100% 8px;
+    background-size: 100% 8px, 100% 10px, 100% 6px, 100% 12px, 100% 8px;
     background-position: 0 0, 0 10px, 0 20px, 0 30px, 0 40px;
     opacity: 0;
   }
@@ -514,6 +565,18 @@
 
 @keyframes thick-lines-transition {
   0% {
+    background-image: 
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.9) 3px, transparent 6px, rgba(0,0,0,0.9) 9px, transparent 12px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
+    background-size: 100% 8px, 100% 10px, 100% 6px, 100% 12px, 100% 8px;
+    background-position: 0 0, 0 10px, 0 20px, 0 30px, 0 40px;
+    opacity: 0;
+  }
+  
+  5% {
     background-image: 
       linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
       linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
@@ -534,7 +597,7 @@
       linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px);
     background-size: 100% 10px, 100% 8px, 100% 12px, 100% 6px, 100% 10px;
     background-position: 0 5px, 0 15px, 0 25px, 0 35px, 0 45px;
-    opacity: 0.9;
+    opacity: 1;
   }
   
   50% {
@@ -546,7 +609,7 @@
       linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
     background-size: 100% 6px, 100% 12px, 100% 8px, 100% 10px, 100% 8px;
     background-position: 0 10px, 0 20px, 0 30px, 0 40px, 0 50px;
-    opacity: 0.8;
+    opacity: 1;
   }
   
   75% {
@@ -558,17 +621,29 @@
       linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px);
     background-size: 100% 12px, 100% 8px, 100% 10px, 100% 6px, 100% 12px;
     background-position: 0 15px, 0 25px, 0 35px, 0 45px, 0 55px;
-    opacity: 0.6;
+    opacity: 1;
+  }
+  
+  95% {
+    background-image: 
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.9) 3px, transparent 6px, rgba(0,0,0,0.9) 9px, transparent 12px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
+    background-size: 100% 8px, 100% 10px, 100% 6px, 100% 12px, 100% 8px;
+    background-position: 0 0, 0 10px, 0 20px, 0 30px, 0 40px;
+    opacity: 1;
   }
   
   100% {
     background-image: 
-      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
       linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px),
-      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.7) 5px, transparent 10px, rgba(0,0,0,0.8) 15px, transparent 20px),
       linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.9) 3px, transparent 6px, rgba(0,0,0,0.9) 9px, transparent 12px),
+      linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.6) 6px, transparent 12px, rgba(0,0,0,0.7) 18px, transparent 24px),
       linear-gradient(0deg, transparent 0%, rgba(0,255,0,0.8) 4px, transparent 8px, rgba(0,0,0,0.9) 12px, transparent 16px);
-    background-size: 100% 10px, 100% 8px, 100% 12px, 100% 6px, 100% 8px;
+    background-size: 100% 8px, 100% 10px, 100% 6px, 100% 12px, 100% 8px;
     background-position: 0 0, 0 10px, 0 20px, 0 30px, 0 40px;
     opacity: 0;
   }
