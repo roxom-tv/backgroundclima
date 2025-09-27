@@ -11,24 +11,25 @@ interface RotatingBackgroundProps {
 }
 
 export default function RotatingBackground({ activeIndex, onIndexChange }: RotatingBackgroundProps) {
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout>();
   const overlayTimerRef = useRef<NodeJS.Timeout>();
+  const transitionTimerRef = useRef<NodeJS.Timeout>();
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     // Limpiar timers anteriores
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
+    if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
 
-    intervalRef.current = setInterval(() => {
-      // 1. Activar efecto de televisión (lluvia caótica y random)
-      console.log('🎬 Activando efecto de TV...');
+    // Función para ejecutar la transición
+    const executeTransition = () => {
+      console.log('🎬 Iniciando transición...');
+      
+      // 1. Activar efecto de transición inmediatamente
       setShowOverlay(true);
-      setIsVideoLoaded(false);
       
       // 2. Después de 0.5 segundos, cambiar la cámara
       overlayTimerRef.current = setTimeout(() => {
@@ -36,35 +37,49 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
         console.log('🔄 Cambiando a ciudad:', nextIndex);
         onIndexChange(nextIndex);
       }, 500);
-    }, ROTATION_SECONDS * 1000);
+      
+      // 3. Después de 3 segundos, desactivar la transición
+      transitionTimerRef.current = setTimeout(() => {
+        console.log('✅ Transición completada, desactivando efecto...');
+        setShowOverlay(false);
+      }, 3000);
+    };
+
+    // Configurar el intervalo principal
+    intervalRef.current = setInterval(executeTransition, ROTATION_SECONDS * 1000);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
+      if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
     };
   }, [activeIndex, onIndexChange]);
 
-  // Efecto para manejar la carga del video - Desactivar después de 3 segundos
+  // Efecto adicional para asegurar que la transición se ejecute cuando cambie el activeIndex
   useEffect(() => {
-    if (showOverlay) {
+    // Si el activeIndex cambia y no hay transición activa, ejecutar una transición
+    if (!showOverlay) {
+      console.log('🔄 Cambio de ciudad detectado, ejecutando transición...');
+      setShowOverlay(true);
+      
+      // Desactivar después de 3 segundos
       const timer = setTimeout(() => {
-        console.log('✅ 3 segundos completados, desactivando efecto de TV...');
+        console.log('✅ Transición por cambio de ciudad completada');
         setShowOverlay(false);
       }, 3000);
       
       return () => clearTimeout(timer);
     }
-  }, [showOverlay]);
+  }, [activeIndex, showOverlay]);
 
   const currentCity = CITIES[activeIndex];
 
-  // Handler para detectar cuando el iframe ha cargado
+  // Handler para detectar cuando el iframe ha cargado (opcional, para logging)
   const handleIframeLoad = () => {
     console.log('📺 Iframe cargado completamente');
-    setIsVideoLoaded(true);
   };
 
-  console.log('🎬 Estado del overlay:', showOverlay, 'Video cargado:', isVideoLoaded);
+  console.log('🎬 Estado del overlay:', showOverlay);
 
   return (
     <>
