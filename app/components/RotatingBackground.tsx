@@ -68,12 +68,12 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
         onIndexChange(nextIndex);
       }, 500);
       
-      // 3. Después de 1.5 segundos total, finalizar el efecto
+      // 3. Después de 1.8 segundos total, finalizar el efecto
       channelChangeTimerRef.current = setTimeout(() => {
         console.log('Finalizando efecto de cambio de canal');
         setShowChannelChange(false);
         setIsTransitioning(false);
-      }, 1500);
+      }, 1800);
     };
 
     // Configurar el intervalo principal
