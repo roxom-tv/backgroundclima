@@ -4,7 +4,7 @@ A Next.js 14 application that displays rotating YouTube Live streams from cities
 
 ## Features
 
-- 🌍 **Live City Views**: YouTube Live streams from Hong Kong, London, and New York
+- 🌍 **Live City Views**: YouTube Live streams from cities around the world including Hong Kong, London, New York, Dubai, Tokyo, Sydney, Amsterdam, Rio de Janeiro, Necochea, and Alberta
 - ⏰ **Auto-Rotation**: Changes cities every 15 seconds with smooth transitions
 - 🌤️ **Real-Time Weather**: Current temperature, conditions, and wind speed from OpenWeatherMap
 - 🎮 **Fully Automatic**: No manual controls needed

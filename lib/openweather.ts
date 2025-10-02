@@ -105,13 +105,6 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
       conditionIconUrl: 'https://openweathermap.org/img/wn/01d@2x.png',
       windKmh: 25,
       updatedAt: new Date(),
-    },
-    'ISS,SPACE': {
-      tempC: -270,
-      conditionText: 'Earth Orbit',
-      conditionIconUrl: 'https://openweathermap.org/img/wn/01d@2x.png',
-      windKmh: 27720,
-      updatedAt: new Date(),
     }
   };
 
@@ -135,8 +128,7 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
     'Amsterdam,NL': { lat: 52.3676, lon: 4.9041 },
     'Rio de Janeiro,BR': { lat: -22.9068, lon: -43.1729 },
     'Necochea,AR': { lat: -38.5475, lon: -58.7368 },
-    'Calgary,CA': { lat: 51.0447, lon: -114.0719 },
-    'ISS,SPACE': { lat: 0, lon: 0 }
+    'Calgary,CA': { lat: 51.0447, lon: -114.0719 }
   };
 
   // Check cache first
@@ -145,16 +137,6 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
     return cached.data;
   }
 
-  // Para la ISS, usar directamente datos de fallback sin llamar a la API
-  if (query === 'ISS,SPACE') {
-    console.log('🚀 Usando datos espaciales para ISS');
-    const issData = fallbackDataByCity[query];
-    weatherCache.set(query, {
-      data: issData,
-      timestamp: Date.now(),
-    });
-    return issData;
-  }
 
   // Rate limiting check
   const now = Date.now();
