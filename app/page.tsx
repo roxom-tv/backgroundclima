@@ -26,7 +26,7 @@ export default function Home() {
       {/* Top Information Bar */}
       <div className="top-info-bar">
         {/* Date Display - Top Left */}
-        <DateDisplay />
+        <DateDisplay activeIndex={activeIndex} />
         
         {/* Live Indicator - Top Center */}
         <LiveIndicator />

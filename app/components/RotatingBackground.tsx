@@ -92,9 +92,6 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
   }, [activeIndex]);
 
   const currentCity = CITIES[activeIndex];
-  
-  // Debug: verificar que la URL cambia
-  console.log('Ciudad actual:', currentCity.name, 'URL:', currentCity.ytLiveUrl);
 
   // Handler para detectar cuando el iframe ha cargado
   const handleIframeLoad = () => {

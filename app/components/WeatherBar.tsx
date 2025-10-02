@@ -23,6 +23,8 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
         setWeatherData(data);
       } catch (error) {
         console.error('Error fetching weather:', error);
+        // En caso de error, mantener datos anteriores o usar fallback
+        setWeatherData(null);
       } finally {
         setLoading(false);
       }

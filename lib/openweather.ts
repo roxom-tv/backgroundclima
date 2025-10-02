@@ -107,8 +107,8 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
       updatedAt: new Date(),
     },
     'ISS,SPACE': {
-      tempC: -157,
-      conditionText: 'Space Environment',
+      tempC: -270,
+      conditionText: 'Earth Orbit',
       conditionIconUrl: 'https://openweathermap.org/img/wn/01d@2x.png',
       windKmh: 27720,
       updatedAt: new Date(),
@@ -145,6 +145,17 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
     return cached.data;
   }
 
+  // Para la ISS, usar directamente datos de fallback sin llamar a la API
+  if (query === 'ISS,SPACE') {
+    console.log('🚀 Usando datos espaciales para ISS');
+    const issData = fallbackDataByCity[query];
+    weatherCache.set(query, {
+      data: issData,
+      timestamp: Date.now(),
+    });
+    return issData;
+  }
+
   // Rate limiting check
   const now = Date.now();
   RATE_LIMIT.calls = RATE_LIMIT.calls.filter(timestamp => now - timestamp < RATE_LIMIT.timeWindow);
@@ -154,7 +165,7 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
     if (cached) {
       return cached.data;
     }
-    return null;
+    return fallbackData;
   }
 
   try {
@@ -171,8 +182,6 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
     // Usar One Call API 3.0 con coordenadas
     const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${coords.lat}&lon=${coords.lon}&exclude=minutely,hourly,daily,alerts&appid=${apiKey}&units=${units}&lang=${lang}`;
     
-    console.log(`🌤️ Intentando llamar a la API para ${query}...`);
-    
     const response = await fetch(url, {
       signal: controller.signal,
     });
@@ -185,7 +194,6 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
     }
 
     const data = await response.json();
-    console.log(`✅ Datos obtenidos de la API para ${query}`);
 
     // One Call API 3.0 tiene una estructura diferente
     const weatherData: WeatherData = {
@@ -195,8 +203,6 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
       windKmh: Math.round((data.current.wind_speed || 0) * 3.6), // Convert m/s to km/h
       updatedAt: new Date(),
     };
-    
-    console.log(`🌡️ Datos procesados para ${query}:`, weatherData);
 
     // Update cache
     weatherCache.set(query, {
@@ -214,12 +220,10 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
     
     // Return cached data if available, even if expired
     if (cached) {
-      console.log(`📦 Usando datos en caché para ${query}`);
       return cached.data;
     }
     
     // Return fallback data if API fails
-    console.log(`🎯 Usando datos de fallback para ${query}`);
     return fallbackData;
   }
 }
