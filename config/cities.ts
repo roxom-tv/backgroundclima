@@ -7,7 +7,7 @@ export interface CityConfig {
   tz: string;
 }
 
-export const ROTATION_SECONDS = 35;
+export const ROTATION_SECONDS = 45; // Aumentado para incluir 8 segundos de mercado + 2 segundos de transición
 
 export const CITIES: CityConfig[] = [
   { 
@@ -65,13 +65,6 @@ export const CITIES: CityConfig[] = [
     ytLiveUrl: "https://www.youtube.com/embed/1phWWCgzXgM?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=1phWWCgzXgM&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
     openWeatherQuery: "Amsterdam,NL", 
     tz: "Europe/Amsterdam" 
-  },
-  { 
-    name: "Rio de Janeiro", 
-    country: "Brazil",
-    ytLiveUrl: "https://www.youtube.com/embed/6QoLEltTzIM?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=6QoLEltTzIM&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
-    openWeatherQuery: "Rio de Janeiro,BR", 
-    tz: "America/Sao_Paulo" 
   },
   { 
     name: "Necochea", 

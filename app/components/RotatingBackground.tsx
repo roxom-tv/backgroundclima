@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CITIES, ROTATION_SECONDS } from '@/config/cities';
+import MarketDataDisplay from './MarketDataDisplay';
 import Image from 'next/image';
 
 interface RotatingBackgroundProps {
@@ -16,10 +17,12 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
   const [useSimpleFallback, setUseSimpleFallback] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showChannelChange, setShowChannelChange] = useState(false);
+  const [showMarketData, setShowMarketData] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout>();
   const overlayTimerRef = useRef<NodeJS.Timeout>();
   const channelChangeTimerRef = useRef<NodeJS.Timeout>();
+  const marketDataTimerRef = useRef<NodeJS.Timeout>();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const activeIndexRef = useRef(activeIndex);
 
@@ -52,28 +55,36 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
     if (channelChangeTimerRef.current) clearTimeout(channelChangeTimerRef.current);
+    if (marketDataTimerRef.current) clearTimeout(marketDataTimerRef.current);
 
-    // Función para ejecutar transición con efecto de cambio de canal
+    // Función para ejecutar transición con pantalla de mercado
     const executeTransition = () => {
-      // 1. Activar el efecto de cambio de canal
-      console.log('Iniciando efecto de cambio de canal');
-      setShowChannelChange(true);
+      // 1. Mostrar pantalla de mercado primero
+      console.log('Mostrando pantalla de mercado');
+      setShowMarketData(true);
       setIsTransitioning(true);
-      setAnimationKey(prev => prev + 1);
       
-      // 2. Después de 0.5 segundos, cambiar la cámara
-      overlayTimerRef.current = setTimeout(() => {
-        const nextIndex = (activeIndexRef.current + 1) % CITIES.length;
-        console.log('Cambiando a cámara:', nextIndex);
-        onIndexChange(nextIndex);
-      }, 500);
-      
-      // 3. Después de 1.8 segundos total, finalizar el efecto
-      channelChangeTimerRef.current = setTimeout(() => {
-        console.log('Finalizando efecto de cambio de canal');
-        setShowChannelChange(false);
-        setIsTransitioning(false);
-      }, 1800);
+      // 2. Después de 8 segundos, ocultar mercado y mostrar efecto de cambio de canal
+      marketDataTimerRef.current = setTimeout(() => {
+        console.log('Ocultando mercado, iniciando cambio de canal');
+        setShowMarketData(false);
+        setShowChannelChange(true);
+        setAnimationKey(prev => prev + 1);
+        
+        // 3. Después de 0.5 segundos, cambiar la cámara
+        overlayTimerRef.current = setTimeout(() => {
+          const nextIndex = (activeIndexRef.current + 1) % CITIES.length;
+          console.log('Cambiando a cámara:', nextIndex);
+          onIndexChange(nextIndex);
+        }, 500);
+        
+        // 4. Después de 1.8 segundos total, finalizar el efecto
+        channelChangeTimerRef.current = setTimeout(() => {
+          console.log('Finalizando efecto de cambio de canal');
+          setShowChannelChange(false);
+          setIsTransitioning(false);
+        }, 1800);
+      }, 8000);
     };
 
     // Configurar el intervalo principal
@@ -83,6 +94,7 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
       if (channelChangeTimerRef.current) clearTimeout(channelChangeTimerRef.current);
+      if (marketDataTimerRef.current) clearTimeout(marketDataTimerRef.current);
     };
   }, []); // Sin dependencias para evitar re-ejecuciones
 
@@ -134,6 +146,14 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* Pantalla de datos de mercado */}
+      <MarketDataDisplay 
+        isVisible={showMarketData}
+        onComplete={() => {
+          setShowMarketData(false);
+        }}
+      />
 
       {/* Efecto de cambio de canal - Ruido blanco y líneas de interferencia */}
       {showChannelChange && (
