@@ -42,18 +42,105 @@ const RATE_LIMIT = {
 
 const API_KEY = 'BY1AQOS9DQTUS2WW';
 
-// Símbolos de mercado que vamos a mostrar
+// Símbolos de mercado para las placas financieras
 export const MARKET_SYMBOLS = [
-  { symbol: 'SPY', name: 'SPDR S&P 500 ETF' },
-  { symbol: 'QQQ', name: 'Invesco QQQ Trust' },
-  { symbol: 'DIA', name: 'SPDR Dow Jones ETF' },
-  { symbol: 'AAPL', name: 'Apple Inc.' },
-  { symbol: 'MSFT', name: 'Microsoft Corp.' },
-  { symbol: 'GOOGL', name: 'Alphabet Inc.' },
-  { symbol: 'TSLA', name: 'Tesla Inc.' },
-  { symbol: 'NVDA', name: 'NVIDIA Corp.' },
-  { symbol: 'AMZN', name: 'Amazon.com Inc.' },
-  { symbol: 'META', name: 'Meta Platforms Inc.' }
+  // Global Bonds
+  { symbol: '^TNX', name: 'US 10Y Treasury' },
+  { symbol: '^FVX', name: 'US 5Y Treasury' },
+  { symbol: '^TYX', name: 'US 30Y Treasury' },
+  
+  // Commodities
+  { symbol: 'CL=F', name: 'WTI Crude Oil' },
+  { symbol: 'GC=F', name: 'Gold Futures' },
+  { symbol: 'HG=F', name: 'Copper Futures' },
+  
+  // FX
+  { symbol: 'EURUSD=X', name: 'EUR/USD' },
+  { symbol: 'USDJPY=X', name: 'USD/JPY' },
+  { symbol: 'DX-Y.NYB', name: 'Dollar Index' },
+  
+  // Major Indices
+  { symbol: '^GSPC', name: 'S&P 500' },
+  { symbol: '^IXIC', name: 'NASDAQ' },
+  { symbol: '^VIX', name: 'VIX Volatility' },
+  
+  // ETFs
+  { symbol: 'GLD', name: 'Gold ETF' },
+  { symbol: 'SPY', name: 'S&P 500 ETF' },
+  { symbol: 'QQQ', name: 'NASDAQ ETF' }
+];
+
+// Definición de las placas financieras
+export const FINANCIAL_PLATES = [
+  {
+    id: 'bonds',
+    title: 'GLOBAL BONDS PULSE',
+    type: 'bonds',
+    data: {
+      ust10y: 0,
+      bund10y: 0,
+      jgb10y: 0
+    }
+  },
+  {
+    id: 'commodities',
+    title: 'COMMODITIES QUICK',
+    type: 'commodities',
+    data: {
+      wti_price: 0,
+      wti_pct: 0,
+      gold_price: 0,
+      copper_price: 0
+    }
+  },
+  {
+    id: 'fx',
+    title: 'FX CROSSES BOARD',
+    type: 'fx',
+    data: {
+      eurusd: 0,
+      usdjpy: 0,
+      dxy: 0
+    }
+  },
+  {
+    id: 'inflation',
+    title: 'INFLATION WATCH',
+    type: 'inflation',
+    data: {
+      us_cpi_yoy: 0,
+      eu_cpi_yoy: 0
+    }
+  },
+  {
+    id: 'etf',
+    title: 'ETF FLOWS NON-BTC',
+    type: 'etf',
+    data: {
+      gold_etf_flow: 0,
+      spx_etf_flow: 0
+    }
+  },
+  {
+    id: 'equities',
+    title: 'MARKET MOVERS (EQUITIES)',
+    type: 'equities',
+    data: {
+      spx_pct: 0,
+      ndx_pct: 0,
+      msci_pct: 0
+    }
+  },
+  {
+    id: 'risk',
+    title: 'RISK-ON/OFF FLASH',
+    type: 'risk',
+    data: {
+      vix_level: 0,
+      dxy_pct: 0,
+      wti_pct: 0
+    }
+  }
 ];
 
 export async function fetchMarketData(symbol: string): Promise<MarketData | null> {
@@ -95,7 +182,7 @@ export async function fetchMarketData(symbol: string): Promise<MarketData | null
     const data: AlphaVantageResponse = await response.json();
 
     if (!data['Global Quote'] || !data['Global Quote']['05. price']) {
-      console.warn(`No data received for ${symbol}`);
+      console.warn(`No data received for ${symbol}, using fallback data`);
       return getFallbackData(symbol);
     }
 
@@ -297,3 +384,45 @@ function getFallbackData(symbol: string): MarketData {
     previousClose: 100.00
   };
 }
+
+// Generate fallback data for financial plates
+export const generateFinancialPlatesData = () => {
+  return FINANCIAL_PLATES.map(plate => ({
+    ...plate,
+    data: {
+      // Bonds
+      ust10y: plate.id === 'bonds' ? (4.2 + (Math.random() - 0.5) * 0.5).toFixed(2) : plate.data.ust10y,
+      bund10y: plate.id === 'bonds' ? (2.1 + (Math.random() - 0.5) * 0.3).toFixed(2) : plate.data.bund10y,
+      jgb10y: plate.id === 'bonds' ? (0.8 + (Math.random() - 0.5) * 0.2).toFixed(2) : plate.data.jgb10y,
+      
+      // Commodities
+      wti_price: plate.id === 'commodities' ? (75 + (Math.random() - 0.5) * 10).toFixed(2) : plate.data.wti_price,
+      wti_pct: plate.id === 'commodities' ? ((Math.random() - 0.5) * 4).toFixed(2) : plate.data.wti_pct,
+      gold_price: plate.id === 'commodities' ? (1950 + (Math.random() - 0.5) * 50).toFixed(2) : plate.data.gold_price,
+      copper_price: plate.id === 'commodities' ? (3.8 + (Math.random() - 0.5) * 0.3).toFixed(2) : plate.data.copper_price,
+      
+      // FX
+      eurusd: plate.id === 'fx' ? (1.08 + (Math.random() - 0.5) * 0.02).toFixed(4) : plate.data.eurusd,
+      usdjpy: plate.id === 'fx' ? (150 + (Math.random() - 0.5) * 5).toFixed(2) : plate.data.usdjpy,
+      dxy: plate.id === 'fx' ? (103 + (Math.random() - 0.5) * 2).toFixed(2) : plate.data.dxy,
+      
+      // Inflation
+      us_cpi_yoy: plate.id === 'inflation' ? (3.2 + (Math.random() - 0.5) * 0.5).toFixed(1) : plate.data.us_cpi_yoy,
+      eu_cpi_yoy: plate.id === 'inflation' ? (2.8 + (Math.random() - 0.5) * 0.4).toFixed(1) : plate.data.eu_cpi_yoy,
+      
+      // ETF Flows
+      gold_etf_flow: plate.id === 'etf' ? ((Math.random() - 0.5) * 200).toFixed(0) : plate.data.gold_etf_flow,
+      spx_etf_flow: plate.id === 'etf' ? ((Math.random() - 0.5) * 500).toFixed(0) : plate.data.spx_etf_flow,
+      
+      // Equities
+      spx_pct: plate.id === 'equities' ? ((Math.random() - 0.5) * 3).toFixed(2) : plate.data.spx_pct,
+      ndx_pct: plate.id === 'equities' ? ((Math.random() - 0.5) * 4).toFixed(2) : plate.data.ndx_pct,
+      msci_pct: plate.id === 'equities' ? ((Math.random() - 0.5) * 2.5).toFixed(2) : plate.data.msci_pct,
+      
+      // Risk
+      vix_level: plate.id === 'risk' ? (18 + (Math.random() - 0.5) * 8).toFixed(1) : plate.data.vix_level,
+      dxy_pct: plate.id === 'risk' ? ((Math.random() - 0.5) * 2).toFixed(2) : plate.data.dxy_pct,
+      wti_pct: plate.id === 'risk' ? ((Math.random() - 0.5) * 3).toFixed(2) : plate.data.wti_pct
+    }
+  }));
+};
