@@ -14,6 +14,7 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
   const [showOverlay, setShowOverlay] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
   const [useSimpleFallback, setUseSimpleFallback] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [showChannelChange, setShowChannelChange] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout>();
@@ -52,24 +53,26 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
     if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
     if (channelChangeTimerRef.current) clearTimeout(channelChangeTimerRef.current);
 
-    // Función para ejecutar transición sin pantalla de mercado
+    // Función para ejecutar transición con efecto de cambio de canal
     const executeTransition = () => {
-      // Ejecutar directamente el efecto de cambio de canal
-      console.log('Iniciando cambio de canal');
+      // 1. Activar el efecto de cambio de canal
+      console.log('Iniciando efecto de cambio de canal');
       setShowChannelChange(true);
+      setIsTransitioning(true);
       setAnimationKey(prev => prev + 1);
       
-      // Después de 0.5 segundos, cambiar la cámara
+      // 2. Después de 0.5 segundos, cambiar la cámara
       overlayTimerRef.current = setTimeout(() => {
         const nextIndex = (activeIndexRef.current + 1) % CITIES.length;
         console.log('Cambiando a cámara:', nextIndex);
         onIndexChange(nextIndex);
       }, 500);
       
-      // Después de 1.8 segundos total, finalizar el efecto
+      // 3. Después de 1.8 segundos total, finalizar el efecto
       channelChangeTimerRef.current = setTimeout(() => {
         console.log('Finalizando efecto de cambio de canal');
         setShowChannelChange(false);
+        setIsTransitioning(false);
       }, 1800);
     };
 
@@ -108,7 +111,7 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
           <motion.div
             key={activeIndex}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            animate={{ opacity: isTransitioning ? 0 : 1 }}
             exit={{ opacity: 0 }}
             transition={{ 
               duration: 0.4,
@@ -131,7 +134,6 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
           </motion.div>
         </AnimatePresence>
       </div>
-
 
       {/* Efecto de cambio de canal - Ruido blanco y líneas de interferencia */}
       {showChannelChange && (

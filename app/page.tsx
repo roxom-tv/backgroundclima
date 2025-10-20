@@ -17,7 +17,6 @@ export default function Home() {
 
   return (
     <main className="h-screen w-screen overflow-hidden relative bg-black">
-      
       {/* YouTube Live Background */}
       <RotatingBackground 
         activeIndex={activeIndex} 

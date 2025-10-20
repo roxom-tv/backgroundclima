@@ -7,7 +7,7 @@ export interface CityConfig {
   tz: string;
 }
 
-export const ROTATION_SECONDS = 50; // Aumentado para incluir 15 segundos de mercado + 2 segundos de transición
+export const ROTATION_SECONDS = 35;
 
 export const CITIES: CityConfig[] = [
   { 
