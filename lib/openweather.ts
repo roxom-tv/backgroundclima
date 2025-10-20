@@ -85,13 +85,6 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
       windKmh: 25,
       updatedAt: new Date(),
     },
-    'Rio de Janeiro,BR': {
-      tempC: 30,
-      conditionText: 'Sunny',
-      conditionIconUrl: 'https://openweathermap.org/img/wn/01d@2x.png',
-      windKmh: 10,
-      updatedAt: new Date(),
-    },
     'Necochea,AR': {
       tempC: 22,
       conditionText: 'Partly Cloudy',
@@ -126,7 +119,6 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
     'Tokyo,JP': { lat: 35.6762, lon: 139.6503 },
     'Sydney,AU': { lat: -33.8688, lon: 151.2093 },
     'Amsterdam,NL': { lat: 52.3676, lon: 4.9041 },
-    'Rio de Janeiro,BR': { lat: -22.9068, lon: -43.1729 },
     'Necochea,AR': { lat: -38.5475, lon: -58.7368 },
     'Calgary,CA': { lat: 51.0447, lon: -114.0719 }
   };
