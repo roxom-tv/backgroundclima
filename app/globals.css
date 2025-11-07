@@ -3,12 +3,24 @@
 @tailwind utilities;
 
 @layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
   html, body {
     @apply h-full overflow-hidden;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
   }
   
   #__next {
     @apply h-full;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
   }
 }
 
@@ -234,16 +246,48 @@
 
   /* ===== YOUTUBE AND LOGO STYLES ===== */
   .youtube-container {
-    @apply fixed inset-0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
     z-index: 1;
     background-color: #000;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+  }
+
+  .market-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    background-color: #000;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
   }
   
   .youtube-iframe {
-    @apply w-full h-full object-cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     transform: scale(1.3);
     transform-origin: center center;
     background-color: #000;
+    border: none;
+    margin: 0;
+    padding: 0;
   }
 
 
@@ -299,6 +343,8 @@
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
   width: 100vw;
   height: 100vh;
   z-index: 10001;
@@ -310,6 +356,8 @@
   overflow: hidden;
   opacity: 1;
   transition: opacity 0.3s ease-out;
+  margin: 0;
+  padding: 0;
 }
 
 /* Ruido blanco de TV */
@@ -672,5 +720,301 @@
 
   .tv-static {
     background-size: 1px 1px, 2px 2px, 3px 3px, 4px 4px;
+  }
+}
+
+/* ===== MARKET PLATE STYLES - TV FULL SCREEN 1920x1080 ===== */
+.market-plate-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.market-plate-content {
+  @apply w-full h-full flex flex-col items-center;
+  max-width: 100%;
+  padding: 40px 60px 40px 60px;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+
+.market-plate-title {
+  @apply text-white font-bold;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 72px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-align: center;
+  color: #ffffff;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  line-height: 1.1;
+  width: 100%;
+}
+
+.market-data-list {
+  @apply flex flex-col;
+  flex: 1;
+  justify-content: space-between;
+  gap: 0;
+  width: 80%;
+  max-width: 80%;
+}
+
+.market-data-row {
+  @apply flex items-center w-full;
+  background: #2a2a2a;
+  padding: 20px 24px;
+  min-height: 0;
+  border-bottom: 1px solid #3a3a3a;
+  gap: 24px;
+  flex: 1;
+}
+
+.market-symbol-text {
+  @apply flex items-center justify-center;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 40px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  width: 15%;
+  min-width: 160px;
+  max-width: 200px;
+  flex-shrink: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.market-row-content {
+  @apply flex flex-col justify-center items-center;
+  flex: 1;
+  min-width: 0;
+  gap: 4px;
+  flex-basis: 0;
+}
+
+.market-row-name {
+  color: #b0b0b0;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.2;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  margin-bottom: 2px;
+  text-align: center;
+  width: 100%;
+}
+
+.market-row-value {
+  @apply text-white font-black;
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: -2px;
+  line-height: 1;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  width: 100%;
+}
+
+.market-row-change {
+  @apply flex flex-col items-end justify-center;
+  font-weight: 700;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  gap: 4px;
+  width: 25%;
+  min-width: 220px;
+  max-width: 280px;
+  flex-shrink: 0;
+  padding-left: 24px;
+  border-left: 1px solid #3a3a3a;
+}
+
+.market-row-change.text-green-500 {
+  color: #4caf50;
+}
+
+.market-row-change.text-red-500 {
+  color: #f44336;
+}
+
+.market-row-change.text-white {
+  color: #ffffff;
+}
+
+.change-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 2px;
+}
+
+.change-absolute {
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.change-percent {
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.2;
+  opacity: 0.95;
+  white-space: nowrap;
+}
+
+.change-type-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  opacity: 0.7;
+  margin-top: 2px;
+  text-transform: uppercase;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Responsive para tablets */
+@media (max-width: 1024px) {
+  .market-plate-content {
+    padding: 32px 48px;
+  }
+  
+  .market-plate-title {
+    font-size: 56px;
+    margin-bottom: 20px;
+  }
+  
+  .market-data-row {
+    padding: 18px 20px;
+    gap: 20px;
+  }
+  
+  .market-symbol-text {
+    font-size: 32px;
+    width: 15%;
+    min-width: 140px;
+    max-width: 180px;
+  }
+  
+  .market-row-change {
+    width: 25%;
+    min-width: 200px;
+    max-width: 260px;
+    padding-left: 20px;
+  }
+  
+  .market-row-content {
+    align-items: center;
+  }
+  
+  .market-row-name {
+    font-size: 18px;
+    text-align: center;
+  }
+  
+  .market-row-value {
+    font-size: 60px;
+    text-align: center;
+  }
+  
+  .market-row-change {
+    min-width: 200px;
+    padding-left: 24px;
+  }
+  
+  .change-arrow {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .change-absolute {
+    font-size: 28px;
+  }
+  
+  .change-percent {
+    font-size: 24px;
+  }
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+  .market-plate-content {
+    padding: 24px 32px;
+  }
+  
+  .market-plate-title {
+    font-size: 42px;
+    margin-bottom: 16px;
+  }
+  
+  .market-data-row {
+    padding: 16px 18px;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .market-symbol-text {
+    font-size: 28px;
+    min-width: 120px;
+  }
+  
+  .market-row-content {
+    flex: 1 1 100%;
+    min-width: 0;
+    align-items: center;
+  }
+  
+  .market-row-name {
+    font-size: 16px;
+    text-align: center;
+  }
+  
+  .market-row-value {
+    font-size: 48px;
+    text-align: center;
+  }
+  
+  .market-row-change {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: auto;
+    width: 100%;
+    padding-left: 0;
+    padding-top: 12px;
+    border-left: none;
+    border-top: 1px solid #3a3a3a;
+    gap: 12px;
+  }
+  
+  .change-arrow {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .change-absolute {
+    font-size: 24px;
+  }
+  
+  .change-percent {
+    font-size: 20px;
   }
 }
