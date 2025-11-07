@@ -108,7 +108,14 @@ async function fetchFromTwelveData(symbol: string): Promise<MarketDataResponse |
     });
 
     if (!response.ok) {
-      console.error(`Twelve Data API error for ${symbol}: ${response.status}`);
+      const errorText = await response.text().catch(() => 'Unknown error');
+      console.error(`Twelve Data API error for ${symbol}: ${response.status} - ${errorText}`);
+      
+      // Si es un error de autenticación (401), puede ser problema con la API key
+      if (response.status === 401) {
+        console.error(`⚠️ Invalid API key for Twelve Data. Check TWELVE_DATA_API_KEY environment variable.`);
+      }
+      
       return null;
     }
 
@@ -199,6 +206,12 @@ export async function GET(request: NextRequest) {
       { error: 'Symbols parameter is required' },
       { status: 400 }
     );
+  }
+
+  // Log para debugging (solo en desarrollo)
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[market-data] Fetching data for symbols: ${symbols}`);
+    console.log(`[market-data] API Key configured: ${TWELVE_DATA_API_KEY ? 'Yes' : 'No'}`);
   }
 
   const symbolList = symbols.split(',').map(s => s.trim());

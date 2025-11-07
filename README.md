@@ -126,14 +126,27 @@ The app fetches weather data from OpenWeatherMap with:
 
 ### Environment Variables for Production
 
-Make sure to set these in your deployment platform:
+Make sure to set these in your deployment platform (Vercel):
 
 ```env
 OPENWEATHER_API_KEY=your_production_api_key
 OPENWEATHER_UNITS=metric
 OPENWEATHER_LANG=es
+TWELVE_DATA_API_KEY=your_twelve_data_api_key
 ROTATION_SECONDS=15
 ```
+
+**How to add environment variables in Vercel:**
+1. Go to your project in [Vercel Dashboard](https://vercel.com/dashboard)
+2. Click on **Settings** → **Environment Variables**
+3. Add each variable:
+   - `OPENWEATHER_API_KEY` = your OpenWeatherMap API key
+   - `TWELVE_DATA_API_KEY` = your Twelve Data API key (or use: `8084cf3a16a449caba286882cb101c28`)
+   - `OPENWEATHER_UNITS` = `metric`
+   - `OPENWEATHER_LANG` = `es`
+   - `ROTATION_SECONDS` = `15`
+4. Make sure to select **Production**, **Preview**, and **Development** environments
+5. **Redeploy** your application after adding variables
 
 ### Build Dependencies
 
