@@ -295,6 +295,11 @@
     transform: scale(1.6);
     transform-origin: center center;
   }
+
+  .youtube-iframe.hongkong-zoom {
+    transform: scale(1.5);
+    transform-origin: center center;
+  }
   
   .centered-logo {
     @apply fixed inset-0 z-10 flex items-center justify-center;
@@ -740,12 +745,13 @@
   margin: 0;
   padding: 0;
   overflow: hidden;
+  z-index: 2;
 }
 
 .market-plate-content {
-  @apply w-full h-full flex flex-col items-center;
+  @apply w-full h-full flex flex-col;
   max-width: 100%;
-  padding: 40px 60px 40px 60px;
+  padding: 60px 80px 60px 80px;
   justify-content: flex-start;
   box-sizing: border-box;
 }
@@ -753,13 +759,13 @@
 .market-plate-title {
   @apply text-white font-bold;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 72px;
+  font-size: 84px;
   font-weight: 800;
-  letter-spacing: 3px;
-  text-align: center;
+  letter-spacing: 2px;
+  text-align: left;
   color: #ffffff;
   text-transform: uppercase;
-  margin-bottom: 24px;
+  margin-bottom: 48px;
   line-height: 1.1;
   width: 100%;
 }
@@ -767,90 +773,75 @@
 .market-data-list {
   @apply flex flex-col;
   flex: 1;
-  justify-content: space-between;
-  gap: 0;
-  width: 80%;
-  max-width: 80%;
+  justify-content: flex-start;
+  gap: 16px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .market-data-row {
   @apply flex items-center w-full;
   background: #2a2a2a;
-  padding: 20px 24px;
-  min-height: 0;
-  border-bottom: 1px solid #3a3a3a;
-  gap: 24px;
-  flex: 1;
+  padding: 28px 32px;
+  min-height: 100px;
+  border-radius: 0;
+  gap: 32px;
+  flex: 0 0 auto;
 }
 
 .market-symbol-text {
-  @apply flex items-center justify-center;
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 40px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  width: 15%;
-  min-width: 160px;
-  max-width: 200px;
-  flex-shrink: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.2;
-  text-align: center;
+  display: none; /* Ocultar símbolo - ahora el nombre está en market-row-name */
 }
 
 .market-row-content {
-  @apply flex flex-col justify-center items-center;
+  @apply flex flex-row items-center;
   flex: 1;
   min-width: 0;
-  gap: 4px;
-  flex-basis: 0;
+  gap: 24px;
+  justify-content: flex-start;
 }
 
 .market-row-name {
-  color: #b0b0b0;
-  font-size: 20px;
-  font-weight: 500;
+  color: #ffffff;
+  font-size: 36px;
+  font-weight: 700;
   line-height: 1.2;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-  margin-bottom: 2px;
-  text-align: center;
-  width: 100%;
+  text-transform: uppercase;
+  text-align: left;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .market-row-value {
-  @apply text-white font-black;
-  font-size: 72px;
-  font-weight: 900;
-  letter-spacing: -2px;
-  line-height: 1;
+  @apply text-white font-bold;
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: 0px;
+  line-height: 1.2;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: center;
-  width: 100%;
+  text-align: right;
+  margin-left: auto;
+  flex: 0 0 auto;
 }
 
 .market-row-change {
-  @apply flex flex-col items-end justify-center;
+  @apply flex flex-row items-center;
   font-weight: 700;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-  gap: 4px;
-  width: 25%;
-  min-width: 220px;
-  max-width: 280px;
+  gap: 12px;
   flex-shrink: 0;
-  padding-left: 24px;
-  border-left: 1px solid #3a3a3a;
+  padding-left: 0;
+  border-left: none;
 }
 
 .market-row-change.text-green-500 {
-  color: #4caf50;
+  color: #00ff00;
 }
 
 .market-row-change.text-red-500 {
-  color: #f44336;
+  color: #ff0000;
 }
 
 .market-row-change.text-white {
@@ -861,23 +852,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-bottom: 2px;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  flex-shrink: 0;
 }
 
 .change-absolute {
   font-weight: 700;
-  font-size: 32px;
+  font-size: 48px;
   line-height: 1.2;
   white-space: nowrap;
 }
 
 .change-percent {
   font-weight: 700;
-  font-size: 28px;
+  font-size: 48px;
   line-height: 1.2;
-  opacity: 0.95;
+  opacity: 1;
   white-space: nowrap;
 }
 

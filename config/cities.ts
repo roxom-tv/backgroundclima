@@ -13,7 +13,7 @@ export const CITIES: CityConfig[] = [
   { 
     name: "Hong Kong", 
     country: "Hong Kong",
-    ytLiveUrl: "https://www.youtube.com/embed/7XT3EY_1NPU?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=7XT3EY_1NPU&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
+    ytLiveUrl: "https://www.youtube.com/embed/mtDnW5afs8g?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=mtDnW5afs8g&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
     openWeatherQuery: "Hong Kong,HK", 
     tz: "Asia/Hong_Kong" 
   },

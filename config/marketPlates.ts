@@ -28,17 +28,17 @@ export const MARKET_PLATES: MarketPlate[] = [
       { symbol: 'NIKKEI', name: 'Nikkei 225', value: 33850.67, change: 0.67, changeAmount: 225.45 },
     ],
   },
-  // Plate 2: Forex
+  // Plate 2: Forex (Major - en Satoshis)
   {
     id: 2,
     type: 'forex',
     title: 'MAJOR FOREX',
     data: [
-      { symbol: 'USD/EUR', name: 'US Dollar / Euro', value: 0.9234, change: 0.12, changeAmount: 0.0011 },
-      { symbol: 'USD/GBP', name: 'US Dollar / British Pound', value: 0.7891, change: -0.08, changeAmount: -0.0006 },
-      { symbol: 'USD/JPY', name: 'US Dollar / Japanese Yen', value: 149.23, change: 0.34, changeAmount: 0.51 },
-      { symbol: 'EUR/GBP', name: 'Euro / British Pound', value: 0.8545, change: -0.15, changeAmount: -0.0013 },
-      { symbol: 'USD/CHF', name: 'US Dollar / Swiss Franc', value: 0.8678, change: 0.09, changeAmount: 0.0008 },
+      { symbol: 'USD', name: 'US Dollar', value: 0, change: 0, changeAmount: 0 },
+      { symbol: 'EUR', name: 'Euro', value: 0, change: 0, changeAmount: 0 },
+      { symbol: 'GBP', name: 'British Pound', value: 0, change: 0, changeAmount: 0 },
+      { symbol: 'JPY', name: 'Japanese Yen', value: 0, change: 0, changeAmount: 0 },
+      { symbol: 'CHF', name: 'Swiss Franc', value: 0, change: 0, changeAmount: 0 },
     ],
   },
   // Plate 3: Commodities
@@ -67,17 +67,17 @@ export const MARKET_PLATES: MarketPlate[] = [
       { symbol: 'KOSPI', name: 'KOSPI Index', value: 2567.89, change: 0.45, changeAmount: 11.56 },
     ],
   },
-  // Plate 5: Forex (different)
+  // Plate 5: Forex (Emerging - en Satoshis)
   {
     id: 5,
     type: 'forex',
     title: 'EMERGING FOREX',
     data: [
-      { symbol: 'USD/MXN', name: 'US Dollar / Mexican Peso', value: 17.2345, change: 0.23, changeAmount: 0.0396 },
-      { symbol: 'USD/BRL', name: 'US Dollar / Brazilian Real', value: 4.9234, change: -0.12, changeAmount: -0.0059 },
-      { symbol: 'USD/CNY', name: 'US Dollar / Chinese Yuan', value: 7.1234, change: 0.08, changeAmount: 0.0057 },
-      { symbol: 'EUR/JPY', name: 'Euro / Japanese Yen', value: 137.89, change: 0.45, changeAmount: 0.62 },
-      { symbol: 'GBP/JPY', name: 'British Pound / Japanese Yen', value: 188.45, change: 0.34, changeAmount: 0.64 },
+      { symbol: 'MXN', name: 'Mexican Peso', value: 0, change: 0, changeAmount: 0 },
+      { symbol: 'BRL', name: 'Brazilian Real', value: 0, change: 0, changeAmount: 0 },
+      { symbol: 'CNY', name: 'Chinese Yuan', value: 0, change: 0, changeAmount: 0 },
+      { symbol: 'AUD', name: 'Australian Dollar', value: 0, change: 0, changeAmount: 0 },
+      { symbol: 'CAD', name: 'Canadian Dollar', value: 0, change: 0, changeAmount: 0 },
     ],
   },
   // Plate 6: Commodities (different)
@@ -106,17 +106,17 @@ export const MARKET_PLATES: MarketPlate[] = [
       { symbol: 'AEX', name: 'AEX Index', value: 723.45, change: 0.34, changeAmount: 2.46 },
     ],
   },
-  // Plate 8: Forex (different)
+  // Plate 8: Forex (Exotic - en Satoshis)
   {
     id: 8,
     type: 'forex',
     title: 'EXOTIC FOREX',
     data: [
-      { symbol: 'USD/ZAR', name: 'US Dollar / South African Rand', value: 18.4567, change: 0.45, changeAmount: 0.0831 },
-      { symbol: 'USD/TRY', name: 'US Dollar / Turkish Lira', value: 30.1234, change: -0.23, changeAmount: -0.0693 },
-      { symbol: 'USD/SGD', name: 'US Dollar / Singapore Dollar', value: 1.3456, change: 0.12, changeAmount: 0.0016 },
-      { symbol: 'EUR/CHF', name: 'Euro / Swiss Franc', value: 0.9456, change: 0.08, changeAmount: 0.0008 },
-      { symbol: 'AUD/USD', name: 'Australian Dollar / US Dollar', value: 0.6789, change: -0.15, changeAmount: -0.0010 },
+      { symbol: 'ZAR', name: 'South African Rand', value: 0, change: 0, changeAmount: 0 },
+      { symbol: 'TRY', name: 'Turkish Lira', value: 0, change: 0, changeAmount: 0 },
+      { symbol: 'SGD', name: 'Singapore Dollar', value: 0, change: 0, changeAmount: 0 },
+      { symbol: 'NZD', name: 'New Zealand Dollar', value: 0, change: 0, changeAmount: 0 },
+      { symbol: 'HKD', name: 'Hong Kong Dollar', value: 0, change: 0, changeAmount: 0 },
     ],
   },
   // Plate 9: Commodities (different)

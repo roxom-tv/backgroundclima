@@ -11,13 +11,9 @@ import { CITIES } from '@/config/cities';
 export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // Determinar si es placa de mercado
-  const isMarketPlate = (index: number): boolean => {
-    return index % 2 === 1;
-  };
-
+  // Ahora solo hay ciudades, el índice es directamente el índice de la ciudad
   const getCityIndex = (index: number): number => {
-    return Math.floor(index / 2);
+    return index % CITIES.length;
   };
 
   // Handle manual city changes
@@ -26,11 +22,12 @@ export default function Home() {
   };
 
   const currentCityIndex = getCityIndex(activeIndex);
-  const showOverlays = !isMarketPlate(activeIndex);
+  // Siempre mostrar overlays ya que solo hay ciudades
+  const showOverlays = true;
 
   return (
     <main className="h-screen w-screen overflow-hidden relative bg-black" style={{ margin: 0, padding: 0 }}>
-      {/* YouTube Live Background o Market Plate */}
+      {/* YouTube Live Background - Cámaras de ciudades */}
       <RotatingBackground 
         activeIndex={activeIndex} 
         onIndexChange={handleIndexChange}

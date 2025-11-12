@@ -85,21 +85,49 @@ async function fetchFromTwelveData(symbol: string): Promise<MarketDataResponse |
     // Verificar cache primero
     const cached = cache.get(symbol);
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      console.log(`[fetchFromTwelveData] Cache hit for ${symbol}`);
       return cached.data;
     }
 
     // Verificar rate limit antes de hacer la request
+    const now = Date.now();
+    rateLimiter.requests = rateLimiter.requests.filter(
+      timestamp => now - timestamp < rateLimiter.timeWindow
+    );
+    rateLimiter.dailyRequests = rateLimiter.dailyRequests.filter(
+      timestamp => now - timestamp < rateLimiter.dayWindow
+    );
+    
     if (!canMakeRequest()) {
-      console.warn(`Rate limit reached, using cached data for ${symbol}`);
+      console.warn(`⛔ Rate limit reached for ${symbol}:`, {
+        perMinute: `${rateLimiter.requests.length}/${rateLimiter.maxRequestsPerMinute}`,
+        perDay: `${rateLimiter.dailyRequests.length}/${rateLimiter.maxRequestsPerDay}`,
+        usingCache: cached ? 'Yes' : 'No'
+      });
+      
       // Si hay datos en cache aunque estén vencidos, usarlos
       if (cached) {
+        console.log(`[fetchFromTwelveData] Using expired cache for ${symbol}`);
         return cached.data;
       }
       return null;
     }
 
-    // Registrar la request
+    // Registrar la request ANTES de hacerla (para evitar race conditions)
     registerRequest();
+    
+    // Log para monitoreo
+    const requestTime = Date.now();
+    rateLimiter.requests = rateLimiter.requests.filter(
+      timestamp => requestTime - timestamp < rateLimiter.timeWindow
+    );
+    rateLimiter.dailyRequests = rateLimiter.dailyRequests.filter(
+      timestamp => requestTime - timestamp < rateLimiter.dayWindow
+    );
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📊 Requesting ${symbol}: ${rateLimiter.requests.length}/8 per min, ${rateLimiter.dailyRequests.length}/800 per day`);
+    }
 
     const url = `${TWELVE_DATA_BASE_URL}/quote?symbol=${encodeURIComponent(symbol)}&apikey=${TWELVE_DATA_API_KEY}`;
     
@@ -127,13 +155,102 @@ async function fetchFromTwelveData(symbol: string): Promise<MarketDataResponse |
       return null;
     }
 
+    // Validación especial: Verificar que no se devuelvan datos incorrectos de empresas en lugar de commodities
+    const commodityValidations: Record<string, { incorrect: string[], correct: string[] }> = {
+      'CL=F': { 
+        incorrect: ['colgate', 'palmolive'], 
+        correct: ['crude', 'oil', 'wti', 'petroleum', 'futures'] 
+      },
+      'HG=F': { 
+        incorrect: ['hamilton', 'insurance'], 
+        correct: ['copper', 'futures'] 
+      },
+      'NG=F': { 
+        incorrect: ['novagold', 'resources'], 
+        correct: ['natural gas', 'gas', 'futures'] 
+      },
+      'ALI=F': { 
+        incorrect: [], 
+        correct: ['aluminum', 'aluminium', 'futures'] 
+      },
+    };
+
+    // Validar commodities específicos
+    if (commodityValidations[symbol]) {
+      const validation = commodityValidations[symbol];
+      const name = (data.name || '').toLowerCase();
+      
+      // Verificar que no sea una empresa incorrecta
+      for (const incorrectTerm of validation.incorrect) {
+        if (name.includes(incorrectTerm)) {
+          console.error(`❌ SYMBOL MISMATCH: ${symbol} returned incorrect data (${data.name})`);
+          console.error(`   Expected: Commodity futures, got: Company stock`);
+          return null; // Rechazar este dato incorrecto
+        }
+      }
+      
+      // Verificar que sea realmente el commodity esperado
+      const hasCorrectTerm = validation.correct.some(term => name.includes(term));
+      if (!hasCorrectTerm && validation.correct.length > 0) {
+        console.warn(`⚠️ Unexpected name for ${symbol}: ${data.name} - Verificar que sea el commodity correcto`);
+      }
+    }
+
+    // Validación especial para índices de Latinoamérica
+    const latinAmericaIndices: Record<string, { expected: string[], incorrect: string[] }> = {
+      'MERV': { 
+        expected: ['merval', 'argentina', 'buenos aires', 'index'], 
+        incorrect: [] 
+      },
+      'BVSP': { 
+        expected: ['ibovespa', 'brazil', 'brasil', 'sao paulo', 'index'], 
+        incorrect: [] 
+      },
+      'MXX': { 
+        expected: ['ipc', 'mexico', 'mexico city', 'index'], 
+        incorrect: [] 
+      },
+      'IPSA': { 
+        expected: ['ipsa', 'chile', 'santiago', 'index'], 
+        incorrect: [] 
+      },
+      'IGBC': { 
+        expected: ['igbc', 'colombia', 'bogota', 'index'], 
+        incorrect: [] 
+      },
+    };
+
+    // Validar índices de Latinoamérica
+    if (latinAmericaIndices[symbol]) {
+      const validation = latinAmericaIndices[symbol];
+      const name = (data.name || '').toLowerCase();
+      
+      // Verificar que contenga términos esperados
+      const hasExpectedTerm = validation.expected.some(term => name.includes(term));
+      if (!hasExpectedTerm && validation.expected.length > 0) {
+        console.warn(`⚠️ LATIN AMERICA INDEX WARNING: ${symbol} returned "${data.name}"`);
+        console.warn(`   Expected terms: ${validation.expected.join(', ')}`);
+        console.warn(`   Verificar que sea el índice correcto`);
+      } else {
+        console.log(`✅ LATIN AMERICA INDEX VERIFIED: ${symbol} - ${data.name}`);
+      }
+    }
+
     // Verificar campos requeridos
     if (!data.close || data.close === 'N/A' || !data.previous_close || data.previous_close === 'N/A' || !data.percent_change || data.percent_change === 'N/A') {
-      console.error(`Incomplete or invalid data for ${symbol}:`, {
+      console.error(`⚠️ Incomplete or invalid data for ${symbol}:`, {
         close: data.close,
         previous_close: data.previous_close,
-        percent_change: data.percent_change
+        percent_change: data.percent_change,
+        name: data.name,
+        symbol: data.symbol
       });
+      // Log adicional para índices de Latinoamérica
+      if (['MERV', 'BVSP', 'MXX', 'IPSA', 'IGBC'].includes(symbol)) {
+        console.error(`🔴 LATIN AMERICA INDEX FAILED: ${symbol} - Verificar símbolo en Twelve Data`);
+        console.error(`   API returned name: ${data.name || 'N/A'}`);
+        console.error(`   Missing required fields - check if symbol is correct`);
+      }
       return null;
     }
 
@@ -157,15 +274,15 @@ async function fetchFromTwelveData(symbol: string): Promise<MarketDataResponse |
     // Determinar el tipo de cambio basado en la fecha/hora
     // Twelve Data quote generalmente devuelve cambio desde el cierre anterior (daily)
     // Para mercados abiertos puede ser intraday, para cerrados es daily
-    const now = new Date();
-    const hour = now.getUTCHours();
+    const currentTime = new Date();
+    const hour = currentTime.getUTCHours();
     const isMarketHours = (hour >= 13 && hour < 20); // Aproximadamente horas de mercado US (UTC)
     
     // Determinar tipo de cambio
     let changeType = 'daily'; // Por defecto daily (cierre a cierre)
     if (data.datetime) {
       const quoteTime = new Date(data.datetime);
-      const timeDiff = now.getTime() - quoteTime.getTime();
+      const timeDiff = currentTime.getTime() - quoteTime.getTime();
       const hoursDiff = timeDiff / (1000 * 60 * 60);
       
       if (hoursDiff < 24) {
@@ -218,12 +335,55 @@ export async function GET(request: NextRequest) {
 
   try {
     // Procesar símbolos respetando el rate limit de 8/min
+    // IMPORTANTE: Procesar secuencialmente con delays para no exceder límites
     const results: (MarketDataResponse | null)[] = [];
     
     for (const symbol of symbolList) {
+      // Verificar rate limit antes de cada símbolo
+      // Si estamos cerca del límite, esperar un poco
+      const now = Date.now();
+      rateLimiter.requests = rateLimiter.requests.filter(
+        timestamp => now - timestamp < rateLimiter.timeWindow
+      );
+      
+      // Si estamos cerca del límite por minuto (6 o más), esperar un poco
+      // PERO limitar el tiempo de espera máximo a 2 segundos para no bloquear demasiado
+      // Esto permite que las requests se distribuyan sin causar timeouts
+      if (rateLimiter.requests.length >= 6 && rateLimiter.requests.length > 0) {
+        const oldestRequest = Math.min(...rateLimiter.requests);
+        const timeUntilOldestExpires = rateLimiter.timeWindow - (now - oldestRequest);
+        const waitTime = Math.min(timeUntilOldestExpires + 100, 2000); // Máximo 2 segundos de espera
+        if (waitTime > 0 && waitTime < 2000) {
+          console.log(`⏳ Rate limit near (${rateLimiter.requests.length}/8), waiting ${Math.ceil(waitTime / 1000)}s for ${symbol}`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+      }
+      
+      // Verificar límite diario también
+      rateLimiter.dailyRequests = rateLimiter.dailyRequests.filter(
+        timestamp => now - timestamp < rateLimiter.dayWindow
+      );
+      
+      if (rateLimiter.dailyRequests.length >= 790) {
+        console.warn(`⚠️ Daily limit near (${rateLimiter.dailyRequests.length}/800), using cache only`);
+        // Si estamos cerca del límite diario, solo usar cache
+        const cached = cache.get(symbol);
+        if (cached) {
+          results.push(cached.data);
+          continue;
+        } else {
+          results.push(null);
+          continue;
+        }
+      }
+      
       // fetchFromTwelveData ya maneja cache y rate limit internamente
       const result = await fetchFromTwelveData(symbol);
       results.push(result);
+      
+      // Delay mínimo entre símbolos (solo si hay request real, no si viene de cache)
+      // Reducido a 50ms para acelerar el proceso
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
 
     // Filtrar nulls y retornar
