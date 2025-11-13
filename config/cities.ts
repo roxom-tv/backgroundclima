@@ -13,7 +13,7 @@ export const CITIES: CityConfig[] = [
   { 
     name: "Hong Kong", 
     country: "Hong Kong",
-    ytLiveUrl: "https://www.youtube.com/embed/mtDnW5afs8g?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=mtDnW5afs8g&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
+    ytLiveUrl: "https://www.youtube.com/embed/vlINsdjDN28?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=vlINsdjDN28&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
     openWeatherQuery: "Hong Kong,HK", 
     tz: "Asia/Hong_Kong" 
   },
@@ -79,5 +79,12 @@ export const CITIES: CityConfig[] = [
     ytLiveUrl: "https://www.youtube.com/embed/_0wPODlF9wU?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=_0wPODlF9wU&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
     openWeatherQuery: "Calgary,CA", 
     tz: "America/Edmonton" 
+  },
+  { 
+    name: "Rio de Janeiro", 
+    country: "Brazil",
+    ytLiveUrl: "https://www.youtube.com/embed/q2OP32pIwW4?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=q2OP32pIwW4&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440", 
+    openWeatherQuery: "Rio de Janeiro,BR", 
+    tz: "America/Sao_Paulo" 
   },
 ];
