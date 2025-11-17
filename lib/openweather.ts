@@ -98,13 +98,6 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
       conditionIconUrl: 'https://openweathermap.org/img/wn/01d@2x.png',
       windKmh: 25,
       updatedAt: new Date(),
-    },
-    'Rio de Janeiro,BR': {
-      tempC: 28,
-      conditionText: 'Sunny',
-      conditionIconUrl: 'https://openweathermap.org/img/wn/01d@2x.png',
-      windKmh: 15,
-      updatedAt: new Date(),
     }
   };
 
@@ -127,8 +120,7 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
     'Sydney,AU': { lat: -33.8688, lon: 151.2093 },
     'Amsterdam,NL': { lat: 52.3676, lon: 4.9041 },
     'Necochea,AR': { lat: -38.5475, lon: -58.7368 },
-    'Calgary,CA': { lat: 51.0447, lon: -114.0719 },
-    'Rio de Janeiro,BR': { lat: -22.9068, lon: -43.1729 }
+    'Calgary,CA': { lat: 51.0447, lon: -114.0719 }
   };
 
   // Check cache first
