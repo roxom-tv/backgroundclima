@@ -8,6 +8,11 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        'debt-bg': '#1a1a1a',
+        'debt-red': '#DC2626',
+        'debt-yellow': '#FCD34D',
+      },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'fade-out': 'fadeOut 0.5s ease-in-out',

@@ -7,7 +7,8 @@ export interface CityConfig {
   tz: string;
 }
 
-export const ROTATION_SECONDS = 35;
+export const ROTATION_SECONDS = 25; // Tiempo para cada ciudad en el carrusel
+export const DEBT_DISPLAY_SECONDS = 35; // Tiempo para mostrar estadísticas de deuda
 
 export const CITIES: CityConfig[] = [
   { 

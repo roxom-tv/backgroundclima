@@ -28,11 +28,6 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
     return index % CITIES.length;
   };
 
-  // Actualizar la referencia del activeIndex
-  useEffect(() => {
-    activeIndexRef.current = activeIndex;
-  }, [activeIndex]);
-
   // Limpiar efecto cuando llegamos a una ciudad - esperar a que el iframe cargue
   useEffect(() => {
     iframeLoadedRef.current = false;
@@ -71,65 +66,47 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
     }
   }, [activeIndex, showChannelChange]);
 
+  // Rotación automática desactivada - ahora se controla desde page.tsx
+  // El componente solo muestra la ciudad actual cuando activeIndex cambia
   useEffect(() => {
-    // Limpiar solo el intervalo anterior
+    // Limpiar intervalo anterior si existe
     if (intervalRef.current) clearInterval(intervalRef.current);
 
-    // Función para ejecutar transición
-    const executeTransition = () => {
-      const currentIndex = activeIndexRef.current;
-      const nextIndex = (currentIndex + 1) % TOTAL_ITEMS;
+    // Solo mostrar efecto de transición si no es la primera carga
+    const prevIndex = activeIndexRef.current;
+    const isFirstLoad = prevIndex === undefined || prevIndex === activeIndex;
       
-      console.log(`[RotatingBackground] Ejecutando transición desde ciudad ${currentIndex} a ciudad ${nextIndex}`);
+    if (!isFirstLoad) {
+      console.log(`[RotatingBackground] Cambio de ciudad detectado: ${prevIndex} -> ${activeIndex}`);
       
       // Mostrar efecto de switching feed al cambiar de ciudad
-      console.log(`[RotatingBackground] Activando efecto de switching feed`);
       channelChangeStartTimeRef.current = Date.now();
       setShowChannelChange(true);
       
-      // Limpiar timers anteriores de esta transición
+      // Limpiar timers anteriores
       if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
       if (channelChangeTimerRef.current) clearTimeout(channelChangeTimerRef.current);
       
-      overlayTimerRef.current = setTimeout(() => {
-        console.log(`[RotatingBackground] Cambiando a ciudad ${nextIndex}`);
-        onIndexChange(nextIndex);
-      }, 500);
-      
       // Timer para limpiar el efecto - dar tiempo para que el iframe cargue
-      const cleanupDelay = 3000; // Tiempo para que el iframe cargue
+      const cleanupDelay = 3000;
       channelChangeTimerRef.current = setTimeout(() => {
-        // Verificar que el iframe haya cargado
         if (!iframeLoadedRef.current) {
           console.log(`[RotatingBackground] Iframe aún no cargado, extendiendo switching feed`);
           const extendedTimer = setTimeout(() => {
-            console.log(`[RotatingBackground] Limpiando efecto después de extensión`);
             setShowChannelChange(false);
             channelChangeStartTimeRef.current = null;
-          }, 2000); // Extender 2 segundos más
+          }, 2000);
           channelChangeTimerRef.current = extendedTimer;
           return;
         }
-        console.log(`[RotatingBackground] Limpiando efecto de switching feed después de ${cleanupDelay}ms`);
         setShowChannelChange(false);
         channelChangeStartTimeRef.current = null;
       }, cleanupDelay);
-    };
-
-    // Duración para ciudades
-    const duration = ROTATION_SECONDS * 1000;
-
-    console.log(`[RotatingBackground] Configurando intervalo para ciudad ${activeIndex} con duración ${duration}ms`);
-
-    // Configurar el intervalo principal
-    intervalRef.current = setInterval(executeTransition, duration);
-
-    return () => {
-      // Solo limpiar el intervalo, NO los timers de transición activos
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIndex]); // Depender de activeIndex para recalcular cuando cambie
+    }
+    
+    // Actualizar referencia
+    activeIndexRef.current = activeIndex;
+  }, [activeIndex]);
 
   const cityIndex = getCityIndex(activeIndex);
   const currentCity = CITIES[cityIndex];
