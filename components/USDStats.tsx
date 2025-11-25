@@ -76,7 +76,7 @@ export default function USDStats({ perSecond, base, annualFederalSpending, annua
           <div className="flex flex-col shadow-xl">
             <div className={`${headerBgColor} flex items-center justify-center ${headerPadding} h-32`}>
               <h2 className="text-white text-center tracking-wider uppercase" style={headerFont}>
-                US NATIONAL DEBT — (BTC Needed at Current Price)
+                US NATIONAL DEBT (BTC Needed at Current Price)
               </h2>
             </div>
             <div className={`flex items-center justify-center flex-1 ${contentBgColor} ${contentPadding}`}>
