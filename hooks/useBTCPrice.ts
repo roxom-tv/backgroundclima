@@ -24,12 +24,11 @@ export function useBTCPrice(initialPrice: number) {
     // Fetch immediately
     fetchBtcPrice();
 
-    // Then fetch every second
-    const interval = setInterval(fetchBtcPrice, 1000);
+    // Then fetch every 2 seconds (2000ms)
+    const interval = setInterval(fetchBtcPrice, 2000);
 
     return () => clearInterval(interval);
   }, []);
 
   return btcPrice;
 }
-

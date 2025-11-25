@@ -28,7 +28,10 @@ export function parseDebtApi(apiResponse: any): DebtRow[] {
     }
 
     const recordDate = new Date(item.record_date);
-    const totalDebt = parseFloat(item.tot_pub_debt_out_amt);
+    // Convert to dollars and round to integer as requested
+    // The API returns "tot_pub_debt_out_amt" which IS in dollars (with decimals for cents)
+    // Example: "35946551234567.89" -> 35946551234568
+    const totalDebt = Math.round(parseFloat(item.tot_pub_debt_out_amt));
 
     if (isNaN(totalDebt) || isNaN(recordDate.getTime())) {
       continue;
@@ -118,17 +121,23 @@ export function computeRate(rows: DebtRow[]): DebtCalculation {
 
   // Calculate estimated change for today
   const now = new Date();
-  const latestDate = new Date(latest.recordDate);
-  latestDate.setHours(0, 0, 0, 0);
   
+  // FIX: Calculate time difference from the ACTUAL latest record date, not just today's midnight
+  // The API data is often a few days old (e.g. published on Monday for previous Thursday)
+  const timeSinceLastRecord = now.getTime() - latest.recordDate.getTime();
+  const secondsSinceLastRecord = timeSinceLastRecord / 1000;
+  
+  // Total estimated delta since the last official record
+  const estimatedTotalDelta = perSecond * secondsSinceLastRecord;
+
+  // Live estimate = latest published + estimated change since then
+  const liveNow = latestTotal + estimatedTotalDelta;
+
+  // For "today's" delta specifically (visual only)
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
-  
   const secondsSinceMidnight = (now.getTime() - todayStart.getTime()) / 1000;
   const estimatedTodayDelta = perSecond * secondsSinceMidnight;
-
-  // Live estimate = latest published + estimated change today
-  const liveNow = latestTotal + estimatedTodayDelta;
 
   return {
     latestDateUTC,

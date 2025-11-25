@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { parseDebtApi, computeRate } from "@/lib/debt";
 
-export const revalidate = 300; // Revalidate every 5 minutes
+// Disable caching to ensure real-time data and avoid stale values
+export const revalidate = 0; 
+export const dynamic = 'force-dynamic';
 
 function parsePrice(priceString: string): number {
   // Remove $ and commas, then parse as float
@@ -20,7 +22,8 @@ async function getBTCPrice(): Promise<number> {
     const url =
       "https://rtvapi.roxom.com/btc/info?apiKey=60be7d11-ec67-4ac0-9241-da1cbdcba73d";
     const response = await fetch(url, {
-      next: { revalidate: 60 },
+      next: { revalidate: 0 },
+      cache: "no-store"
     });
 
     if (!response.ok) {
@@ -38,18 +41,19 @@ async function getBTCPrice(): Promise<number> {
   } catch (error) {
     console.error("Error fetching BTC price, using fallback:", error);
     // Fallback to a recent average BTC price if API fails
-    return 65000; // Approximate fallback
+    return 95000; 
   }
 }
 
 async function getFederalSpendingAndDeficit() {
   try {
-    // Get Monthly Treasury Statement data
-    const currentYear = new Date().getFullYear();
-    const url = `https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_5?filter=record_date:gte:${currentYear}-01-01&sort=-record_date&page[size]=100`;
+    // MTS Table 5: Outlays of the U.S. Government
+    // We fetch the latest available data (usually end of FY or latest month FYTD)
+    // "Total Outlays" represents the fiscal year to date spending
+    const url = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_5?sort=-record_date&page[size]=100";
     
     const response = await fetch(url, {
-      next: { revalidate: 3600 }, // Cache for 1 hour
+      next: { revalidate: 3600 }, // Cache for 1 hour is fine for monthly data
     });
 
     if (!response.ok) {
@@ -58,38 +62,68 @@ async function getFederalSpendingAndDeficit() {
 
     const json = await response.json();
     
-    // Calculate fiscal year to date totals
-    let totalReceipts = 0;
-    let totalOutlays = 0;
-    
-    if (json.data && Array.isArray(json.data)) {
-      for (const row of json.data) {
-        // Sum up receipts and outlays
-        if (row.current_fytd_net_rcpt_amt) {
-          const receipts = parseFloat(row.current_fytd_net_rcpt_amt);
-          if (!isNaN(receipts)) totalReceipts = Math.max(totalReceipts, receipts);
-        }
-        if (row.current_fytd_net_outly_amt) {
-          const outlays = parseFloat(row.current_fytd_net_outly_amt);
-          if (!isNaN(outlays)) totalOutlays = Math.max(totalOutlays, outlays);
-        }
-      }
+    if (!json.data || !Array.isArray(json.data)) {
+      throw new Error("Invalid MTS data format");
     }
 
-    // Convert from millions to actual dollars
-    const annualSpending = totalOutlays * 1_000_000;
-    const annualDeficit = (totalOutlays - totalReceipts) * 1_000_000;
+    // Find Total Outlays
+    // FIX: Instead of just taking the first row (which might be partial FYTD if we are in Oct/Nov),
+    // find the latest COMPLETED Fiscal Year data.
+    // The US Fiscal Year ends in September (month "09").
+    
+    // Try to find the latest September entry (end of Fiscal Year)
+    let outlaysRow = json.data.find((row: any) => 
+      row.classification_desc === "Total Outlays" && row.record_calendar_month === "09"
+    );
+    
+    // Fallback: If no September data found in recent page, use the absolute latest row found
+    // (This ensures we at least show SOMETHING, even if it's partial FYTD, though usually we want full year)
+    if (!outlaysRow) {
+      outlaysRow = json.data.find((row: any) => row.classification_desc === "Total Outlays");
+    }
+
+    // Find Total Deficit (same logic, look for latest complete FY)
+    let deficitRow = json.data.find((row: any) => 
+      row.classification_desc === "Total Surplus (+) or Deficit (-)" && row.record_calendar_month === "09"
+    );
+
+    if (!deficitRow) {
+      deficitRow = json.data.find((row: any) => row.classification_desc === "Total Surplus (+) or Deficit (-)");
+    }
+
+    let annualSpending = 0;
+    let annualDeficit = 0;
+
+    if (outlaysRow && outlaysRow.current_fytd_net_outly_amt) {
+      annualSpending = parseFloat(outlaysRow.current_fytd_net_outly_amt);
+    }
+
+    if (deficitRow && deficitRow.current_fytd_net_outly_amt) {
+      // Deficit is usually negative in this table ("-1775..."), so we take absolute value
+      annualDeficit = Math.abs(parseFloat(deficitRow.current_fytd_net_outly_amt));
+    }
+
+    // Validation: If values are zero or unreasonably small (e.g. failed parse), use fallbacks
+    if (annualSpending < 1_000_000_000 || isNaN(annualSpending)) {
+      console.warn("Fetched annual spending seems invalid, using fallback");
+      annualSpending = 6_752_000_000_000; // Fallback FY2024
+    }
+    
+    if (annualDeficit < 1_000_000_000 || isNaN(annualDeficit)) {
+      console.warn("Fetched annual deficit seems invalid, using fallback");
+      annualDeficit = 1_833_000_000_000; // Fallback FY2024
+    }
 
     return {
-      annualSpending: annualSpending > 0 ? annualSpending : 7_023_165_848_620,
-      annualDeficit: annualDeficit > 0 ? annualDeficit : 1_748_017_294_780,
+      annualSpending,
+      annualDeficit,
     };
   } catch (error) {
     console.error("Error fetching spending/deficit data:", error);
-    // Return fallback values
+    // Return fallback values (FY 2024 Actuals)
     return {
-      annualSpending: 7_023_165_848_620,
-      annualDeficit: 1_748_017_294_780,
+      annualSpending: 6_752_000_000_000, 
+      annualDeficit: 1_833_000_000_000,
     };
   }
 }
@@ -100,7 +134,8 @@ export async function GET() {
       "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?fields=record_date,tot_pub_debt_out_amt&sort=-record_date&page[size]=14";
 
     const response = await fetch(url, {
-      next: { revalidate: 300 },
+      next: { revalidate: 0 },
+      cache: "no-store"
     });
 
     if (!response.ok) {
@@ -137,7 +172,7 @@ export async function GET() {
     const nextResponse = NextResponse.json(result);
     nextResponse.headers.set(
       "Cache-Control",
-      "public, s-maxage=300, stale-while-revalidate=600"
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
     );
 
     return nextResponse;
@@ -149,4 +184,3 @@ export async function GET() {
     );
   }
 }
-

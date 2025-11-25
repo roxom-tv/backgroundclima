@@ -23,10 +23,12 @@ export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>('climate');
   const [debtData, setDebtData] = useState<DebtData | null>(null);
+  
+  // Estados para la transición
   const [showTransition, setShowTransition] = useState(false);
-  const [transitionText, setTransitionText] = useState('LOADING INFORMATION...');
+  const [transitionText, setTransitionText] = useState('');
 
-  // Obtener datos de deuda
+  // Obtener datos de deuda (Background Fetch)
   useEffect(() => {
     const fetchDebtData = async () => {
       try {
@@ -52,76 +54,63 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Sistema de rotación entre clima y deuda
+  // Sistema de rotación y manejo de modos
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
-    let transitionTimeoutId: NodeJS.Timeout;
 
     if (viewMode === 'climate') {
-      // Mostrar clima por 25 segundos, luego cambiar a deuda
+      // Estamos viendo una ciudad -> Esperar ROTATION_SECONDS y cambiar a Deuda
       timeoutId = setTimeout(() => {
-        // Mostrar transición con "LOADING INFORMATION..." (de clima a deuda)
-        setTransitionText('LOADING INFORMATION...');
+        // Iniciar transición
+        setTransitionText('LOADING US DEBT INFO...');
         setShowTransition(true);
-        // Después de un delay similar al switching feed (2.5-3 segundos), cambiar a deuda
-        transitionTimeoutId = setTimeout(() => {
+        
+        // Esperar un poco para el efecto de estática
+        setTimeout(() => {
           setViewMode('debt');
-          // Ocultar transición después de que cambie (similar al efecto de cámaras)
-          setTimeout(() => {
-            setShowTransition(false);
-          }, 500);
-        }, 2500); // Tiempo similar al switching feed
+          setShowTransition(false);
+        }, 1500);
       }, ROTATION_SECONDS * 1000);
-    } else {
-      // Mostrar deuda por 35 segundos, luego cambiar a clima
+    } else if (viewMode === 'debt') {
+      // Estamos viendo la deuda -> Esperar DEBT_DISPLAY_SECONDS y cambiar a la siguiente ciudad
       timeoutId = setTimeout(() => {
-        // Mostrar transición con "SWITCHING FEED..." (de deuda a clima)
+        // Iniciar transición
         setTransitionText('SWITCHING FEED...');
         setShowTransition(true);
-        // Después de un delay similar al switching feed (2.5-3 segundos), cambiar a clima
-        transitionTimeoutId = setTimeout(() => {
-          setViewMode('climate');
-          // Avanzar a la siguiente ciudad
+        
+        // Esperar un poco para el efecto de estática
+        setTimeout(() => {
           setActiveIndex((prev) => (prev + 1) % CITIES.length);
-          // Ocultar transición después de que cambie (similar al efecto de cámaras)
-          setTimeout(() => {
-            setShowTransition(false);
-          }, 500);
-        }, 2500); // Tiempo similar al switching feed
+          setViewMode('climate');
+          setShowTransition(false);
+        }, 1500);
       }, DEBT_DISPLAY_SECONDS * 1000);
     }
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
-      if (transitionTimeoutId) clearTimeout(transitionTimeoutId);
     };
-  }, [viewMode]);
+  }, [viewMode, activeIndex]);
 
-  // Ahora solo hay ciudades, el índice es directamente el índice de la ciudad
-  const getCityIndex = (index: number): number => {
-    return index % CITIES.length;
-  };
-
-  // Handle manual city changes
+  // Manejo manual del cambio de índice (por si se agrega interactividad futura)
   const handleIndexChange = (newIndex: number) => {
     setActiveIndex(newIndex);
   };
 
-  const currentCityIndex = getCityIndex(activeIndex);
-  const showOverlays = viewMode === 'climate';
+  const currentCityIndex = activeIndex % CITIES.length;
 
   return (
     <main className="h-screen w-screen overflow-hidden relative bg-black" style={{ margin: 0, padding: 0 }}>
-      {/* Efecto de transición entre clima y deuda */}
+      {/* Efecto de transición (TV Static) */}
       {showTransition && (
-        <div className="channel-change-overlay">
+        <div className="channel-change-overlay" style={{ zIndex: 9999 }}>
           <div className="tv-static"></div>
           <div className="interference-lines"></div>
           <div className="channel-change-text">{transitionText}</div>
         </div>
       )}
 
-      {/* Vista de Clima - YouTube Live Background */}
+      {/* Vista de Clima / Ciudad */}
       {viewMode === 'climate' && (
         <>
           <RotatingBackground 
@@ -129,31 +118,19 @@ export default function Home() {
             onIndexChange={handleIndexChange}
           />
           
-          {/* Top Information Bar - Solo mostrar en clima */}
-          {showOverlays && (
-            <div className="top-info-bar">
-              {/* Date Display - Top Left */}
-              <DateDisplay activeIndex={currentCityIndex} />
-              
-              {/* Live Indicator - Top Center */}
-              <LiveIndicator />
-            </div>
-          )}
+          <div className="top-info-bar">
+            <DateDisplay activeIndex={currentCityIndex} />
+            <LiveIndicator />
+          </div>
           
-          {/* Bottom Information Bar - Solo mostrar en clima */}
-          {showOverlays && (
-            <div className="bottom-info-bar">
-              {/* Weather and Location Information */}
-              <WeatherBar activeIndex={currentCityIndex} />
-              
-              {/* Sponsor Display - Bottom Right */}
-              <SponsorDisplay />
-            </div>
-          )}
+          <div className="bottom-info-bar">
+            <WeatherBar activeIndex={currentCityIndex} />
+            <SponsorDisplay />
+          </div>
         </>
       )}
 
-      {/* Vista de Deuda - Estadísticas */}
+      {/* Vista de Deuda */}
       {viewMode === 'debt' && debtData && (
         <div className="h-full w-full flex items-center justify-center bg-black p-4">
           <div className="w-full h-full max-w-[1920px] mx-auto">
@@ -167,6 +144,13 @@ export default function Home() {
             />
           </div>
         </div>
+      )}
+      
+      {/* Fallback si no hay datos de deuda, mostrar loading pero mantener estructura */}
+      {viewMode === 'debt' && !debtData && (
+         <div className="h-full w-full flex items-center justify-center bg-black">
+           <div className="text-white text-2xl font-bold tracking-wider">LOADING DEBT DATA...</div>
+         </div>
       )}
     </main>
   );
