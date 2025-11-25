@@ -53,13 +53,18 @@ export default function USDStats({ perSecond, base, annualFederalSpending, annua
       
       {/* US Map Background - Centered and Faded */}
       <div className="absolute inset-0 z-0 flex items-center justify-center opacity-100 pointer-events-none brightness-150">
-        <Image 
-          src="/Vector.png"
-          alt="US Map Background" 
-          fill
-          className="object-contain p-10"
-          priority
-        />
+        <div className="relative w-full h-full flex items-center justify-center">
+          <Image 
+            src="/Vector.png"
+            alt="US Map Background" 
+            fill
+            className="object-contain p-10"
+            style={{
+              filter: 'drop-shadow(0 0 3px white)'
+            }}
+            priority
+          />
+        </div>
       </div>
 
       {/* Content Container - z-10 to sit above map */}
@@ -125,7 +130,7 @@ export default function USDStats({ perSecond, base, annualFederalSpending, annua
             </div>
             <div className={`flex items-center justify-center flex-1 ${contentBgColor} ${contentPadding}`}>
               <div className="text-white tabular-nums text-center" style={valueFont}>
-                {formatBTC(annualFederalSpendingBTC)}
+                {annualFederalSpendingBTC > 0 ? formatBTC(annualFederalSpendingBTC) : "N/A"}
               </div>
             </div>
           </div>
@@ -139,7 +144,7 @@ export default function USDStats({ perSecond, base, annualFederalSpending, annua
             </div>
             <div className={`flex items-center justify-center flex-1 ${contentBgColor} ${contentPadding}`}>
               <div className="text-white tabular-nums text-center" style={valueFont}>
-                {formatBTC(annualBudgetDeficitBTC)}
+                {annualBudgetDeficitBTC > 0 ? formatBTC(annualBudgetDeficitBTC) : "N/A"}
               </div>
             </div>
           </div>

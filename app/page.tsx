@@ -42,9 +42,14 @@ export default function Home() {
             annualBudgetDeficit: data.annualBudgetDeficit,
             btcPriceUsd: data.btcPriceUsd,
           });
+        } else {
+          // Explicitly handle API failure
+          console.error('Debt API failed with status:', response.status);
+          setDebtData(null);
         }
       } catch (error) {
         console.error('Error fetching debt data:', error);
+        setDebtData(null);
       }
     };
 
@@ -146,10 +151,12 @@ export default function Home() {
         </div>
       )}
       
-      {/* Fallback si no hay datos de deuda, mostrar loading pero mantener estructura */}
+      {/* Fallback if debt data fails to load - Shows an error message */}
       {viewMode === 'debt' && !debtData && (
-         <div className="h-full w-full flex items-center justify-center bg-black">
-           <div className="text-white text-2xl font-bold tracking-wider">LOADING DEBT DATA...</div>
+         <div className="h-full w-full flex flex-col items-center justify-center bg-black gap-4">
+           <div className="text-red-500 text-4xl font-bold tracking-wider">DATA UNAVAILABLE</div>
+           <div className="text-white text-xl tracking-wider">Unable to fetch live US Debt info</div>
+           <div className="text-gray-500 text-sm mt-4">Retrying automatically...</div>
          </div>
       )}
     </main>

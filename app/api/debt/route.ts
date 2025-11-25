@@ -47,71 +47,106 @@ async function getBTCPrice(): Promise<number> {
 
 async function getFederalSpendingAndDeficit() {
   try {
-    // MTS Table 5: Outlays of the U.S. Government
-    // We fetch the latest available data (usually end of FY or latest month FYTD)
-    // "Total Outlays" represents the fiscal year to date spending
-    const url = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_5?sort=-record_date&page[size]=100";
+    // MTS Table 5: Total Outlays using line_code_nbr 5691
+    const spendingUrl = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_5?filter=line_code_nbr:eq:5691&sort=-record_date&page[size]=1";
     
-    const response = await fetch(url, {
-      next: { revalidate: 3600 }, // Cache for 1 hour is fine for monthly data
+    const spendingResponse = await fetch(spendingUrl, {
+      next: { revalidate: 3600 }, 
     });
 
-    if (!response.ok) {
-      throw new Error(`MTS API error: ${response.status}`);
+    if (!spendingResponse.ok) {
+      throw new Error(`MTS API error (spending): ${spendingResponse.status}`);
     }
 
-    const json = await response.json();
+    const spendingJson = await spendingResponse.json();
     
-    if (!json.data || !Array.isArray(json.data)) {
-      throw new Error("Invalid MTS data format");
+    if (!spendingJson.data || !Array.isArray(spendingJson.data) || spendingJson.data.length === 0) {
+      throw new Error("No spending data returned from MTS API");
     }
 
-    // Find Total Outlays
-    // FIX: Instead of just taking the first row (which might be partial FYTD if we are in Oct/Nov),
-    // find the latest COMPLETED Fiscal Year data.
-    // The US Fiscal Year ends in September (month "09").
+    const spendingRow = spendingJson.data[0];
+    // Use current_fytd_tot_outly_amt (not current_fytd_net_outly_amt)
+    let annualSpending = parseFloat(spendingRow.current_fytd_tot_outly_amt || spendingRow.current_fytd_net_outly_amt || "0");
+
+    // Calculate deficit: Outlays - Receipts
+    // First, try to get Receipts from mts_table_2
+    // If that fails, search mts_table_5 for any record with "Receipts" or calculate from available data
+    let receipts = 0;
     
-    // Try to find the latest September entry (end of Fiscal Year)
-    let outlaysRow = json.data.find((row: any) => 
-      row.classification_desc === "Total Outlays" && row.record_calendar_month === "09"
-    );
+    // Strategy 1: Try mts_table_2 for Total Receipts
+    const receiptsUrl = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_2?sort=-record_date&page[size]=50";
+    console.log("Fetching receipts from:", receiptsUrl);
+    const receiptsResponse = await fetch(receiptsUrl, { next: { revalidate: 3600 } });
     
-    // Fallback: If no September data found in recent page, use the absolute latest row found
-    // (This ensures we at least show SOMETHING, even if it's partial FYTD, though usually we want full year)
-    if (!outlaysRow) {
-      outlaysRow = json.data.find((row: any) => row.classification_desc === "Total Outlays");
+    if (receiptsResponse.ok) {
+      const receiptsJson = await receiptsResponse.json();
+      console.log("Receipts API - Total records:", receiptsJson.meta?.["total-count"] || 0);
+      
+      if (receiptsJson.data && receiptsJson.data.length > 0) {
+        // Look for "Total Receipts" by description or line_code_nbr
+        const receiptsRow = receiptsJson.data.find((r: any) => 
+          (r.classification_desc && r.classification_desc.toLowerCase().includes("total receipts")) ||
+          r.line_code_nbr === "829"
+        );
+        
+        if (receiptsRow) {
+          // Try different field names
+          receipts = parseFloat(
+            receiptsRow.current_fytd_ytd_amt ||
+            receiptsRow.current_fytd_budget_amt ||
+            receiptsRow.current_fytd_receipt_amt ||
+            "0"
+          );
+          console.log("Found receipts:", receipts, "from field:", Object.keys(receiptsRow).find(k => k.includes("fytd")));
+        } else {
+          console.log("Sample receipts records:", receiptsJson.data.slice(0, 3).map((r: any) => ({
+            line_code: r.line_code_nbr,
+            desc: r.classification_desc,
+            fields: Object.keys(r).filter(k => k.includes("fytd"))
+          })));
+        }
+      }
     }
-
-    // Find Total Deficit (same logic, look for latest complete FY)
-    let deficitRow = json.data.find((row: any) => 
-      row.classification_desc === "Total Surplus (+) or Deficit (-)" && row.record_calendar_month === "09"
-    );
-
-    if (!deficitRow) {
-      deficitRow = json.data.find((row: any) => row.classification_desc === "Total Surplus (+) or Deficit (-)");
+    
+    // Strategy 2: If receipts still 0, try to find it in mts_table_5
+    if (receipts === 0) {
+      console.log("Receipts not found in mts_table_2, searching mts_table_5...");
+      const searchUrl = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_5?sort=-record_date&page[size]=100";
+      const searchResponse = await fetch(searchUrl, { next: { revalidate: 3600 } });
+      
+      if (searchResponse.ok) {
+        const searchJson = await searchResponse.json();
+        const receiptsRow = searchJson.data?.find((r: any) => 
+          r.classification_desc && r.classification_desc.toLowerCase().includes("receipts")
+        );
+        
+        if (receiptsRow) {
+          receipts = parseFloat(receiptsRow.current_fytd_net_outly_amt || receiptsRow.current_fytd_tot_outly_amt || "0");
+          console.log("Found receipts in mts_table_5:", receipts);
+        }
+      }
     }
-
-    let annualSpending = 0;
+    
+    // Calculate deficit
     let annualDeficit = 0;
-
-    if (outlaysRow && outlaysRow.current_fytd_net_outly_amt) {
-      annualSpending = parseFloat(outlaysRow.current_fytd_net_outly_amt);
+    if (receipts > 0) {
+      annualDeficit = Math.abs(annualSpending - receipts);
+      console.log(`Deficit calculated: ${annualSpending} (outlays) - ${receipts} (receipts) = ${annualDeficit}`);
+    } else {
+      console.warn("Could not find receipts data, cannot calculate deficit. Will show N/A.");
     }
 
-    if (deficitRow && deficitRow.current_fytd_net_outly_amt) {
-      // Deficit is usually negative in this table ("-1775..."), so we take absolute value
-      annualDeficit = Math.abs(parseFloat(deficitRow.current_fytd_net_outly_amt));
-    }
-
-    // Validation: If values are zero or unreasonably small (e.g. failed parse), use fallbacks
-    if (annualSpending < 1_000_000_000 || isNaN(annualSpending)) {
-      console.warn("Fetched annual spending seems invalid, using fallback");
-      annualSpending = 6_752_000_000_000; // Fallback FY2024
+    // Validation: Ensure we have valid numbers
+    // If invalid, return null instead of crashing everything.
+    // This allows the frontend to show "N/A" for these specific fields while keeping the main Debt clock running.
+    if (annualSpending <= 0 || isNaN(annualSpending)) {
+      console.warn("Annual spending data unavailable or invalid:", annualSpending);
+      annualSpending = 0; // Or null/undefined if type allows, but 0 is safer for calculations
     }
     
-    if (annualDeficit < 1_000_000_000 || isNaN(annualDeficit)) {
-      console.warn("Fetched annual deficit seems invalid, using fallback");
-      annualDeficit = 1_833_000_000_000; // Fallback FY2024
+    if (annualDeficit <= 0 || isNaN(annualDeficit)) {
+       console.warn("Annual deficit data unavailable or invalid:", annualDeficit);
+       annualDeficit = 0;
     }
 
     return {
@@ -120,10 +155,10 @@ async function getFederalSpendingAndDeficit() {
     };
   } catch (error) {
     console.error("Error fetching spending/deficit data:", error);
-    // Return fallback values (FY 2024 Actuals)
+    // Soft fail: Return 0s so the rest of the API (Debt clock) keeps working
     return {
-      annualSpending: 6_752_000_000_000, 
-      annualDeficit: 1_833_000_000_000,
+      annualSpending: 0, 
+      annualDeficit: 0,
     };
   }
 }

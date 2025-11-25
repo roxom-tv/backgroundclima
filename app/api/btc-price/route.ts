@@ -27,48 +27,14 @@ export async function GET() {
     });
 
     if (!response.ok) {
-      // Silently return fallback price instead of throwing error
-      const fallbackPrice = 65000; // Approximate fallback
-      return NextResponse.json(
-        {
-          btcPriceUsd: fallbackPrice,
-          timestamp: new Date().toISOString(),
-          priceChange: null,
-          marketCap: null,
-          btcDominance: null,
-          _fallback: true,
-        },
-        {
-          status: 200, // Return 200 with fallback data
-          headers: {
-            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-          },
-        }
-      );
+      throw new Error(`Roxom API error: ${response.status}`);
     }
 
     const json = await response.json();
     const livePriceString = json.price?.live_price;
 
     if (!livePriceString || typeof livePriceString !== "string") {
-      // Return fallback instead of error
-      const fallbackPrice = 65000;
-      return NextResponse.json(
-        {
-          btcPriceUsd: fallbackPrice,
-          timestamp: new Date().toISOString(),
-          priceChange: null,
-          marketCap: null,
-          btcDominance: null,
-          _fallback: true,
-        },
-        {
-          status: 200,
-          headers: {
-            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-          },
-        }
-      );
+      throw new Error("Invalid BTC price data from Roxom API");
     }
 
     const btcPrice = parsePrice(livePriceString);
@@ -90,28 +56,11 @@ export async function GET() {
 
     return nextResponse;
   } catch (error) {
-    // Silently handle errors and return fallback price
-    // Only log in development mode
-    if (process.env.NODE_ENV === 'development') {
-      console.warn("BTC API error, using fallback:", error instanceof Error ? error.message : 'Unknown error');
-    }
+    console.error("BTC API error:", error instanceof Error ? error.message : 'Unknown error');
     
-    const fallbackPrice = 65000;
     return NextResponse.json(
-      {
-        btcPriceUsd: fallbackPrice,
-        timestamp: new Date().toISOString(),
-        priceChange: null,
-        marketCap: null,
-        btcDominance: null,
-        _fallback: true,
-      },
-      {
-        status: 200, // Return 200 with fallback data
-        headers: {
-          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-        },
-      }
+      { error: "Failed to fetch BTC price" },
+      { status: 500 }
     );
   }
 }
