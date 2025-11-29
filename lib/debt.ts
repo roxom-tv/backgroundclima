@@ -1,3 +1,11 @@
+export interface MtsTable1Row {
+  record_date: string;
+  classification_desc: string;
+  current_month_gross_outly_amt: string; // Spending (FYTD when row is "Year-to-Date")
+  current_month_dfct_sur_amt: string;    // Deficit (FYTD when row is "Year-to-Date")
+  record_fiscal_year: string;
+}
+
 export interface DebtRow {
   recordDate: Date;
   totalDebt: number;

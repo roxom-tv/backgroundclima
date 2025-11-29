@@ -125,12 +125,15 @@ export default function USDStats({ perSecond, base, annualFederalSpending, annua
           <div className="flex flex-col shadow-xl">
             <div className={`${headerBgColor} flex items-center justify-center ${headerPadding}`}>
               <h3 className="text-white text-center tracking-wider uppercase" style={headerFont}>
-                US FEDERAL SPENDING (OFFICIAL)
+                US FEDERAL SPENDING (OFFICIAL FY TOTAL)
               </h3>
             </div>
-            <div className={`flex items-center justify-center flex-1 ${contentBgColor} ${contentPadding}`}>
+            <div className={`flex flex-col items-center justify-center flex-1 ${contentBgColor} ${contentPadding}`}>
               <div className="text-white tabular-nums text-center" style={valueFont}>
                 {annualFederalSpendingBTC > 0 ? formatBTC(annualFederalSpendingBTC) : "N/A"}
+              </div>
+              <div className="text-white/60 text-xs sm:text-sm mt-2 text-center uppercase tracking-wider font-medium">
+                Source: U.S. Treasury MTS (FiscalData.gov) — Last Full FY
               </div>
             </div>
           </div>
@@ -139,12 +142,15 @@ export default function USDStats({ perSecond, base, annualFederalSpending, annua
           <div className="flex flex-col shadow-xl">
             <div className={`${headerBgColor} flex items-center justify-center ${headerPadding}`}>
               <h3 className="text-white text-center tracking-wider uppercase" style={headerFont}>
-                US FEDERAL BUDGET DEFICIT (OFFICIAL)
+                US FEDERAL BUDGET DEFICIT (OFFICIAL FY TOTAL)
               </h3>
             </div>
-            <div className={`flex items-center justify-center flex-1 ${contentBgColor} ${contentPadding}`}>
+            <div className={`flex flex-col items-center justify-center flex-1 ${contentBgColor} ${contentPadding}`}>
               <div className="text-white tabular-nums text-center" style={valueFont}>
                 {annualBudgetDeficitBTC > 0 ? formatBTC(annualBudgetDeficitBTC) : "N/A"}
+              </div>
+              <div className="text-white/60 text-xs sm:text-sm mt-2 text-center uppercase tracking-wider font-medium">
+                Source: U.S. Treasury MTS (FiscalData.gov) — Last Full FY
               </div>
             </div>
           </div>
@@ -189,6 +195,13 @@ export default function USDStats({ perSecond, base, annualFederalSpending, annua
               </div>
             </div>
           </div>
+        </div>
+        
+        {/* Footnote */}
+        <div className="absolute bottom-2 right-4 z-50 pointer-events-none">
+          <p className="text-white/40 text-[10px] sm:text-xs text-right max-w-2xl leading-tight">
+            Spending and deficit represent official totals for the last completed Fiscal Year from U.S. Treasury Monthly Treasury Statement (FiscalData.gov).
+          </p>
         </div>
       
       </div>
