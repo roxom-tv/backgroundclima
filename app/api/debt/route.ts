@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { parseDebtApi, computeRate } from "@/lib/debt";
+import { sendSlackAlert } from "@/lib/slack";
 
 // Disable caching to ensure real-time data and avoid stale values
 export const revalidate = 0; 
@@ -27,7 +28,9 @@ async function getBTCPrice(): Promise<number> {
     });
 
     if (!response.ok) {
-      throw new Error(`Roxom API error: ${response.status}`);
+      const errorMsg = `Roxom API error: ${response.status}`;
+      await sendSlackAlert(errorMsg);
+      throw new Error(errorMsg);
     }
 
     const json = await response.json();
@@ -59,7 +62,11 @@ async function getFederalSpendingAndDeficit() {
     });
 
     if (!response.ok) {
-      throw new Error(`MTS Table 1 API error: ${response.status}`);
+      const errorMsg = `MTS Table 1 API error: ${response.status}`;
+      // Log but don't break the whole app if just spending data fails, 
+      // but alerting is good to know it's broken
+      await sendSlackAlert(errorMsg);
+      throw new Error(errorMsg);
     }
 
     const json = await response.json();
@@ -107,7 +114,9 @@ export async function GET() {
     });
 
     if (!response.ok) {
-      throw new Error(`Treasury API error: ${response.status}`);
+      const errorMsg = `Treasury API error: ${response.status}`;
+      await sendSlackAlert(errorMsg);
+      throw new Error(errorMsg);
     }
 
     const json = await response.json();
@@ -146,6 +155,11 @@ export async function GET() {
     return nextResponse;
   } catch (error) {
     console.error("Error fetching debt data:", error);
+    
+    // Send critical alert
+    const errorMsg = error instanceof Error ? error.message : "Unknown error in Debt API";
+    await sendSlackAlert(`CRITICAL FAILURE: ${errorMsg}`);
+
     return NextResponse.json(
       { error: "Failed to fetch debt data" },
       { status: 500 }

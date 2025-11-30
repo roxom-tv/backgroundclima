@@ -45,11 +45,11 @@ export default function Home() {
         } else {
           // Explicitly handle API failure
           console.error('Debt API failed with status:', response.status);
-          setDebtData(null);
+          // Keep existing data on error
         }
       } catch (error) {
         console.error('Error fetching debt data:', error);
-        setDebtData(null);
+        // Keep existing data on error
       }
     };
 

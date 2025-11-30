@@ -54,7 +54,8 @@ export default function DebtPage() {
     );
   }
 
-  if (error || !debtData) {
+  // Only show error if we have NO data at all
+  if (!debtData && error) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-red-500 text-xl">
@@ -62,6 +63,10 @@ export default function DebtPage() {
         </div>
       </div>
     );
+  }
+
+  if (!debtData) {
+    return null; // Should not happen given loading check, but safe guard
   }
 
   return (
