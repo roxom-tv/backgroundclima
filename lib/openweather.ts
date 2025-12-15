@@ -18,7 +18,7 @@ const RATE_LIMIT = {
   calls: [] as number[]
 };
 
-const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds (reduces API calls to 1,440/day - within free tier limit)
+const CACHE_DURATION = 2 * 60 * 60 * 1000; // 2 hours in milliseconds (reduces API calls significantly - weather doesn't change that fast)
 const weatherCache = new Map<string, CacheEntry>();
 
 export async function fetchCurrentWeather(query: string): Promise<WeatherData | null> {

@@ -1,54 +1,37 @@
 import { NextResponse } from "next/server";
 import { parseDebtApi, computeRate } from "@/lib/debt";
 import { sendSlackAlert } from "@/lib/slack";
+import { getBTCPriceWithCache } from "@/lib/btc-cache";
 
 // Disable caching to ensure real-time data and avoid stale values
 export const revalidate = 0; 
 export const dynamic = 'force-dynamic';
 
-function parsePrice(priceString: string): number {
-  // Remove $ and commas, then parse as float
-  // Example: "$101,270.04" -> 101270.04
-  const cleaned = priceString.replace(/[$,]/g, "");
-  const parsed = parseFloat(cleaned);
-  if (isNaN(parsed)) {
-    throw new Error(`Invalid price format: ${priceString}`);
-  }
-  return parsed;
-}
-
 async function getBTCPrice(): Promise<number> {
-  try {
-    // Fetch directly from Roxom API to avoid internal API calls
-    const url =
-      "https://rtvapi.roxom.com/btc/info?apiKey=60be7d11-ec67-4ac0-9241-da1cbdcba73d";
-    const response = await fetch(url, {
-      next: { revalidate: 0 },
-      cache: "no-store"
-    });
-
-    if (!response.ok) {
-      const errorMsg = `Roxom API error: ${response.status}`;
-      await sendSlackAlert(errorMsg);
-      throw new Error(errorMsg);
-    }
-
-    const json = await response.json();
-    const livePriceString = json.price?.live_price;
-
-    if (!livePriceString || typeof livePriceString !== "string") {
-      throw new Error("Invalid BTC price data from Roxom API");
-    }
-
-    return parsePrice(livePriceString);
-  } catch (error) {
-    console.error("Error fetching BTC price, using fallback:", error);
-    // Fallback to a recent average BTC price if API fails
-    return 95000; 
-  }
+  // Use shared cache to avoid duplicate API calls
+  return getBTCPriceWithCache();
 }
+
+interface MTSCacheEntry {
+  annualSpending: number;
+  annualDeficit: number;
+  timestamp: number;
+}
+
+const MTS_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours (spending/deficit data changes once per year)
+let mtsCache: MTSCacheEntry | null = null;
 
 async function getFederalSpendingAndDeficit() {
+  const now = Date.now();
+  
+  // Return cached data if still valid (spending/deficit only changes once per fiscal year)
+  if (mtsCache && (now - mtsCache.timestamp) < MTS_CACHE_DURATION) {
+    return {
+      annualSpending: mtsCache.annualSpending,
+      annualDeficit: mtsCache.annualDeficit,
+    };
+  }
+
   try {
     // Strategy: Fetch the FINAL Fiscal Year totals (Year-to-Date for September)
     // This ensures we show the full annual impact (approx $7T Spending, $1.8T Deficit)
@@ -89,12 +72,27 @@ async function getFederalSpendingAndDeficit() {
     const fytdSpending = parseFloat(targetRow.current_month_gross_outly_amt || "0");
     const fytdDeficit = parseFloat(targetRow.current_month_dfct_sur_amt || "0");
     
-    return {
+    const result = {
       annualSpending: fytdSpending,
       annualDeficit: Math.abs(fytdDeficit), // Ensure positive for display
     };
+
+    // Update cache
+    mtsCache = {
+      ...result,
+      timestamp: now,
+    };
+
+    return result;
   } catch (error) {
     console.error("Error fetching FYTD data:", error);
+    // Return cached data if available, even if expired
+    if (mtsCache) {
+      return {
+        annualSpending: mtsCache.annualSpending,
+        annualDeficit: mtsCache.annualDeficit,
+      };
+    }
     return {
       annualSpending: 0, 
       annualDeficit: 0,

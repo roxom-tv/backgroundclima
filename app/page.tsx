@@ -8,6 +8,7 @@ import LiveIndicator from './components/LiveIndicator';
 import SponsorDisplay from './components/SponsorDisplay';
 import USDStats from '@/components/USDStats';
 import { CITIES, ROTATION_SECONDS, DEBT_DISPLAY_SECONDS } from '@/config/cities';
+import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
 
 type ViewMode = 'climate' | 'debt';
 
@@ -27,6 +28,15 @@ export default function Home() {
   // Estados para la transición
   const [showTransition, setShowTransition] = useState(false);
   const [transitionText, setTransitionText] = useState('');
+
+  // Pre-fetch weather data for all cities on mount (runs once)
+  useEffect(() => {
+    // Pre-fetch all weather data in background to minimize requests when switching cities
+    prefetchAllWeatherData().catch(error => {
+      console.warn('Weather prefetch failed:', error);
+      // Non-critical, continue anyway
+    });
+  }, []);
 
   // Obtener datos de deuda (Background Fetch)
   useEffect(() => {
