@@ -41,8 +41,8 @@ export default function DebtPage() {
     };
 
     fetchDebtData();
-    // Refresh every 5 minutes
-    const interval = setInterval(fetchDebtData, 5 * 60 * 1000);
+    // Refresh every 15 minutes - optimized to minimize API calls (debt changes slowly)
+    const interval = setInterval(fetchDebtData, 15 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 

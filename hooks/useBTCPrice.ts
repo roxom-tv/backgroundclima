@@ -24,8 +24,8 @@ export function useBTCPrice(initialPrice: number) {
     // Fetch immediately
     fetchBtcPrice();
 
-    // Then fetch every 30 seconds (30000ms) - reduced from 2s to minimize API calls
-    const interval = setInterval(fetchBtcPrice, 30000);
+    // Then fetch every 2 minutes (120000ms) - optimized to minimize API calls while keeping data reasonably fresh
+    const interval = setInterval(fetchBtcPrice, 2 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);

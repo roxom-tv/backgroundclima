@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import localFont from 'next/font/local'
+import Script from 'next/script'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -30,6 +31,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} ${pixelFont.variable}`}>
+        <Script
+          src="https://kit.fontawesome.com/090ca49637.js"
+          crossOrigin="anonymous"
+          strategy="beforeInteractive"
+        />
         {children}
       </body>
     </html>

@@ -76,3 +76,45 @@ export function formatBTCRate(btcPerSecond: number): string {
   }
   return `${btcPerSecond.toExponential(2)} BTC/sec`;
 }
+
+/**
+ * Format satoshis with appropriate precision
+ * Returns an object with the formatted number and the icon HTML
+ */
+export function formatSats(sats: number): { number: string; html: string } {
+  const satoshiIcon = '<i class="fak fa-regular"></i>';
+  let number: string;
+  
+  if (sats >= 1_000_000) {
+    number = `${(sats / 1_000_000).toFixed(2)}M`;
+  } else if (sats >= 1_000) {
+    number = `${(sats / 1_000).toFixed(2)}K`;
+  } else {
+    number = `${Math.round(sats).toLocaleString("en-US")}`;
+  }
+  
+  return {
+    number,
+    html: `${number} ${satoshiIcon} sats`
+  };
+}
+
+/**
+ * Format USD in compact form (e.g., $2,500.50)
+ */
+export function formatUSDCompact(usd: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+  }).format(usd);
+}
+
+/**
+ * Format 24h change percentage with sign
+ */
+export function formatChange24h(changePct: number): string {
+  const sign = changePct >= 0 ? "+" : "";
+  return `${sign}${changePct.toFixed(2)}%`;
+}

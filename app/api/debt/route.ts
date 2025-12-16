@@ -21,6 +21,14 @@ interface MTSCacheEntry {
 const MTS_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours (spending/deficit data changes once per year)
 let mtsCache: MTSCacheEntry | null = null;
 
+interface DebtCacheEntry {
+  data: any;
+  timestamp: number;
+}
+
+const DEBT_CACHE_DURATION = 15 * 60 * 1000; // 15 minutes - la deuda cambia lentamente (una vez al día)
+let debtCache: DebtCacheEntry | null = null;
+
 async function getFederalSpendingAndDeficit() {
   const now = Date.now();
   
@@ -102,6 +110,17 @@ async function getFederalSpendingAndDeficit() {
 
 
 export async function GET() {
+  const now = Date.now();
+  
+  // Return cached data if still valid (15 minutes)
+  if (debtCache && (now - debtCache.timestamp) < DEBT_CACHE_DURATION) {
+    return NextResponse.json(debtCache.data, {
+      headers: {
+        "Cache-Control": "public, s-maxage=900, stale-while-revalidate=1800", // 15 minutes cache
+      },
+    });
+  }
+
   try {
     const url =
       "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?fields=record_date,tot_pub_debt_out_amt&sort=-record_date&page[size]=14";
@@ -144,10 +163,16 @@ export async function GET() {
       annualBudgetDeficit: annualDeficit,
     };
 
+    // Update cache
+    debtCache = {
+      data: result,
+      timestamp: now,
+    };
+
     const nextResponse = NextResponse.json(result);
     nextResponse.headers.set(
       "Cache-Control",
-      "no-store, no-cache, must-revalidate, proxy-revalidate"
+      "public, s-maxage=900, stale-while-revalidate=1800" // 15 minutes cache
     );
 
     return nextResponse;

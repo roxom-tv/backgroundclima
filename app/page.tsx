@@ -1,16 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import RotatingBackground from './components/RotatingBackground';
 import WeatherBar from './components/WeatherBar';
 import DateDisplay from './components/DateDisplay';
 import LiveIndicator from './components/LiveIndicator';
 import SponsorDisplay from './components/SponsorDisplay';
 import USDStats from '@/components/USDStats';
-import { CITIES, ROTATION_SECONDS, DEBT_DISPLAY_SECONDS } from '@/config/cities';
+import MetalsSlide from '@/components/MetalsSlide';
+import OilSlide from '@/components/OilSlide';
+import FxSlide from '@/components/FxSlide';
+import { CITIES, ROTATION_SECONDS, DEBT_DISPLAY_SECONDS, MARKET_SLIDE_SECONDS } from '@/config/cities';
 import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
+import { prefetchMarketsData } from '@/hooks/useMarketsSats';
 
-type ViewMode = 'climate' | 'debt';
+type ViewMode = 'climate' | 'debt' | 'metals' | 'oil' | 'fx';
 
 interface DebtData {
   liveEstimateNow: number;
@@ -29,11 +34,17 @@ export default function Home() {
   const [showTransition, setShowTransition] = useState(false);
   const [transitionText, setTransitionText] = useState('');
 
-  // Pre-fetch weather data for all cities on mount (runs once)
+  // Pre-fetch weather and market data for all cities on mount (runs once)
   useEffect(() => {
     // Pre-fetch all weather data in background to minimize requests when switching cities
     prefetchAllWeatherData().catch(error => {
       console.warn('Weather prefetch failed:', error);
+      // Non-critical, continue anyway
+    });
+    
+    // Pre-fetch market data immediately so slides don't show loading
+    prefetchMarketsData().catch(error => {
+      console.warn('Markets prefetch failed:', error);
       // Non-critical, continue anyway
     });
   }, []);
@@ -64,48 +75,88 @@ export default function Home() {
     };
 
     fetchDebtData();
-    // Actualizar cada 5 minutos
-    const interval = setInterval(fetchDebtData, 5 * 60 * 1000);
+    // Actualizar cada 15 minutos (la deuda cambia lentamente, optimizado para minimizar API calls)
+    const interval = setInterval(fetchDebtData, 15 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
   // Sistema de rotación y manejo de modos
+  // Flujo: ciudad -> deuda -> ciudad -> metals -> ciudad -> oil -> ciudad -> fx -> ciudad -> deuda -> etc.
+  const [nextMarketSlide, setNextMarketSlide] = useState<'debt' | 'metals' | 'oil' | 'fx'>('debt');
+
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
 
+    const transitionDelay = 1500; // Tiempo de transición con efecto estático
+
     if (viewMode === 'climate') {
-      // Estamos viendo una ciudad -> Esperar ROTATION_SECONDS y cambiar a Deuda
+      // Estamos viendo una ciudad -> Esperar ROTATION_SECONDS y cambiar al siguiente slide de mercado
       timeoutId = setTimeout(() => {
-        // Iniciar transición
-        setTransitionText('LOADING US DEBT INFO...');
+        if (nextMarketSlide === 'debt') {
+          setTransitionText('LOADING US DEBT INFO...');
+        } else {
+          setTransitionText('LOADING MARKET DATA...');
+        }
         setShowTransition(true);
-        
-        // Esperar un poco para el efecto de estática
         setTimeout(() => {
-          setViewMode('debt');
+          setViewMode(nextMarketSlide);
           setShowTransition(false);
-        }, 1500);
+        }, transitionDelay);
       }, ROTATION_SECONDS * 1000);
     } else if (viewMode === 'debt') {
-      // Estamos viendo la deuda -> Esperar DEBT_DISPLAY_SECONDS y cambiar a la siguiente ciudad
+      // Deuda -> Siguiente ciudad
       timeoutId = setTimeout(() => {
-        // Iniciar transición
         setTransitionText('SWITCHING FEED...');
         setShowTransition(true);
-        
-        // Esperar un poco para el efecto de estática
         setTimeout(() => {
           setActiveIndex((prev) => (prev + 1) % CITIES.length);
           setViewMode('climate');
+          setNextMarketSlide('metals'); // Después de deuda, viene metals
           setShowTransition(false);
-        }, 1500);
+        }, transitionDelay);
       }, DEBT_DISPLAY_SECONDS * 1000);
+    } else if (viewMode === 'metals') {
+      // Metals -> Siguiente ciudad
+      timeoutId = setTimeout(() => {
+        setTransitionText('SWITCHING FEED...');
+        setShowTransition(true);
+        setTimeout(() => {
+          setActiveIndex((prev) => (prev + 1) % CITIES.length);
+          setViewMode('climate');
+          setNextMarketSlide('oil'); // Después de metals, viene oil
+          setShowTransition(false);
+        }, transitionDelay);
+      }, MARKET_SLIDE_SECONDS * 1000);
+    } else if (viewMode === 'oil') {
+      // Oil -> Siguiente ciudad
+      timeoutId = setTimeout(() => {
+        setTransitionText('SWITCHING FEED...');
+        setShowTransition(true);
+        setTimeout(() => {
+          setActiveIndex((prev) => (prev + 1) % CITIES.length);
+          setViewMode('climate');
+          setNextMarketSlide('fx'); // Después de oil, viene fx
+          setShowTransition(false);
+        }, transitionDelay);
+      }, MARKET_SLIDE_SECONDS * 1000);
+    } else if (viewMode === 'fx') {
+      // FX -> Siguiente ciudad
+      timeoutId = setTimeout(() => {
+        setTransitionText('SWITCHING FEED...');
+        setShowTransition(true);
+        setTimeout(() => {
+          setActiveIndex((prev) => (prev + 1) % CITIES.length);
+          setViewMode('climate');
+          setNextMarketSlide('debt'); // Después de fx, vuelve a deuda
+          setShowTransition(false);
+        }, transitionDelay);
+      }, MARKET_SLIDE_SECONDS * 1000);
     }
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [viewMode, activeIndex]);
+  }, [viewMode, activeIndex, nextMarketSlide]);
 
   // Manejo manual del cambio de índice (por si se agrega interactividad futura)
   const handleIndexChange = (newIndex: number) => {
@@ -169,6 +220,31 @@ export default function Home() {
            <div className="text-gray-500 text-sm mt-4">Retrying automatically...</div>
          </div>
       )}
+
+      {/* Vistas de Mercado con AnimatePresence */}
+      <AnimatePresence mode="wait">
+        {viewMode === 'metals' && (
+          <div key="metals" className="h-full w-full flex items-center justify-center bg-black p-4">
+            <div className="w-full h-full max-w-[1920px] mx-auto">
+              <MetalsSlide />
+            </div>
+          </div>
+        )}
+        {viewMode === 'oil' && (
+          <div key="oil" className="h-full w-full flex items-center justify-center bg-black p-4">
+            <div className="w-full h-full max-w-[1920px] mx-auto">
+              <OilSlide />
+            </div>
+          </div>
+        )}
+        {viewMode === 'fx' && (
+          <div key="fx" className="h-full w-full flex items-center justify-center bg-black p-4">
+            <div className="w-full h-full max-w-[1920px] mx-auto">
+              <FxSlide />
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

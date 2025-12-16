@@ -8,7 +8,7 @@ interface BTCCacheEntry {
   timestamp: number;
 }
 
-const BTC_CACHE_DURATION = 30 * 1000; // 30 seconds
+const BTC_CACHE_DURATION = 2 * 60 * 1000; // 2 minutes - optimized to minimize API calls
 let btcCache: BTCCacheEntry | null = null;
 
 function parsePrice(priceString: string): number {

@@ -22,10 +22,15 @@ const CACHE_DURATION = 2 * 60 * 60 * 1000; // 2 hours in milliseconds (reduces A
 const weatherCache = new Map<string, CacheEntry>();
 
 export async function fetchCurrentWeather(query: string): Promise<WeatherData | null> {
-  // API key pública (puede ser expuesta en el frontend)
-  const apiKey = '679aca02b37f0662d2a1fb16a47ba7ba';
-  const units = 'metric';
-  const lang = 'en';
+  // Get configuration from environment variables with sensible defaults
+  const apiKey = process.env.OPENWEATHER_API_KEY;
+  const units = process.env.OPENWEATHER_UNITS || 'metric';
+  const lang = process.env.OPENWEATHER_LANG || 'en';
+
+  // If no API key is provided, use fallback data immediately
+  if (!apiKey) {
+    console.warn('⚠️ OPENWEATHER_API_KEY not configured. Using fallback weather data.');
+  }
 
   // Datos de fallback realistas por ciudad
   const fallbackDataByCity: { [key: string]: WeatherData } = {
@@ -129,6 +134,11 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
     return cached.data;
   }
 
+
+  // If no API key, return fallback data immediately
+  if (!apiKey) {
+    return fallbackData;
+  }
 
   // Rate limiting check
   const now = Date.now();
