@@ -26,3 +26,4 @@ export async function prefetchAllWeatherData(): Promise<void> {
   console.log('Weather data prefetch completed for all cities');
 }
 
+
