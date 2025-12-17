@@ -105,21 +105,33 @@ async function fetchMarketsDataInternal(setData?: (data: MarketsSatsData | null)
       
       const result = await response.json();
       
-      // Check if we have real data (non-zero values)
-      const hasRealData = result.metals?.gold?.usd > 0 || 
-                         result.oil?.wti?.usd > 0 || 
-                         result.fx?.EUR?.usdPerUnit > 0;
+      // Check if we have ANY real data (partial data is acceptable)
+      // Accept data if ANY market has values, or if it's marked as stale (cached data)
+      const hasMetalsData = (result.metals?.gold?.usd > 0 || result.metals?.silver?.usd > 0);
+      const hasOilData = (result.oil?.wti?.usd > 0 || result.oil?.brent?.usd > 0);
+      const hasFxData = (result.fx?.EUR?.usdPerUnit > 0 || result.fx?.JPY?.usdPerUnit > 0 || result.fx?.GBP?.usdPerUnit > 0);
       
-      if (hasRealData) {
-        sharedMarketsData = result;
-        sharedError = null;
-        if (setData) setData(result);
-        if (setError) setError(null);
+      const hasAnyData = hasMetalsData || hasOilData || hasFxData;
+      const isStale = result.stale === true;
+      
+      // Accept data if:
+      // 1. We have any real data (partial is fine), OR
+      // 2. It's marked as stale (cached data from server), OR
+      // 3. We already have cached data and this is an update attempt
+      if (hasAnyData || isStale || sharedMarketsData) {
+        // If we have new data (even partial or stale), use it
+        if (hasAnyData || isStale) {
+          sharedMarketsData = result;
+          sharedError = null;
+          if (setData) setData(result);
+          if (setError) setError(null);
+        }
+        // If no new data but we have existing cached data, keep it
+        // (don't overwrite with empty data)
       } else {
-        // No real data available - APIs not configured or returned zeros
-        // Pero no sobrescribir datos existentes si los hay
+        // No data at all - only set error if we don't have existing data
         if (!sharedMarketsData) {
-          console.warn("No real market data available. Please configure API keys.");
+          console.warn("No market data available. Please configure API keys.");
           sharedError = new Error("Market data APIs not configured or unavailable");
           sharedMarketsData = null;
           if (setData) setData(null);

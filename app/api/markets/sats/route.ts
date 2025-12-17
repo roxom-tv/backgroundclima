@@ -601,7 +601,7 @@ export async function GET() {
     ]);
 
     // Extract results (handle failures gracefully)
-    const metals = metalsData.status === "fulfilled" 
+    let metals = metalsData.status === "fulfilled" 
       ? metalsData.value 
       : { 
           gold: { usd: 0, change24hPct: null }, 
@@ -612,8 +612,8 @@ export async function GET() {
             limitReached: false,
           },
         };
-    const oil = oilData.status === "fulfilled" ? oilData.value : { wti: { usd: 0, change24hPct: null }, brent: { usd: 0, change24hPct: null } };
-    const fx = fxData.status === "fulfilled" ? fxData.value : { EUR: { usdPerUnit: 0 }, JPY: { usdPerUnit: 0 }, GBP: { usdPerUnit: 0 } };
+    let oil = oilData.status === "fulfilled" ? oilData.value : { wti: { usd: 0, change24hPct: null }, brent: { usd: 0, change24hPct: null } };
+    let fx = fxData.status === "fulfilled" ? fxData.value : { EUR: { usdPerUnit: 0 }, JPY: { usdPerUnit: 0 }, GBP: { usdPerUnit: 0 } };
 
     // Debug: Log results
     if (metalsData.status === "rejected") {
@@ -634,12 +634,47 @@ export async function GET() {
       console.log("FX data:", { EUR: fx.EUR.usdPerUnit, JPY: fx.JPY.usdPerUnit });
     }
 
-    // Si metals no tiene datos y el rate limit se alcanzó, usar datos cached si están disponibles
-    if (metals.gold.usd === 0 && metals.silver.usd === 0 && metals.rateLimitInfo?.limitReached && marketsCache) {
-      console.log("Using cached metals data due to rate limit");
-      const cachedMetals = marketsCache.data.metals;
-      metals.gold = { usd: cachedMetals.gold.usd, change24hPct: cachedMetals.gold.change24hPct };
-      metals.silver = { usd: cachedMetals.silver.usd, change24hPct: cachedMetals.silver.change24hPct };
+    // Fallback: Use individual cache if API failed or returned zeros
+    // Metals fallback
+    if ((metals.gold.usd === 0 && metals.silver.usd === 0) || metalsData.status === "rejected") {
+      if (metalsCache && (now - metalsCache.timestamp) < METALS_CACHE_DURATION * 2) {
+        // Use cache even if expired (up to 2x duration) as fallback
+        console.log("Using cached metals data as fallback");
+        metals = metalsCache.data;
+      } else if (marketsCache && marketsCache.data.metals) {
+        // Fallback to general cache if individual cache not available
+        console.log("Using metals data from general cache as fallback");
+        const cachedMetals = marketsCache.data.metals;
+        metals.gold = { usd: cachedMetals.gold.usd, change24hPct: cachedMetals.gold.change24hPct };
+        metals.silver = { usd: cachedMetals.silver.usd, change24hPct: cachedMetals.silver.change24hPct };
+      }
+    }
+
+    // Oil fallback
+    if ((oil.wti.usd === 0 && oil.brent.usd === 0) || oilData.status === "rejected") {
+      if (oilCache && (now - oilCache.timestamp) < OIL_CACHE_DURATION * 2) {
+        console.log("Using cached oil data as fallback");
+        oil = oilCache.data;
+      } else if (marketsCache && marketsCache.data.oil) {
+        console.log("Using oil data from general cache as fallback");
+        const cachedOil = marketsCache.data.oil;
+        oil.wti = { usd: cachedOil.wti.usd, change24hPct: cachedOil.wti.change24hPct };
+        oil.brent = { usd: cachedOil.brent.usd, change24hPct: cachedOil.brent.change24hPct };
+      }
+    }
+
+    // FX fallback
+    if ((fx.EUR.usdPerUnit === 0 && fx.JPY.usdPerUnit === 0 && fx.GBP.usdPerUnit === 0) || fxData.status === "rejected") {
+      if (fxCache && (now - fxCache.timestamp) < FX_CACHE_DURATION * 2) {
+        console.log("Using cached FX data as fallback");
+        fx = fxCache.data;
+      } else if (marketsCache && marketsCache.data.fx) {
+        console.log("Using FX data from general cache as fallback");
+        const cachedFx = marketsCache.data.fx;
+        fx.EUR = { usdPerUnit: cachedFx.EUR.usdPerUnit };
+        fx.JPY = { usdPerUnit: cachedFx.JPY.usdPerUnit };
+        fx.GBP = { usdPerUnit: cachedFx.GBP.usdPerUnit };
+      }
     }
 
     // Convert to satoshis
