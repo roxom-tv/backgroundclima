@@ -8,24 +8,30 @@ export default function CalendarSlide() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full h-full flex flex-col items-center justify-center bg-black relative"
+      className="fixed inset-0 w-screen h-screen bg-black z-50 overflow-hidden flex items-center justify-center"
+      style={{ margin: 0, padding: 0 }}
     >
-      <div className="w-full h-full relative">
+      {/* 
+         En vMix/OBS, a veces los iframes no renderizan bien el viewport.
+         Forzamos un tamaño ligeramente superior y centrado para asegurar cobertura.
+      */}
+      <div className="relative w-full h-full">
         <iframe 
           src="https://calendar-event-fc75.vercel.app/events" 
-          className="w-full h-full border-0"
+          className="absolute top-0 left-0 w-full h-full border-0"
           style={{ 
-            pointerEvents: 'auto' 
+            width: '100%',
+            height: '100%',
+            border: 'none',
+            // Si la web tiene márgenes internos, este scale ayuda a "acercarla".
+            // Descomenta y ajusta si necesitas hacer zoom:
+            // transform: 'scale(1.0)', 
+            // transformOrigin: 'center center'
           }}
           title="Events Calendar"
-          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+          scrolling="no" // Intentar evitar barras de scroll que achican el contenido
         />
-        
-        {/* Overlay opcional para mantener el estilo visual si es necesario, 
-            pero el usuario pidió ver el link "completo" así que mejor dejarlo limpio.
-            Solo añadimos un borde sutil estilo CRT si queremos, pero por ahora limpio. */}
       </div>
     </motion.div>
   );
 }
-
