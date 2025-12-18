@@ -11,11 +11,12 @@ import USDStats from '@/components/USDStats';
 import MetalsSlide from '@/components/MetalsSlide';
 import OilSlide from '@/components/OilSlide';
 import FxSlide from '@/components/FxSlide';
-import { CITIES, ROTATION_SECONDS, DEBT_DISPLAY_SECONDS, MARKET_SLIDE_SECONDS } from '@/config/cities';
+import CalendarSlide from '@/components/CalendarSlide';
+import { CITIES, ROTATION_SECONDS, DEBT_DISPLAY_SECONDS, MARKET_SLIDE_SECONDS, CALENDAR_DISPLAY_SECONDS } from '@/config/cities';
 import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
 import { prefetchMarketsData } from '@/hooks/useMarketsSats';
 
-type ViewMode = 'climate' | 'debt' | 'metals' | 'oil' | 'fx';
+type ViewMode = 'climate' | 'debt' | 'metals' | 'oil' | 'fx' | 'calendar';
 
 interface DebtData {
   liveEstimateNow: number;
@@ -81,8 +82,8 @@ export default function Home() {
   }, []);
 
   // Sistema de rotación y manejo de modos
-  // Flujo: ciudad -> deuda -> ciudad -> metals -> ciudad -> oil -> ciudad -> fx -> ciudad -> deuda -> etc.
-  const [nextMarketSlide, setNextMarketSlide] = useState<'debt' | 'metals' | 'oil' | 'fx'>('debt');
+  // Flujo: ciudad -> deuda -> ciudad -> metals -> ciudad -> oil -> ciudad -> fx -> ciudad -> calendar -> ciudad -> deuda -> etc.
+  const [nextMarketSlide, setNextMarketSlide] = useState<'debt' | 'metals' | 'oil' | 'fx' | 'calendar'>('debt');
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -94,6 +95,8 @@ export default function Home() {
       timeoutId = setTimeout(() => {
         if (nextMarketSlide === 'debt') {
           setTransitionText('LOADING US DEBT INFO...');
+        } else if (nextMarketSlide === 'calendar') {
+          setTransitionText('LOADING CALENDAR...');
         } else {
           setTransitionText('LOADING MARKET DATA...');
         }
@@ -111,46 +114,22 @@ export default function Home() {
         setTimeout(() => {
           setActiveIndex((prev) => (prev + 1) % CITIES.length);
           setViewMode('climate');
-          setNextMarketSlide('metals'); // Después de deuda, viene metals
+          setNextMarketSlide('calendar'); // Después de deuda, saltamos a calendar (omitiendo metals, oil, fx)
           setShowTransition(false);
         }, transitionDelay);
       }, DEBT_DISPLAY_SECONDS * 1000);
-    } else if (viewMode === 'metals') {
-      // Metals -> Siguiente ciudad
+    } else if (viewMode === 'calendar') {
+      // Calendar -> Siguiente ciudad
       timeoutId = setTimeout(() => {
         setTransitionText('SWITCHING FEED...');
         setShowTransition(true);
         setTimeout(() => {
           setActiveIndex((prev) => (prev + 1) % CITIES.length);
           setViewMode('climate');
-          setNextMarketSlide('oil'); // Después de metals, viene oil
+          setNextMarketSlide('debt'); // Después de calendar, vuelve a deuda
           setShowTransition(false);
         }, transitionDelay);
-      }, MARKET_SLIDE_SECONDS * 1000);
-    } else if (viewMode === 'oil') {
-      // Oil -> Siguiente ciudad
-      timeoutId = setTimeout(() => {
-        setTransitionText('SWITCHING FEED...');
-        setShowTransition(true);
-        setTimeout(() => {
-          setActiveIndex((prev) => (prev + 1) % CITIES.length);
-          setViewMode('climate');
-          setNextMarketSlide('fx'); // Después de oil, viene fx
-          setShowTransition(false);
-        }, transitionDelay);
-      }, MARKET_SLIDE_SECONDS * 1000);
-    } else if (viewMode === 'fx') {
-      // FX -> Siguiente ciudad
-      timeoutId = setTimeout(() => {
-        setTransitionText('SWITCHING FEED...');
-        setShowTransition(true);
-        setTimeout(() => {
-          setActiveIndex((prev) => (prev + 1) % CITIES.length);
-          setViewMode('climate');
-          setNextMarketSlide('debt'); // Después de fx, vuelve a deuda
-          setShowTransition(false);
-        }, transitionDelay);
-      }, MARKET_SLIDE_SECONDS * 1000);
+      }, CALENDAR_DISPLAY_SECONDS * 1000);
     }
 
     return () => {
@@ -242,6 +221,11 @@ export default function Home() {
             <div className="w-full h-full max-w-[1920px] mx-auto">
               <FxSlide />
             </div>
+          </div>
+        )}
+        {viewMode === 'calendar' && (
+          <div key="calendar" className="h-full w-full flex items-center justify-center bg-black">
+            <CalendarSlide />
           </div>
         )}
       </AnimatePresence>

@@ -10,6 +10,7 @@ export interface CityConfig {
 export const ROTATION_SECONDS = 25; // Tiempo para cada ciudad en el carrusel
 export const DEBT_DISPLAY_SECONDS = 35; // Tiempo para mostrar estadísticas de deuda
 export const MARKET_SLIDE_SECONDS = 20; // Tiempo para mostrar cada slide de mercado (Gold, Silver, Oil, FX)
+export const CALENDAR_DISPLAY_SECONDS = 60; // Tiempo para mostrar el calendario
 
 export const CITIES: CityConfig[] = [
   { 
