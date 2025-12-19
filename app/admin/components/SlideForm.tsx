@@ -34,6 +34,7 @@ const COMMON_TIMEZONES = [
 ];
 
 const EVENT_COLORS = [
+  { value: '#1AE784', label: 'Mint Green (Default)' },
   { value: '#3B82F6', label: 'Blue' },
   { value: '#10B981', label: 'Green' },
   { value: '#F59E0B', label: 'Amber' },
@@ -172,7 +173,11 @@ export default function SlideForm({
     // Clean data - remove empty strings and convert to null where appropriate
     const cleanedData: SlideInsert = {
       type: formData.type,
-      name: formData.name.trim(),
+      // For show slides, if name is empty, use a default value for DB (required field)
+      // The component will hide the overlay if only default "Show" name exists without other content
+      name: formData.type === 'show' && !formData.name.trim() 
+        ? 'Show' 
+        : formData.name.trim(),
       country: formData.country?.trim() || null,
       youtube_url: processedYoutubeUrl,
       weather_query: formData.weather_query?.trim() || null,
@@ -298,7 +303,7 @@ export default function SlideForm({
       {/* Name / Title */}
       <div>
         <label htmlFor="name" className="block text-xs font-mono font-medium text-white uppercase tracking-wider mb-1">
-          {isShow ? 'SHOW TITLE' : isEvent ? 'EVENT TITLE' : isNews ? 'NEWS TITLE' : isVideo ? 'VIDEO TITLE' : 'NAME'} *
+          {isShow ? 'SHOW TITLE' : isEvent ? 'EVENT TITLE' : isNews ? 'NEWS TITLE' : isVideo ? 'VIDEO TITLE' : 'NAME'} {!isShow && '*'}
         </label>
         <input
           id="name"
@@ -306,10 +311,15 @@ export default function SlideForm({
           type="text"
           value={formData.name}
           onChange={handleChange}
-          required
-          placeholder={isShow ? 'Show name...' : isEvent ? 'Event title...' : isNews ? 'News title...' : isVideo ? 'Video title...' : 'e.g., Hong Kong'}
+          required={!isShow}
+          placeholder={isShow ? 'Show name (optional - image only if empty)...' : isEvent ? 'Event title...' : isNews ? 'News title...' : isVideo ? 'Video title...' : 'e.g., Hong Kong'}
           className="w-full px-4 py-2 bg-[#1a1a1a] border-2 border-[#00ff00] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00cc00]"
         />
+        {isShow && (
+          <p className="text-[#888] text-xs font-mono mt-1 uppercase tracking-wider">
+            OPTIONAL - IF EMPTY, ONLY IMAGE WILL BE DISPLAYED
+          </p>
+        )}
       </div>
 
       {/* ========== SHOW FIELDS ========== */}
@@ -337,7 +347,7 @@ export default function SlideForm({
               BACKGROUND IMAGE (1920X1080) *
             </label>
             <p className="text-xs text-[#888] font-mono mb-2 uppercase tracking-wider">
-              UPLOAD THE FULL SHOW DESIGN. TEXT WILL BE OVERLAID ON THE RIGHT SIDE.
+              UPLOAD IMAGE. IF NO TEXT FIELDS ARE FILLED, ONLY IMAGE WILL BE DISPLAYED.
             </p>
             <div className="flex items-center gap-4">
               {formData.image_url && (

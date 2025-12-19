@@ -134,7 +134,7 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
     const titleFont = event.title_font || 'inherit';
     const titleColor = event.title_color || '#FFFFFF';
     const textColor = event.text_color || '#E5E7EB';
-    const overlayOpacity = (event.overlay_opacity ?? 50) / 100;
+    const overlayOpacity = 0.8; // Fixed 80% transparency overlay
     const showDateBadge = event.show_date_badge ?? true;
     const titleSizeClass = getTitleSizeClass(event.title_size, 'full');
 
@@ -255,7 +255,7 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
     const titleFont = event.title_font || 'inherit';
     const titleColor = event.title_color || '#FFFFFF';
     const textColor = event.text_color || '#E5E7EB';
-    const overlayOpacity = (event.overlay_opacity ?? 60) / 100;
+    const overlayOpacity = 0.8; // Fixed 80% transparency overlay
     const showDateBadge = event.show_date_badge ?? true;
     const titleSizeClass = getTitleSizeClass(event.title_size, size);
     const descSizeClass = getDescSizeClass(size);

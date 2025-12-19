@@ -12,6 +12,7 @@ interface EventFormProps {
 }
 
 const COLORS = [
+  { value: '#1AE784', label: 'Mint Green (Default)' },
   { value: '#3B82F6', label: 'Blue' },
   { value: '#10B981', label: 'Green' },
   { value: '#F59E0B', label: 'Amber' },
@@ -67,7 +68,7 @@ export default function EventForm({
     start_time: '',
     end_time: '',
     is_active: true,
-    color: '#3B82F6',
+    color: '#1AE784',
     // Style options
     title_font: 'Inter',
     title_size: 'large',
@@ -97,7 +98,7 @@ export default function EventForm({
         start_time: event.start_time?.slice(0, 5) || '', // HH:MM
         end_time: event.end_time?.slice(0, 5) || '',
         is_active: event.is_active,
-        color: event.color || '#3B82F6',
+        color: event.color || '#1AE784',
         // Style options
         title_font: event.title_font || 'Inter',
         title_size: event.title_size || 'large',
