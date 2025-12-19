@@ -113,9 +113,11 @@ export default function AdminLayout({
                 VIEW
               </Link>
               
-              <div className="text-[#888] text-xs font-mono">
-                {user.email}
-              </div>
+              {user && (
+                <div className="text-[#888] text-xs font-mono">
+                  {user.email}
+                </div>
+              )}
               
               <button
                 onClick={handleSignOut}

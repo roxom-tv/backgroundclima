@@ -69,14 +69,25 @@ export function useAuth(): UseAuthReturn {
     let subscription: { unsubscribe: () => void } | null = null;
     
     try {
-      const { data } = supabase.auth.onAuthStateChange(
+      const authStateChange = supabase.auth.onAuthStateChange(
         async (event, session) => {
           setSession(session);
           setUser(session?.user ?? null);
           setIsLoading(false);
         }
       );
-      subscription = data;
+      // onAuthStateChange returns { data: { subscription: Subscription } }
+      // Extract the subscription and create a wrapper
+      if (authStateChange?.data?.subscription) {
+        const sub = authStateChange.data.subscription;
+        subscription = {
+          unsubscribe: () => {
+            if (sub && typeof sub.unsubscribe === 'function') {
+              sub.unsubscribe();
+            }
+          }
+        };
+      }
     } catch (err) {
       console.error('Failed to set up auth state listener:', err);
     }
