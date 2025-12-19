@@ -25,7 +25,23 @@ export function useAuth(): UseAuthReturn {
 
   // Initialize auth state
   useEffect(() => {
-    const supabase = getSupabaseClient();
+    // Check if environment variables are configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('Supabase environment variables are not configured');
+      setError('Supabase configuration missing. Please check environment variables in Vercel.');
+      setIsLoading(false);
+      return;
+    }
+
+    let supabase;
+    try {
+      supabase = getSupabaseClient();
+    } catch (err) {
+      console.error('Failed to create Supabase client:', err);
+      setError(err instanceof Error ? err.message : 'Failed to initialize Supabase client');
+      setIsLoading(false);
+      return;
+    }
 
     // Get initial session
     const initAuth = async () => {
@@ -50,16 +66,25 @@ export function useAuth(): UseAuthReturn {
     initAuth();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
-      }
-    );
+    let subscription: { unsubscribe: () => void } | null = null;
+    
+    try {
+      const { data } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setIsLoading(false);
+        }
+      );
+      subscription = data;
+    } catch (err) {
+      console.error('Failed to set up auth state listener:', err);
+    }
 
     return () => {
-      subscription.unsubscribe();
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
   }, []);
 

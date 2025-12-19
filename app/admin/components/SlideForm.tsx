@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import type { Slide, SlideInsert, SlideType, Sponsor, ScheduleTime, CalendarEvent, LayoutOrientation } from '@/lib/supabase/types';
+import { convertYouTubeUrlToEmbed, convertEmbedUrlToSimple } from '@/lib/youtube-utils';
 
 interface SlideFormProps {
   slide?: Slide | null;
@@ -127,7 +128,7 @@ export default function SlideForm({
         type,
         name: slide.name,
         country: slide.country || '',
-        youtube_url: slide.youtube_url || '',
+        youtube_url: slide.youtube_url ? convertEmbedUrlToSimple(slide.youtube_url) : '',
         weather_query: slide.weather_query || '',
         timezone: slide.timezone || 'America/New_York',
         duration_seconds: slide.duration_seconds,
@@ -162,20 +163,35 @@ export default function SlideForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Convert YouTube URL to embed format if needed
+    let processedYoutubeUrl = formData.youtube_url?.trim() || null;
+    if (processedYoutubeUrl && formData.type === 'youtube') {
+      processedYoutubeUrl = convertYouTubeUrlToEmbed(processedYoutubeUrl);
+    }
+    
+    // Clean data - remove empty strings and convert to null where appropriate
     const cleanedData: SlideInsert = {
-      ...formData,
-      country: formData.country || null,
-      youtube_url: formData.youtube_url || null,
-      weather_query: formData.weather_query || null,
-      description: formData.description || null,
-      image_url: formData.image_url || null,
-      end_date: formData.end_date || null,
+      type: formData.type,
+      name: formData.name.trim(),
+      country: formData.country?.trim() || null,
+      youtube_url: processedYoutubeUrl,
+      weather_query: formData.weather_query?.trim() || null,
+      timezone: formData.timezone || null,
+      duration_seconds: formData.duration_seconds,
+      is_active: formData.is_active,
+      show_weather: formData.show_weather,
+      show_sponsor: formData.show_sponsor,
+      description: formData.description?.trim() || null,
+      image_url: formData.image_url?.trim() || null,
+      start_date: formData.start_date || null,
+      end_date: formData.end_date?.trim() || null,
       start_time: formData.start_time ? `${formData.start_time}:00` : null,
       end_time: formData.end_time ? `${formData.end_time}:00` : null,
+      color: formData.color || null,
       sponsor_id: formData.show_sponsor ? (formData.sponsor_id || null) : null,
       // Show slide fields
-      host_name: formData.host_name || null,
-      show_days: formData.show_days || null,
+      host_name: formData.host_name?.trim() || null,
+      show_days: formData.show_days?.trim() || null,
       schedule_times: formData.schedule_times && formData.schedule_times.length > 0 
         ? formData.schedule_times 
         : null,
@@ -187,10 +203,10 @@ export default function SlideForm({
         ? formData.layout_orientation 
         : null,
       // News slide fields
-      headline: formData.headline || null,
-      source: formData.source || null,
+      headline: formData.headline?.trim() || null,
+      source: formData.source?.trim() || null,
       // Video slide fields
-      video_url: formData.video_url || null,
+      video_url: formData.video_url?.trim() || null,
       loop_count: formData.loop_count ?? null,
     };
     
@@ -791,8 +807,22 @@ export default function SlideForm({
           </div>
 
           <div>
-            <label htmlFor="youtube_url" className="block text-xs font-mono font-medium text-white uppercase tracking-wider mb-1">YOUTUBE EMBED URL *</label>
-            <textarea id="youtube_url" name="youtube_url" value={formData.youtube_url || ''} onChange={handleChange} required placeholder="https://www.youtube.com/embed/VIDEO_ID?autoplay=1&mute=1..." rows={3} className="w-full px-4 py-2 bg-[#1a1a1a] border-2 border-[#00ff00] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00cc00]" />
+            <label htmlFor="youtube_url" className="block text-xs font-mono font-medium text-white uppercase tracking-wider mb-1">
+              YOUTUBE URL *
+            </label>
+            <input
+              id="youtube_url"
+              name="youtube_url"
+              type="text"
+              value={formData.youtube_url || ''}
+              onChange={handleChange}
+              required
+              placeholder="https://www.youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID"
+              className="w-full px-4 py-2 bg-[#1a1a1a] border-2 border-[#00ff00] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00cc00]"
+            />
+            <p className="text-[#888] text-xs font-mono mt-1 uppercase tracking-wider">
+              ANY YOUTUBE URL FORMAT (WILL BE CONVERTED TO EMBED AUTOMATICALLY)
+            </p>
           </div>
 
           <div>

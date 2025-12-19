@@ -24,8 +24,8 @@ export default function AdminLayout({
   // Show loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl animate-pulse">Loading...</div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-xl font-mono uppercase tracking-wider animate-pulse">LOADING...</div>
       </div>
     );
   }
@@ -36,7 +36,23 @@ export default function AdminLayout({
   }
 
   // If not authenticated, show nothing (redirect will happen)
-  if (!user) {
+  // But check for environment variable errors first
+  if (!user && !isLoading) {
+    // Check if it's an environment variable issue
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return (
+        <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4 px-4">
+          <div className="text-red-500 text-2xl font-mono font-bold uppercase tracking-wider text-center">
+            CONFIGURATION ERROR
+          </div>
+          <div className="text-white text-lg font-mono text-center max-w-2xl">
+            Supabase environment variables are not configured.
+            <br />
+            Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel.
+          </div>
+        </div>
+      );
+    }
     return null;
   }
 

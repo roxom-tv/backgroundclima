@@ -43,8 +43,8 @@ export default function AdminLoginPage() {
   // Show loading while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl animate-pulse">Loading...</div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-white text-xl font-mono uppercase tracking-wider animate-pulse">LOADING...</div>
       </div>
     );
   }

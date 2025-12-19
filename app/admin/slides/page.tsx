@@ -109,25 +109,37 @@ export default function SlidesPage() {
 
     try {
       if (editingSlide) {
-        const { error } = await updateSlide(editingSlide.id, data);
+        // Convert SlideInsert to SlideUpdate (remove fields that shouldn't be updated on edit)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { order_index, ...updateData } = data;
+        
+        console.log('Updating slide:', editingSlide.id, updateData);
+        
+        const { error } = await updateSlide(editingSlide.id, updateData);
         if (error) {
-          showNotification('error', error);
+          console.error('Update error:', error);
+          showNotification('error', `Failed to update: ${error}`);
         } else {
-          showNotification('success', 'Slide updated');
+          showNotification('success', 'Slide updated successfully');
           setIsFormOpen(false);
           setEditingSlide(null);
-          fetchSlides();
+          // Refresh immediately to show updated data
+          await fetchSlides();
         }
       } else {
         const { error } = await createSlide(data);
         if (error) {
+          console.error('Create error:', error);
           showNotification('error', error);
         } else {
-          showNotification('success', 'Slide created');
+          showNotification('success', 'Slide created successfully');
           setIsFormOpen(false);
-          fetchSlides();
+          await fetchSlides();
         }
       }
+    } catch (err) {
+      console.error('Form submit error:', err);
+      showNotification('error', err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsSubmitting(false);
     }
@@ -146,10 +158,12 @@ export default function SlidesPage() {
       if (error) {
         showNotification('error', error);
       } else {
-        showNotification('success', 'Slide deleted');
+        showNotification('success', 'Slide deleted successfully');
+        // Refresh slides list after deletion
+        await fetchSlides();
       }
     }
-  }, [deleteSlide, showNotification]);
+  }, [deleteSlide, fetchSlides, showNotification]);
 
   // Handle duplicate
   const handleDuplicate = useCallback(async (slide: Slide) => {

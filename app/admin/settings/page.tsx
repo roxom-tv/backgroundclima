@@ -28,6 +28,14 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
+        // Check if environment variables are configured
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+          console.error('Supabase environment variables are not configured');
+          setNotification({ type: 'error', message: 'Supabase configuration missing. Please check environment variables.' });
+          setIsLoading(false);
+          return;
+        }
+
         const supabase = getSupabaseClient();
         const { data, error } = await supabase
           .from('settings')
@@ -37,12 +45,17 @@ export default function SettingsPage() {
 
         if (error && error.code !== 'PGRST116') {
           console.error('Error fetching settings:', error);
+          setNotification({ type: 'error', message: 'Failed to load settings. Please refresh the page.' });
         } else if (data) {
           const settingsData = data as { value: GlobalSettings };
           setSettings(settingsData.value);
         }
       } catch (err) {
         console.error('Error fetching settings:', err);
+        setNotification({ 
+          type: 'error', 
+          message: err instanceof Error ? err.message : 'Failed to load settings' 
+        });
       } finally {
         setIsLoading(false);
       }

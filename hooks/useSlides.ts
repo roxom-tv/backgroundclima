@@ -90,18 +90,46 @@ export function useSlides(): UseSlidesReturn {
   // Update a slide
   const updateSlide = useCallback(async (id: string, updates: SlideUpdate) => {
     try {
-      const { error: updateError } = await getSlidesTable()
-        .update(updates)
-        .eq('id', id);
+      // Clean updates - remove undefined values and ensure proper null handling
+      const cleanUpdates: Record<string, unknown> = {};
+      Object.entries(updates).forEach(([key, value]) => {
+        // Only include defined values (not undefined)
+        if (value !== undefined) {
+          // Convert empty strings to null for optional fields
+          if (typeof value === 'string' && value.trim() === '' && key !== 'name' && key !== 'type') {
+            cleanUpdates[key] = null;
+          } else {
+            cleanUpdates[key] = value;
+          }
+        }
+      });
+
+      console.log('Updating slide:', id, cleanUpdates);
+
+      // Update and get the updated data from database
+      const { data: updatedData, error: updateError } = await getSlidesTable()
+        .update(cleanUpdates)
+        .eq('id', id)
+        .select()
+        .single();
 
       if (updateError) {
+        console.error('Supabase update error:', updateError);
+        console.error('Error details:', JSON.stringify(updateError, null, 2));
         throw updateError;
       }
 
-      // Update local state
+      if (!updatedData) {
+        console.error('No data returned from update');
+        throw new Error('No data returned from update');
+      }
+
+      console.log('Slide updated successfully:', updatedData);
+
+      // Update local state with the actual data from database
       setSlides(prev =>
         prev.map(slide =>
-          slide.id === id ? { ...slide, ...updates } : slide
+          slide.id === id ? (updatedData as Slide) : slide
         )
       );
 
