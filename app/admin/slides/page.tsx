@@ -457,6 +457,13 @@ export default function SlidesPage() {
                               {/* Actions */}
                               <div className="flex items-center gap-1">
                                 <button
+                                  onClick={() => window.open(`/admin/slides/preview/${slide.id}`, '_blank')}
+                                  className="p-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#00ffff] border-2 border-[#00ffff] transition-colors font-mono text-xs"
+                                  title="Preview slide in new tab"
+                                >
+                                  👁️
+                                </button>
+                                <button
                                   onClick={() => handleToggleActive(slide)}
                                   className={`p-2 border-2 transition-colors font-mono text-xs ${
                                     slide.is_active

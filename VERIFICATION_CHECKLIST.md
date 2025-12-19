@@ -132,3 +132,4 @@ Todos los tipos de slides tienen:
 - Las URLs de YouTube se convierten automáticamente al guardar
 - Los eventos deben crearse primero en `/admin/events` antes de usarlos en slides
 - Los sponsors deben crearse primero en `/admin/sponsors` antes de asignarlos
+
