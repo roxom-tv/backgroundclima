@@ -116,3 +116,6 @@
 - OilPriceAPI: Cache de 1 hora (plan Exploration - 10,000/mes)
 - Metals.dev: Cache separado de 8 horas para cumplir límite gratuito de 100/mes
 - FX: Cache de 1 hora
+
+
+

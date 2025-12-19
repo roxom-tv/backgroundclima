@@ -2,28 +2,43 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CITIES } from '@/config/cities';
-import { fetchCurrentWeather, type WeatherData } from '@/lib/openweather';
+import type { WeatherData } from '@/lib/openweather';
+import type { Slide } from '@/lib/supabase/types';
 
 interface WeatherBarProps {
   activeIndex: number;
+  currentSlide: Slide | null;
+  visible?: boolean;
 }
 
-export default function WeatherBar({ activeIndex }: WeatherBarProps) {
+export default function WeatherBar({ activeIndex, currentSlide, visible = true }: WeatherBarProps) {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
-  const currentCity = CITIES[activeIndex];
+
+  // Don't render if not visible or no slide
+  if (!visible || !currentSlide) {
+    return null;
+  }
 
   // Fetch weather data when city changes
   useEffect(() => {
     const fetchWeather = async () => {
+      if (!currentSlide.weather_query) {
+        setWeatherData(null);
+        return;
+      }
+
       setLoading(true);
       try {
-        const data = await fetchCurrentWeather(currentCity.openWeatherQuery);
+        // Use API route to keep API key secure on server
+        const response = await fetch(`/api/weather?query=${encodeURIComponent(currentSlide.weather_query)}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch weather');
+        }
+        const data = await response.json();
         setWeatherData(data);
       } catch (error) {
         console.error('Error fetching weather:', error);
-        // En caso de error, mantener datos anteriores o usar fallback
         setWeatherData(null);
       } finally {
         setLoading(false);
@@ -31,7 +46,10 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
     };
 
     fetchWeather();
-  }, [currentCity.openWeatherQuery]);
+  }, [currentSlide.weather_query]);
+
+  const cityName = currentSlide.name || 'Unknown';
+  const countryName = currentSlide.country || '';
 
   return (
     <>
@@ -50,11 +68,13 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
             className="location-content"
           >
             <div className="city-name">
-              {currentCity.name.toUpperCase()}
+              {cityName.toUpperCase()}
             </div>
+            {countryName && (
             <div className="country-name">
-              {currentCity.country.toUpperCase()}
+                {countryName.toUpperCase()}
             </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -101,7 +121,6 @@ export default function WeatherBar({ activeIndex }: WeatherBarProps) {
               Temperature
             </div>
           </div>
-
 
           {/* Wind Section */}
           <div className="weather-section">

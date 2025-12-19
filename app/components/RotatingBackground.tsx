@@ -2,17 +2,16 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CITIES, ROTATION_SECONDS } from '@/config/cities';
+import type { Slide } from '@/lib/supabase/types';
 
 interface RotatingBackgroundProps {
   activeIndex: number;
   onIndexChange: (index: number) => void;
+  slides: Slide[];
+  currentSlide?: Slide; // Direct slide if provided
 }
 
-// Solo ciudades, sin placas de mercado
-const TOTAL_ITEMS = CITIES.length;
-
-export default function RotatingBackground({ activeIndex, onIndexChange }: RotatingBackgroundProps) {
+export default function RotatingBackground({ activeIndex, onIndexChange, slides, currentSlide: directSlide }: RotatingBackgroundProps) {
   const [showChannelChange, setShowChannelChange] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout>();
@@ -23,41 +22,30 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
   const channelChangeStartTimeRef = useRef<number | null>(null);
   const iframeLoadedRef = useRef<boolean>(false);
 
-  // Ahora solo hay ciudades, el índice es directamente el índice de la ciudad
+  // Get city index safely
   const getCityIndex = (index: number): number => {
-    return index % CITIES.length;
+    if (slides.length === 0) return 0;
+    return index % slides.length;
   };
 
   // Limpiar efecto cuando llegamos a una ciudad - esperar a que el iframe cargue
   useEffect(() => {
     iframeLoadedRef.current = false;
     
-    // Si hay efecto activo, esperar a que el iframe cargue o un tiempo mínimo
     if (showChannelChange) {
-      const minDisplayTime = 2500; // Tiempo mínimo de display del switching feed
+      const minDisplayTime = 2500;
       
       if (channelChangeStartTimeRef.current) {
         const elapsed = Date.now() - channelChangeStartTimeRef.current;
         const remaining = Math.max(0, minDisplayTime - elapsed);
         
-        console.log(`[RotatingBackground] Llegamos a ciudad, tiempo transcurrido: ${elapsed}ms, esperando ${remaining}ms más o hasta que iframe cargue`);
-        
-        // Esperar el tiempo restante O hasta que el iframe cargue (lo que ocurra primero)
         const timer = setTimeout(() => {
-          // Si el iframe ya cargó, limpiar inmediatamente
-          if (iframeLoadedRef.current) {
-            console.log(`[RotatingBackground] Limpiando efecto - iframe ya cargado`);
-          } else {
-            console.log(`[RotatingBackground] Limpiando efecto - tiempo mínimo cumplido`);
-          }
           setShowChannelChange(false);
           channelChangeStartTimeRef.current = null;
-        }, Math.max(remaining, 500)); // Mínimo 500ms
+        }, Math.max(remaining, 500));
         
         return () => clearTimeout(timer);
       } else {
-        // Si no hay timestamp, esperar tiempo mínimo o hasta que iframe cargue
-        console.log(`[RotatingBackground] Esperando tiempo mínimo o carga de iframe`);
         const timer = setTimeout(() => {
           setShowChannelChange(false);
         }, minDisplayTime);
@@ -66,32 +54,23 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
     }
   }, [activeIndex, showChannelChange]);
 
-  // Rotación automática desactivada - ahora se controla desde page.tsx
-  // El componente solo muestra la ciudad actual cuando activeIndex cambia
+  // Handle transitions when activeIndex changes
   useEffect(() => {
-    // Limpiar intervalo anterior si existe
     if (intervalRef.current) clearInterval(intervalRef.current);
 
-    // Solo mostrar efecto de transición si no es la primera carga
     const prevIndex = activeIndexRef.current;
     const isFirstLoad = prevIndex === undefined || prevIndex === activeIndex;
       
     if (!isFirstLoad) {
-      console.log(`[RotatingBackground] Cambio de ciudad detectado: ${prevIndex} -> ${activeIndex}`);
-      
-      // Mostrar efecto de switching feed al cambiar de ciudad
       channelChangeStartTimeRef.current = Date.now();
       setShowChannelChange(true);
       
-      // Limpiar timers anteriores
       if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
       if (channelChangeTimerRef.current) clearTimeout(channelChangeTimerRef.current);
       
-      // Timer para limpiar el efecto - dar tiempo para que el iframe cargue
       const cleanupDelay = 3000;
       channelChangeTimerRef.current = setTimeout(() => {
         if (!iframeLoadedRef.current) {
-          console.log(`[RotatingBackground] Iframe aún no cargado, extendiendo switching feed`);
           const extendedTimer = setTimeout(() => {
             setShowChannelChange(false);
             channelChangeStartTimeRef.current = null;
@@ -104,31 +83,45 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
       }, cleanupDelay);
     }
     
-    // Actualizar referencia
     activeIndexRef.current = activeIndex;
   }, [activeIndex]);
 
+  // Use direct slide if provided, otherwise calculate from slides array
   const cityIndex = getCityIndex(activeIndex);
-  const currentCity = CITIES[cityIndex];
+  const currentSlide = directSlide || slides[cityIndex];
 
   // Handler para detectar cuando el iframe ha cargado
   const handleIframeLoad = () => {
-    console.log(`[RotatingBackground] Iframe cargado correctamente`);
     iframeLoadedRef.current = true;
     
-    // Si hay switching feed activo, limpiarlo después de un breve delay
     if (showChannelChange) {
       setTimeout(() => {
-        console.log(`[RotatingBackground] Limpiando switching feed después de carga de iframe`);
         setShowChannelChange(false);
         channelChangeStartTimeRef.current = null;
-      }, 500); // Pequeño delay para transición suave
+      }, 500);
     }
   };
 
   // Handler para errores del iframe
   const handleIframeError = () => {
-    // Error cargando iframe
+    // Error cargando iframe - silently handle
+  };
+
+  // Don't render if no slides
+  if (!currentSlide || !currentSlide.youtube_url) {
+    return (
+      <div className="youtube-container flex items-center justify-center bg-black">
+        <div className="text-white text-2xl">Loading...</div>
+      </div>
+    );
+  }
+
+  // Determine zoom class based on slide name
+  const getZoomClass = () => {
+    const name = currentSlide.name.toLowerCase();
+    if (name === 'necochea' || name === 'sydney') return 'necochea-zoom';
+    if (name === 'hong kong') return 'hongkong-zoom';
+    return '';
   };
 
   return (
@@ -136,7 +129,6 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
       {/* Contenedor principal */}
       <div className="youtube-container">
         <AnimatePresence mode="wait" initial={false}>
-          {/* Mostrar video de YouTube */}
           <motion.div
             key={`city-${activeIndex}`}
             initial={{ opacity: 0 }}
@@ -157,16 +149,10 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
             }}
           >
             <iframe
-              key={`${activeIndex}-${currentCity.name}`}
+              key={`${activeIndex}-${currentSlide.name}`}
               ref={iframeRef}
-              src={currentCity.ytLiveUrl}
-              className={`youtube-iframe ${
-                currentCity.name === 'Necochea' || currentCity.name === 'Sydney' 
-                  ? 'necochea-zoom' 
-                  : currentCity.name === 'Hong Kong' 
-                  ? 'hongkong-zoom' 
-                  : ''
-              }`}
+              src={currentSlide.youtube_url}
+              className={`youtube-iframe ${getZoomClass()}`}
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -178,7 +164,7 @@ export default function RotatingBackground({ activeIndex, onIndexChange }: Rotat
         </AnimatePresence>
       </div>
 
-      {/* Efecto de cambio de canal - Antes de videos y entre ciudades */}
+      {/* Efecto de cambio de canal */}
       {showChannelChange && (
         <div className="channel-change-overlay">
           <div className="tv-static"></div>

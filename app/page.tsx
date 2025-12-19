@@ -1,234 +1,452 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useMemo } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import RotatingBackground from './components/RotatingBackground';
 import WeatherBar from './components/WeatherBar';
 import DateDisplay from './components/DateDisplay';
 import LiveIndicator from './components/LiveIndicator';
 import SponsorDisplay from './components/SponsorDisplay';
-import USDStats from '@/components/USDStats';
-import MetalsSlide from '@/components/MetalsSlide';
-import OilSlide from '@/components/OilSlide';
-import FxSlide from '@/components/FxSlide';
+import TransitionEffectComponent from './components/TransitionEffect';
 import CalendarSlide from '@/components/CalendarSlide';
-import { CITIES, ROTATION_SECONDS, DEBT_DISPLAY_SECONDS, MARKET_SLIDE_SECONDS, CALENDAR_DISPLAY_SECONDS } from '@/config/cities';
+import EventSlide from '@/components/EventSlide';
+import ShowSlide from '@/components/ShowSlide';
+import DebtSlide from '@/components/DebtSlide';
+import MetalsSlide from '@/components/MetalsSlide';
+import FxSlide from '@/components/FxSlide';
+import NewsSlide from '@/components/NewsSlide';
+import VideoSlide from '@/components/VideoSlide';
+import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
 import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
 import { prefetchMarketsData } from '@/hooks/useMarketsSats';
-
-type ViewMode = 'climate' | 'debt' | 'metals' | 'oil' | 'fx' | 'calendar';
-
-interface DebtData {
-  liveEstimateNow: number;
-  perSecond: number;
-  annualFederalSpending: number;
-  annualBudgetDeficit: number;
-  btcPriceUsd: number;
-}
+import type { Slide, Sponsor } from '@/lib/supabase/types';
 
 export default function Home() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<ViewMode>('climate');
-  const [debtData, setDebtData] = useState<DebtData | null>(null);
+  // Current slide index - follows order_index from database
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   
-  // Estados para la transición
+  // Transition states
   const [showTransition, setShowTransition] = useState(false);
   const [transitionText, setTransitionText] = useState('');
 
-  // Pre-fetch weather and market data for all cities on mount (runs once)
-  useEffect(() => {
-    // Pre-fetch all weather data in background to minimize requests when switching cities
-    prefetchAllWeatherData().catch(error => {
-      console.warn('Weather prefetch failed:', error);
-      // Non-critical, continue anyway
-    });
+  // Get configuration from Supabase with real-time updates
+  // slides array is already ordered by order_index and contains only active slides
+  const { slides, settings, sponsors, events, isLoading, error } = useRealtimeConfig();
+
+  // Current slide
+  const currentSlide = useMemo(() => {
+    if (slides.length === 0) return null;
+    return slides[currentSlideIndex % slides.length];
+  }, [slides, currentSlideIndex]);
+
+  // Check if we have certain slide types for prefetching
+  const hasYouTubeSlides = useMemo(() => 
+    slides.some(s => s.type === 'youtube'), [slides]);
+  const hasMarketSlides = useMemo(() => 
+    slides.some(s => s.type === 'metals' || s.type === 'fx'), [slides]);
+
+  // Get sponsor for current slide
+  const getSponsorForSlide = (slide: Slide | null): Sponsor | null => {
+    if (!slide || !slide.show_sponsor) return null;
     
-    // Pre-fetch market data immediately so slides don't show loading
-    prefetchMarketsData().catch(error => {
-      console.warn('Markets prefetch failed:', error);
-      // Non-critical, continue anyway
-    });
-  }, []);
-
-  // Obtener datos de deuda (Background Fetch)
-  useEffect(() => {
-    const fetchDebtData = async () => {
-      try {
-        const response = await fetch('/api/debt');
-        if (response.ok) {
-          const data = await response.json();
-          setDebtData({
-            liveEstimateNow: data.liveEstimateNow,
-            perSecond: data.perSecond,
-            annualFederalSpending: data.annualFederalSpending,
-            annualBudgetDeficit: data.annualBudgetDeficit,
-            btcPriceUsd: data.btcPriceUsd,
-          });
-        } else {
-          // Explicitly handle API failure
-          console.error('Debt API failed with status:', response.status);
-          // Keep existing data on error
-        }
-      } catch (error) {
-        console.error('Error fetching debt data:', error);
-        // Keep existing data on error
-      }
-    };
-
-    fetchDebtData();
-    // Actualizar cada 15 minutos (la deuda cambia lentamente, optimizado para minimizar API calls)
-    const interval = setInterval(fetchDebtData, 15 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Sistema de rotación y manejo de modos
-  // Flujo: ciudad -> deuda -> ciudad -> metals -> ciudad -> oil -> ciudad -> fx -> ciudad -> calendar -> ciudad -> deuda -> etc.
-  const [nextMarketSlide, setNextMarketSlide] = useState<'debt' | 'metals' | 'oil' | 'fx' | 'calendar'>('debt');
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    const transitionDelay = 1500; // Tiempo de transición con efecto estático
-
-    if (viewMode === 'climate') {
-      // Estamos viendo una ciudad -> Esperar ROTATION_SECONDS y cambiar al siguiente slide de mercado
-      timeoutId = setTimeout(() => {
-        if (nextMarketSlide === 'debt') {
-          setTransitionText('LOADING US DEBT INFO...');
-        } else if (nextMarketSlide === 'calendar') {
-          setTransitionText('LOADING CALENDAR...');
-        } else {
-          setTransitionText('LOADING MARKET DATA...');
-        }
-        setShowTransition(true);
-        setTimeout(() => {
-          setViewMode(nextMarketSlide);
-          setShowTransition(false);
-        }, transitionDelay);
-      }, ROTATION_SECONDS * 1000);
-    } else if (viewMode === 'debt') {
-      // Deuda -> Siguiente ciudad
-      timeoutId = setTimeout(() => {
-        setTransitionText('SWITCHING FEED...');
-        setShowTransition(true);
-        setTimeout(() => {
-          setActiveIndex((prev) => (prev + 1) % CITIES.length);
-          setViewMode('climate');
-          setNextMarketSlide('calendar'); // Después de deuda, saltamos a calendar (omitiendo metals, oil, fx)
-          setShowTransition(false);
-        }, transitionDelay);
-      }, DEBT_DISPLAY_SECONDS * 1000);
-    } else if (viewMode === 'calendar') {
-      // Calendar -> Siguiente ciudad
-      timeoutId = setTimeout(() => {
-        setTransitionText('SWITCHING FEED...');
-        setShowTransition(true);
-        setTimeout(() => {
-          setActiveIndex((prev) => (prev + 1) % CITIES.length);
-          setViewMode('climate');
-          setNextMarketSlide('debt'); // Después de calendar, vuelve a deuda
-          setShowTransition(false);
-        }, transitionDelay);
-      }, CALENDAR_DISPLAY_SECONDS * 1000);
+    if (slide.sponsor_id) {
+      return sponsors.find(s => s.id === slide.sponsor_id && s.is_active) || null;
     }
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [viewMode, activeIndex, nextMarketSlide]);
-
-  // Manejo manual del cambio de índice (por si se agrega interactividad futura)
-  const handleIndexChange = (newIndex: number) => {
-    setActiveIndex(newIndex);
+    
+    return sponsors.find(s => s.is_active) || null;
   };
 
-  const currentCityIndex = activeIndex % CITIES.length;
+  const currentSlideSponsor = getSponsorForSlide(currentSlide);
+
+  // Pre-fetch weather data if there are YouTube slides
+  useEffect(() => {
+    if (hasYouTubeSlides) {
+      prefetchAllWeatherData().catch(err => console.warn('Weather prefetch failed:', err));
+    }
+  }, [hasYouTubeSlides]);
+    
+  // Pre-fetch markets data if there are metals or fx slides
+  useEffect(() => {
+    if (hasMarketSlides) {
+      prefetchMarketsData().catch(err => console.warn('Markets prefetch failed:', err));
+    }
+  }, [hasMarketSlides]);
+
+  // Reset index when slides change (e.g., reorder, add, remove)
+  useEffect(() => {
+    if (slides.length > 0 && currentSlideIndex >= slides.length) {
+      setCurrentSlideIndex(0);
+    }
+  }, [slides.length, currentSlideIndex]);
+
+  // Main rotation logic - simple sequential rotation
+  useEffect(() => {
+    if (isLoading || slides.length === 0 || !currentSlide) return;
+
+    // Skip auto-advance for video slides with loop_count = 1 (they advance on video end)
+    if (currentSlide.type === 'video' && currentSlide.loop_count === 1) {
+      return;
+    }
+
+    const transitionEffect = settings.transition_effect || 'tv_static';
+    
+    // Different transition delays based on effect
+    // Increased delays to ensure previous slide exits completely
+    const transitionDelays: Record<string, number> = {
+      'none': 0,
+      'fade': 600,  // Increased to allow fade out
+      'slide': 700,  // Increased to allow slide out
+      'tv_static': 1400,  // Increased for TV static effect
+    };
+    
+    const transitionDelay = transitionDelays[transitionEffect] || 1400;
+    const duration = currentSlide.duration_seconds || settings.default_duration_seconds;
+
+    const timeoutId = setTimeout(() => {
+      // Get transition text based on next slide type
+      const nextIndex = (currentSlideIndex + 1) % slides.length;
+      const nextSlide = slides[nextIndex];
+      
+      let text = 'SWITCHING...';
+      if (nextSlide) {
+        switch (nextSlide.type) {
+          case 'youtube': text = 'SWITCHING FEED...'; break;
+          case 'debt': text = 'LOADING US DEBT...'; break;
+          case 'metals': text = 'LOADING METALS...'; break;
+          case 'fx': text = 'LOADING FX...'; break;
+          case 'show': text = 'LOADING SHOW...'; break;
+          case 'event': text = 'LOADING EVENT...'; break;
+          case 'calendar': text = 'LOADING CALENDAR...'; break;
+          case 'news': text = 'LOADING NEWS...'; break;
+          case 'video': text = 'LOADING VIDEO...'; break;
+          default: text = 'SWITCHING...';
+        }
+      }
+
+      setTransitionText(text);
+      setShowTransition(true);
+
+      // Wait for transition overlay to appear, then change slide
+      setTimeout(() => {
+        setCurrentSlideIndex(nextIndex);
+        // Wait for new slide to start entering before hiding transition
+        setTimeout(() => {
+          setShowTransition(false);
+        }, transitionEffect === 'none' ? 0 : 200);
+      }, transitionDelay);
+    }, duration * 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [currentSlideIndex, currentSlide, slides, isLoading, settings.default_duration_seconds, settings.transition_effect]);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <main className="h-screen w-screen overflow-hidden relative bg-black flex items-center justify-center">
+        <div className="text-white text-2xl tracking-wider animate-pulse">
+          LOADING CONFIGURATION...
+        </div>
+      </main>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <main className="h-screen w-screen overflow-hidden relative bg-black flex flex-col items-center justify-center gap-4">
+        <div className="text-red-500 text-2xl font-bold tracking-wider">CONFIGURATION ERROR</div>
+        <div className="text-white text-lg">{error}</div>
+      </main>
+    );
+  }
+
+  // No slides configured
+  if (slides.length === 0) {
+    return (
+      <main className="h-screen w-screen overflow-hidden relative bg-black flex flex-col items-center justify-center gap-4">
+        <div className="text-yellow-500 text-2xl font-bold tracking-wider">NO SLIDES CONFIGURED</div>
+        <div className="text-white text-lg">Go to /admin to add slides</div>
+      </main>
+    );
+  }
+
+  // Render the appropriate slide based on type
+  const renderSlide = () => {
+    if (!currentSlide) return null;
+
+    switch (currentSlide.type) {
+      case 'youtube':
+        return (
+          <>
+            <RotatingBackground 
+              activeIndex={currentSlideIndex} 
+              onIndexChange={setCurrentSlideIndex}
+              slides={slides.filter(s => s.type === 'youtube')}
+              currentSlide={currentSlide}
+            />
+            
+            <div className="top-info-bar">
+              <DateDisplay 
+                activeIndex={currentSlideIndex} 
+                timezone={currentSlide.timezone || undefined}
+              />
+              <LiveIndicator visible={settings.show_live_indicator} />
+            </div>
+            
+            <div className="bottom-info-bar">
+              <WeatherBar 
+                activeIndex={currentSlideIndex} 
+                currentSlide={currentSlide}
+                visible={currentSlide.show_weather}
+              />
+              <SponsorDisplay 
+                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
+                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
+              />
+            </div>
+          </>
+        );
+
+      case 'debt':
+        return (
+          <motion.div
+            key={`debt-${currentSlide.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ 
+              duration: 0.5, 
+              ease: [0.4, 0, 0.2, 1],
+              opacity: { duration: 0.4 }
+            }}
+            className="h-full w-full bg-black relative"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <DebtSlide />
+            <div className="absolute bottom-4 right-4 z-20">
+              <SponsorDisplay
+                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
+                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? false)}
+              />
+            </div>
+          </motion.div>
+        );
+
+      case 'metals':
+        return (
+          <motion.div
+            key={`metals-${currentSlide.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ 
+              duration: 0.5, 
+              ease: [0.4, 0, 0.2, 1],
+              opacity: { duration: 0.4 }
+            }}
+            className="h-full w-full bg-black relative"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <MetalsSlide />
+            <div className="absolute bottom-4 right-4 z-20">
+              <SponsorDisplay
+                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
+                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? false)}
+              />
+            </div>
+          </motion.div>
+        );
+
+      case 'fx':
+        return (
+          <motion.div
+            key={`fx-${currentSlide.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ 
+              duration: 0.5, 
+              ease: [0.4, 0, 0.2, 1],
+              opacity: { duration: 0.4 }
+            }}
+            className="h-full w-full bg-black relative"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <FxSlide />
+            <div className="absolute bottom-4 right-4 z-20">
+              <SponsorDisplay
+                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
+                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? false)}
+              />
+            </div>
+          </motion.div>
+        );
+
+      case 'show':
+        return (
+          <motion.div
+            key={`show-${currentSlide.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ 
+              duration: 0.5, 
+              ease: [0.4, 0, 0.2, 1],
+              opacity: { duration: 0.4 }
+            }}
+            className="h-full w-full bg-black relative"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <ShowSlide slide={currentSlide} />
+            <div className="absolute bottom-4 right-4 z-20">
+              <SponsorDisplay 
+                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
+                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
+              />
+            </div>
+          </motion.div>
+        );
+
+      case 'event':
+        return (
+          <motion.div
+            key={`event-${currentSlide.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ 
+              duration: 0.5, 
+              ease: [0.4, 0, 0.2, 1],
+              opacity: { duration: 0.4 }
+            }}
+            className="h-full w-full bg-black relative"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <EventSlide slide={currentSlide} events={events} />
+            <div className="absolute bottom-4 right-4 z-20">
+              <SponsorDisplay 
+                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
+                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
+              />
+            </div>
+          </motion.div>
+        );
+
+      case 'calendar':
+        return (
+          <motion.div
+            key={`calendar-${currentSlide.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ 
+              duration: 0.5, 
+              ease: [0.4, 0, 0.2, 1],
+              opacity: { duration: 0.4 }
+            }}
+            className="h-full w-full flex items-center justify-center bg-black relative"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <CalendarSlide events={events} />
+            <div className="absolute bottom-4 right-4">
+              <SponsorDisplay 
+                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
+                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
+              />
+            </div>
+          </motion.div>
+        );
+
+      case 'news':
+        return (
+          <motion.div
+            key={`news-${currentSlide.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ 
+              duration: 0.5, 
+              ease: [0.4, 0, 0.2, 1],
+              opacity: { duration: 0.4 }
+            }}
+            className="h-full w-full bg-black relative"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <NewsSlide slide={currentSlide} duration={currentSlide.duration_seconds} />
+            <div className="absolute bottom-4 right-4 z-20">
+              <SponsorDisplay 
+                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
+                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
+              />
+            </div>
+          </motion.div>
+        );
+
+      case 'video':
+        return (
+          <motion.div
+            key={`video-${currentSlide.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ 
+              duration: 0.5, 
+              ease: [0.4, 0, 0.2, 1],
+              opacity: { duration: 0.4 }
+            }}
+            className="h-full w-full bg-black relative"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <VideoSlide 
+              slide={currentSlide} 
+              onVideoEnd={() => {
+                // When video ends (if loop_count is set and all loops completed), advance to next slide
+                if (currentSlide.loop_count !== null) {
+                  const nextIndex = (currentSlideIndex + 1) % slides.length;
+                  setCurrentSlideIndex(nextIndex);
+                }
+              }}
+            />
+            <div className="absolute bottom-4 right-4 z-20">
+              <SponsorDisplay 
+                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
+                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
+              />
+            </div>
+          </motion.div>
+        );
+
+      default:
+        return (
+          <div className="h-full w-full bg-black flex items-center justify-center">
+            <div className="text-white text-xl">Unknown slide type: {currentSlide.type}</div>
+          </div>
+        );
+    }
+  };
+
+  const transitionEffect = settings.transition_effect || 'tv_static';
 
   return (
     <main className="h-screen w-screen overflow-hidden relative bg-black" style={{ margin: 0, padding: 0 }}>
-      {/* Efecto de transición (TV Static) */}
-      {showTransition && (
-        <div className="channel-change-overlay" style={{ zIndex: 9999 }}>
-          <div className="tv-static"></div>
-          <div className="interference-lines"></div>
-          <div className="channel-change-text">{transitionText}</div>
-        </div>
-      )}
-
-      {/* Vista de Clima / Ciudad */}
-      {viewMode === 'climate' && (
-        <>
-          <RotatingBackground 
-            activeIndex={activeIndex} 
-            onIndexChange={handleIndexChange}
-          />
-          
-          <div className="top-info-bar">
-            <DateDisplay activeIndex={currentCityIndex} />
-            <LiveIndicator />
-          </div>
-          
-          <div className="bottom-info-bar">
-            <WeatherBar activeIndex={currentCityIndex} />
-            <SponsorDisplay />
-          </div>
-        </>
-      )}
-
-      {/* Vista de Deuda */}
-      {viewMode === 'debt' && debtData && (
-        <div className="h-full w-full flex items-center justify-center bg-black p-4">
-          <div className="w-full h-full max-w-[1920px] mx-auto">
-            <USDStats
-              liveDebtUSD={debtData.liveEstimateNow}
-              perSecond={debtData.perSecond}
-              base={debtData.liveEstimateNow}
-              annualFederalSpending={debtData.annualFederalSpending}
-              annualBudgetDeficit={debtData.annualBudgetDeficit}
-              initialBtcPrice={debtData.btcPriceUsd}
-            />
-          </div>
-        </div>
-      )}
-      
-      {/* Fallback if debt data fails to load - Shows an error message */}
-      {viewMode === 'debt' && !debtData && (
-         <div className="h-full w-full flex flex-col items-center justify-center bg-black gap-4">
-           <div className="text-red-500 text-4xl font-bold tracking-wider">DATA UNAVAILABLE</div>
-           <div className="text-white text-xl tracking-wider">Unable to fetch live US Debt info</div>
-           <div className="text-gray-500 text-sm mt-4">Retrying automatically...</div>
-         </div>
-      )}
-
-      {/* Vistas de Mercado con AnimatePresence */}
+      {/* Transition Effect - Above everything */}
       <AnimatePresence mode="wait">
-        {viewMode === 'metals' && (
-          <div key="metals" className="h-full w-full flex items-center justify-center bg-black p-4">
-            <div className="w-full h-full max-w-[1920px] mx-auto">
-              <MetalsSlide />
-            </div>
-          </div>
-        )}
-        {viewMode === 'oil' && (
-          <div key="oil" className="h-full w-full flex items-center justify-center bg-black p-4">
-            <div className="w-full h-full max-w-[1920px] mx-auto">
-              <OilSlide />
-            </div>
-          </div>
-        )}
-        {viewMode === 'fx' && (
-          <div key="fx" className="h-full w-full flex items-center justify-center bg-black p-4">
-            <div className="w-full h-full max-w-[1920px] mx-auto">
-              <FxSlide />
-            </div>
-          </div>
-        )}
-        {viewMode === 'calendar' && (
-          <div key="calendar" className="h-full w-full flex items-center justify-center bg-black">
-            <CalendarSlide />
-          </div>
+        {showTransition && (
+          <TransitionEffectComponent
+            key={`transition-${currentSlideIndex}`}
+            effect={transitionEffect}
+            isVisible={showTransition}
+            text={transitionText}
+          />
         )}
       </AnimatePresence>
+
+      {/* Current Slide Container - Position relative for absolute children */}
+      <div className="relative w-full h-full" style={{ position: 'relative', width: '100%', height: '100%' }}>
+        <AnimatePresence mode="wait" initial={false}>
+          {currentSlide && renderSlide()}
+        </AnimatePresence>
+      </div>
     </main>
   );
 }

@@ -111,16 +111,24 @@ async function fetchMetals(apiUrl: string, apiKey: string): Promise<{
   const now = Date.now();
   
   // Verificar cache de Metals primero (8 horas)
+  // Solo usar cache si tiene valores válidos (> 0)
   if (metalsCache && (now - metalsCache.timestamp) < METALS_CACHE_DURATION) {
-    console.log("Using cached Metals.dev data");
-    return {
-      ...metalsCache.data,
-      rateLimitInfo: {
-        remaining: getMetalsRemainingRequests(),
-        requestsPerDay: getMetalsRequestsPerDay(),
-        limitReached: false,
-      },
-    };
+    const cachedGold = metalsCache.data.gold?.usd || 0;
+    const cachedSilver = metalsCache.data.silver?.usd || 0;
+    
+    if (cachedGold > 0 || cachedSilver > 0) {
+      console.log("Using cached Metals.dev data (valid values)");
+      return {
+        ...metalsCache.data,
+        rateLimitInfo: {
+          remaining: getMetalsRemainingRequests(),
+          requestsPerDay: getMetalsRequestsPerDay(),
+          limitReached: false,
+        },
+      };
+    } else {
+      console.warn("Cache exists but contains invalid values (both 0), fetching fresh data");
+    }
   }
   
   // Verificar rate limit antes de hacer requests
@@ -131,17 +139,24 @@ async function fetchMetals(apiUrl: string, apiKey: string): Promise<{
   
   if (!canMakeRequest || remaining < 1) {
     console.warn(`Metals.dev rate limit reached. Remaining: ${remaining}, Requests per day: ${requestsPerDay}`);
-    // Si hay cache expirado, usarlo de todas formas
+    // Si hay cache expirado, usarlo SOLO si tiene valores válidos
     if (metalsCache) {
-      console.log("Using expired Metals cache due to rate limit");
-      return {
-        ...metalsCache.data,
-        rateLimitInfo: {
-          remaining,
-          requestsPerDay,
-          limitReached: true,
-        },
-      };
+      const cachedGold = metalsCache.data.gold?.usd || 0;
+      const cachedSilver = metalsCache.data.silver?.usd || 0;
+      
+      if (cachedGold > 0 || cachedSilver > 0) {
+        console.log("Using expired Metals cache due to rate limit (has valid values)");
+        return {
+          ...metalsCache.data,
+          rateLimitInfo: {
+            remaining,
+            requestsPerDay,
+            limitReached: true,
+          },
+        };
+      } else {
+        console.warn("Cache exists but contains invalid values (both 0), cannot use as fallback");
+      }
     }
     return {
       gold: { usd: 0, change24hPct: null },
@@ -159,10 +174,11 @@ async function fetchMetals(apiUrl: string, apiKey: string): Promise<{
     // Formato: https://api.metals.dev/v1/latest?api_key=...&currency=USD&unit=toz
     // La respuesta incluye todos los metales, filtramos gold y silver
     // Según docs: https://metals.dev/symbols - los símbolos son "gold" y "silver"
-    const baseUrl = 'https://api.metals.dev';
+    // Usar apiUrl si está disponible, sino usar baseUrl por defecto
+    const baseUrl = apiUrl && apiUrl.trim() ? apiUrl.replace(/\/$/, '') : 'https://api.metals.dev';
     const url = `${baseUrl}/v1/latest?api_key=${apiKey}&currency=USD&unit=toz`;
     
-    console.log("Metals URL:", url.replace(apiKey, '***'));
+    console.log("Metals API URL:", url.replace(apiKey, '***'));
     
     const response = await fetch(url, {
       next: { revalidate: 0 },
@@ -175,14 +191,56 @@ async function fetchMetals(apiUrl: string, apiKey: string): Promise<{
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Metals API error ${response.status}:`, errorText.substring(0, 200));
-      throw new Error(`Metals API error: ${response.status}`);
+      let errorMessage = `Metals API error ${response.status}`;
+      
+      // Intentar parsear el error como JSON si es posible
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.message || errorJson.error || errorMessage;
+        console.error(`Metals API error ${response.status}:`, errorJson);
+      } catch {
+        console.error(`Metals API error ${response.status}:`, errorText.substring(0, 200));
+      }
+      
+      // Si es un error de autenticación o rate limit, no incrementar el contador
+      if (response.status === 401 || response.status === 403) {
+        console.error("Metals API authentication failed - check API key");
+      } else if (response.status === 429) {
+        console.error("Metals API rate limit exceeded");
+        // Marcar que el límite fue alcanzado
+        incrementMetalsRequest(); // Incrementar para reflejar el intento
+      }
+      
+      throw new Error(errorMessage);
     }
 
     const json = await response.json();
     
-    // Debug: Log raw API response
-    console.log("Metals.dev response:", JSON.stringify(json).substring(0, 500));
+    // Debug: Log raw API response completo para diagnóstico
+    console.log("Metals.dev full response:", JSON.stringify(json, null, 2));
+    console.log("Metals.dev response keys:", Object.keys(json));
+    if (json.metals) {
+      console.log("Metals.dev metals keys:", Object.keys(json.metals));
+      console.log("Metals.dev metals values:", {
+        gold: json.metals.gold,
+        goldType: typeof json.metals.gold,
+        silver: json.metals.silver,
+        silverType: typeof json.metals.silver,
+      });
+    }
+    
+    // Verificar si la respuesta tiene status de error
+    if (json.status === "error" || json.status === "failure") {
+      const errorMsg = json.message || json.error || "Unknown error from Metals.dev API";
+      console.error("Metals.dev API returned error:", errorMsg);
+      throw new Error(`Metals.dev API error: ${errorMsg}`);
+    }
+    
+    // Verificar que la respuesta tenga la estructura esperada
+    if (!json.metals || typeof json.metals !== "object") {
+      console.error("Metals.dev API response missing 'metals' object. Full response:", JSON.stringify(json, null, 2));
+      throw new Error("Invalid Metals.dev API response format: missing 'metals' object");
+    }
     
     // Incrementar contador (1 request para todos los metales)
     incrementMetalsRequest();
@@ -193,22 +251,57 @@ async function fetchMetals(apiUrl: string, apiKey: string): Promise<{
     // Metals.dev response format: { status: "success", metals: { gold: number, silver: number, ... } }
     // Los precios están directamente en json.metals.gold y json.metals.silver como números
     const metals = json.metals || {};
-    const goldPrice = metals.gold || "0";
-    const silverPrice = metals.silver || "0";
+    const goldPrice = metals.gold;
+    const silverPrice = metals.silver;
+    
+    // Log valores raw antes de parsear
+    console.log("Raw metals prices from API:", {
+      goldPrice,
+      goldPriceType: typeof goldPrice,
+      silverPrice,
+      silverPriceType: typeof silverPrice,
+    });
+    
+    // Validar que los precios sean números válidos
+    const goldUsd = goldPrice != null && !isNaN(Number(goldPrice)) && Number(goldPrice) > 0 
+      ? parseFloat(String(goldPrice)) 
+      : 0;
+    const silverUsd = silverPrice != null && !isNaN(Number(silverPrice)) && Number(silverPrice) > 0 
+      ? parseFloat(String(silverPrice)) 
+      : 0;
     
     // Metals.dev no proporciona change_24h en el endpoint /v1/latest, solo precios
     const goldChange = null;
     const silverChange = null;
     
-    console.log("Parsed metals:", { goldPrice, silverPrice, goldChange, silverChange });
+    console.log("Parsed metals:", { goldUsd, silverUsd, goldChange, silverChange });
+    
+    // Si los precios son 0 o inválidos, lanzar error para usar cache (si existe y es válido)
+    if (goldUsd <= 0 && silverUsd <= 0) {
+      console.warn("⚠️ Metals.dev API returned invalid prices (both zero or invalid)");
+      console.warn("Raw response metals object:", metals);
+      // No lanzar error inmediatamente - verificar si hay cache válido primero
+      if (metalsCache && metalsCache.data.gold.usd > 0) {
+        console.log("Using cached metals data instead of invalid API response");
+        return {
+          ...metalsCache.data,
+          rateLimitInfo: {
+            remaining: newRemaining,
+            requestsPerDay: newRequestsPerDay,
+            limitReached: false,
+          },
+        };
+      }
+      throw new Error("Invalid metals prices from API and no valid cache available");
+    }
     
     const result = {
       gold: {
-        usd: parseFloat(String(goldPrice)),
+        usd: goldUsd,
         change24hPct: goldChange !== null ? parseFloat(String(goldChange)) : null,
       },
       silver: {
-        usd: parseFloat(String(silverPrice)),
+        usd: silverUsd,
         change24hPct: silverChange !== null ? parseFloat(String(silverChange)) : null,
       },
       rateLimitInfo: {
@@ -230,19 +323,30 @@ async function fetchMetals(apiUrl: string, apiKey: string): Promise<{
     return result;
   } catch (error) {
     console.error("Error fetching metals:", error);
-    // Si hay cache disponible (incluso expirado), usarlo
+    console.error("Error details:", error instanceof Error ? error.message : String(error));
+    
+    // Si hay cache disponible (incluso expirado), usarlo SOLO si tiene valores válidos
     if (metalsCache) {
-      console.log("Using expired Metals cache due to error");
-      return {
-        ...metalsCache.data,
-        rateLimitInfo: {
-          remaining,
-          requestsPerDay,
-          limitReached: false,
-        },
-      };
+      const cachedGold = metalsCache.data.gold?.usd || 0;
+      const cachedSilver = metalsCache.data.silver?.usd || 0;
+      
+      if (cachedGold > 0 || cachedSilver > 0) {
+        console.log("Using expired Metals cache due to error (has valid values)");
+        return {
+          ...metalsCache.data,
+          rateLimitInfo: {
+            remaining,
+            requestsPerDay,
+            limitReached: false,
+          },
+        };
+      } else {
+        console.warn("Cache exists but contains invalid values (both 0), cannot use as fallback");
+      }
     }
+    
     // Return zeros on error - caller will handle stale data
+    console.warn("⚠️ Returning zero values for metals - no valid cache available");
     return {
       gold: { usd: 0, change24hPct: null },
       silver: { usd: 0, change24hPct: null },
@@ -561,14 +665,23 @@ export async function GET() {
     const fxApiKey = process.env.FX_API_KEY;
 
     // Debug: Log environment variables (sin mostrar keys completas)
-    console.log("Markets API Config:", {
+    const configStatus = {
       metalsApiUrl: metalsApiUrl ? "✓ Set" : "✗ Missing",
       metalsApiKey: metalsApiKey ? "✓ Set" : "✗ Missing",
       oilApiUrl: oilApiUrl ? "✓ Set" : "✗ Missing",
       oilApiKey: oilApiKey ? "✓ Set" : "✗ Missing",
       fxApiUrl: fxApiUrl ? "✓ Set" : "✗ Missing",
       fxApiKey: fxApiKey ? "✓ Set" : "✗ Missing",
-    });
+    };
+    console.log("Markets API Config:", configStatus);
+    
+    // Advertir si faltan las API keys críticas
+    if (!metalsApiKey) {
+      console.warn("⚠️ METALS_API_KEY is missing! Metals data will not be available.");
+    }
+    if (!oilApiKey) {
+      console.warn("⚠️ OIL_API_KEY is missing! Oil data will not be available.");
+    }
 
     // Fetch BTC price first (or use cached version from Roxom)
     const btcUsd = await getBTCPrice();
@@ -635,18 +748,32 @@ export async function GET() {
     }
 
     // Fallback: Use individual cache if API failed or returned zeros
-    // Metals fallback
+    // Metals fallback - SOLO usar cache si tiene valores válidos (> 0)
     if ((metals.gold.usd === 0 && metals.silver.usd === 0) || metalsData.status === "rejected") {
       if (metalsCache && (now - metalsCache.timestamp) < METALS_CACHE_DURATION * 2) {
-        // Use cache even if expired (up to 2x duration) as fallback
-        console.log("Using cached metals data as fallback");
-        metals = metalsCache.data;
+        const cachedGold = metalsCache.data.gold?.usd || 0;
+        const cachedSilver = metalsCache.data.silver?.usd || 0;
+        
+        if (cachedGold > 0 || cachedSilver > 0) {
+          // Use cache even if expired (up to 2x duration) as fallback
+          console.log("Using cached metals data as fallback (has valid values)");
+          metals = metalsCache.data;
+        } else {
+          console.warn("Metals cache exists but contains invalid values (both 0), skipping fallback");
+        }
       } else if (marketsCache && marketsCache.data.metals) {
         // Fallback to general cache if individual cache not available
-        console.log("Using metals data from general cache as fallback");
         const cachedMetals = marketsCache.data.metals;
-        metals.gold = { usd: cachedMetals.gold.usd, change24hPct: cachedMetals.gold.change24hPct };
-        metals.silver = { usd: cachedMetals.silver.usd, change24hPct: cachedMetals.silver.change24hPct };
+        const cachedGold = cachedMetals.gold?.usd || 0;
+        const cachedSilver = cachedMetals.silver?.usd || 0;
+        
+        if (cachedGold > 0 || cachedSilver > 0) {
+          console.log("Using metals data from general cache as fallback (has valid values)");
+          metals.gold = { usd: cachedMetals.gold.usd, change24hPct: cachedMetals.gold.change24hPct };
+          metals.silver = { usd: cachedMetals.silver.usd, change24hPct: cachedMetals.silver.change24hPct };
+        } else {
+          console.warn("General cache metals data is invalid (both 0), skipping fallback");
+        }
       }
     }
 

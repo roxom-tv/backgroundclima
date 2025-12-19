@@ -2,37 +2,47 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CITIES } from '@/config/cities';
 
 interface DateDisplayProps {
   activeIndex: number;
+  timezone?: string;
 }
 
-export default function DateDisplay({ activeIndex }: DateDisplayProps) {
+export default function DateDisplay({ activeIndex, timezone = 'America/New_York' }: DateDisplayProps) {
   const [currentDate, setCurrentDate] = useState('');
 
   useEffect(() => {
     const updateDate = () => {
-      const currentCity = CITIES[activeIndex];
       const now = new Date();
       
-      // Crear fecha en la zona horaria de la ciudad actual
-      const localDate = new Intl.DateTimeFormat('en-US', {
-        timeZone: currentCity.tz,
-        month: '2-digit',
-        day: '2-digit',
-        year: 'numeric'
-      }).format(now);
-      
-      setCurrentDate(localDate);
+      try {
+        // Create date in the city's timezone
+        const localDate = new Intl.DateTimeFormat('en-US', {
+          timeZone: timezone,
+          month: '2-digit',
+          day: '2-digit',
+          year: 'numeric'
+        }).format(now);
+        
+        setCurrentDate(localDate);
+      } catch {
+        // Fallback to local date if timezone is invalid
+        const localDate = new Intl.DateTimeFormat('en-US', {
+          month: '2-digit',
+          day: '2-digit',
+          year: 'numeric'
+        }).format(now);
+        
+        setCurrentDate(localDate);
+      }
     };
 
     updateDate();
-    // Solo actualizar cada hora para fechas (no necesitamos actualización por segundo)
-    const interval = setInterval(updateDate, 1000 * 60 * 60); // Update every hour
+    // Update every hour for dates
+    const interval = setInterval(updateDate, 1000 * 60 * 60);
 
     return () => clearInterval(interval);
-  }, [activeIndex]);
+  }, [timezone]);
 
   return (
     <AnimatePresence mode="wait">

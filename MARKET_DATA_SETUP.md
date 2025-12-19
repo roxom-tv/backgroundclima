@@ -97,3 +97,6 @@ Si prefieres usar otras APIs, puedes modificar el código en `app/api/markets/sa
 - **Oil**: Alternativas como Alpha Vantage, EIA, etc.
 - **FX**: Alternativas como Fixer.io, CurrencyLayer, exchangerate-api.com, etc.
 
+
+
+

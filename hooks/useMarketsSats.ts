@@ -157,12 +157,17 @@ async function fetchMarketsDataInternal(setData?: (data: MarketsSatsData | null)
   await fetchPromise;
 }
 
-export function useMarketsSats() {
+export function useMarketsSats(enabled: boolean = true) {
   const [data, setData] = useState<MarketsSatsData | null>(sharedMarketsData);
   const [loading, setLoading] = useState(!sharedMarketsData && sharedLoading);
   const [error, setError] = useState<Error | null>(sharedError);
 
   useEffect(() => {
+    // Don't fetch if disabled
+    if (!enabled) {
+      return;
+    }
+
     // Si ya hay datos compartidos, usarlos inmediatamente
     if (sharedMarketsData && !data) {
       setData(sharedMarketsData);
@@ -182,7 +187,7 @@ export function useMarketsSats() {
     }, 15 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [enabled]);
 
   return { data, loading, error };
 }

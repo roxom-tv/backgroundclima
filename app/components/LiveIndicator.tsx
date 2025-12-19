@@ -2,7 +2,15 @@
 
 import { motion } from 'framer-motion';
 
-export default function LiveIndicator() {
+interface LiveIndicatorProps {
+  visible?: boolean;
+}
+
+export default function LiveIndicator({ visible = true }: LiveIndicatorProps) {
+  if (!visible) {
+    return null;
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
