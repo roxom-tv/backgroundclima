@@ -130,10 +130,15 @@ export default function Home() {
       setTimeout(() => {
         setCurrentSlideIndex(nextIndex);
         // Wait for new slide to be fully visible before hiding transition
-        // Slides have 500ms animation duration, so we wait 700ms to ensure smooth transition
+        // Base delay: 700ms for most slides (500ms animation + 200ms buffer)
+        // Event slides need more time due to internal animations (up to 400ms delay) and image loading
+        let hideDelay = 700;
+        if (nextSlide?.type === 'event') {
+          hideDelay = 900; // Extra time for event slide animations and image loading
+        }
         setTimeout(() => {
           setShowTransition(false);
-        }, transitionEffect === 'none' ? 0 : 700);
+        }, transitionEffect === 'none' ? 0 : hideDelay);
       }, transitionDelay);
     }, duration * 1000);
 
