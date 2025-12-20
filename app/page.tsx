@@ -129,10 +129,11 @@ export default function Home() {
       // Wait for transition overlay to appear, then change slide
       setTimeout(() => {
         setCurrentSlideIndex(nextIndex);
-        // Wait for new slide to start entering before hiding transition
+        // Wait for new slide to be fully visible before hiding transition
+        // Slides have 500ms animation duration, so we wait 700ms to ensure smooth transition
         setTimeout(() => {
           setShowTransition(false);
-        }, transitionEffect === 'none' ? 0 : 200);
+        }, transitionEffect === 'none' ? 0 : 700);
       }, transitionDelay);
     }, duration * 1000);
 
