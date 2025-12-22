@@ -9,9 +9,10 @@ interface RotatingBackgroundProps {
   onIndexChange: (index: number) => void;
   slides: Slide[];
   currentSlide?: Slide; // Direct slide if provided
+  disableInternalOverlay?: boolean; // Disable internal overlay when global overlay is active
 }
 
-export default function RotatingBackground({ activeIndex, onIndexChange, slides, currentSlide: directSlide }: RotatingBackgroundProps) {
+export default function RotatingBackground({ activeIndex, onIndexChange, slides, currentSlide: directSlide, disableInternalOverlay = false }: RotatingBackgroundProps) {
   const [showChannelChange, setShowChannelChange] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout>();
@@ -61,7 +62,7 @@ export default function RotatingBackground({ activeIndex, onIndexChange, slides,
     const prevIndex = activeIndexRef.current;
     const isFirstLoad = prevIndex === undefined || prevIndex === activeIndex;
       
-    if (!isFirstLoad) {
+    if (!isFirstLoad && !disableInternalOverlay) {
       channelChangeStartTimeRef.current = Date.now();
       setShowChannelChange(true);
       
@@ -81,6 +82,10 @@ export default function RotatingBackground({ activeIndex, onIndexChange, slides,
         setShowChannelChange(false);
         channelChangeStartTimeRef.current = null;
       }, cleanupDelay);
+    } else if (disableInternalOverlay) {
+      // If global overlay is active, ensure internal overlay is hidden
+      setShowChannelChange(false);
+      channelChangeStartTimeRef.current = null;
     }
     
     activeIndexRef.current = activeIndex;
@@ -94,7 +99,7 @@ export default function RotatingBackground({ activeIndex, onIndexChange, slides,
   const handleIframeLoad = () => {
     iframeLoadedRef.current = true;
     
-    if (showChannelChange) {
+    if (showChannelChange && !disableInternalOverlay) {
       setTimeout(() => {
         setShowChannelChange(false);
         channelChangeStartTimeRef.current = null;

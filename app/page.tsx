@@ -90,23 +90,25 @@ export default function Home() {
 
     const transitionEffect = settings.transition_effect || 'tv_static';
     
-    // Different transition delays based on effect
-    // Increased delays to ensure previous slide exits completely
+    // Get next slide info early to determine transition behavior
+    const nextIndex = (currentSlideIndex + 1) % slides.length;
+    const nextSlide = slides[nextIndex];
+    const isNextYouTube = nextSlide?.type === 'youtube';
+    
+    // Different transition delays based on effect and slide type
+    // YouTube videos need longer delays, other slides can be faster
     const transitionDelays: Record<string, number> = {
       'none': 0,
-      'fade': 600,  // Increased to allow fade out
-      'slide': 700,  // Increased to allow slide out
-      'tv_static': 1400,  // Increased for TV static effect
+      'fade': isNextYouTube ? 600 : 300,  // Faster for non-YouTube slides
+      'slide': isNextYouTube ? 700 : 400,  // Faster for non-YouTube slides
+      'tv_static': isNextYouTube ? 1400 : 0,  // Only for YouTube
     };
     
-    const transitionDelay = transitionDelays[transitionEffect] || 1400;
+    const transitionDelay = transitionDelays[transitionEffect] || (isNextYouTube ? 1400 : 300);
     const duration = currentSlide.duration_seconds || settings.default_duration_seconds;
 
     const timeoutId = setTimeout(() => {
       // Get transition text based on next slide type
-      const nextIndex = (currentSlideIndex + 1) % slides.length;
-      const nextSlide = slides[nextIndex];
-      
       let text = 'SWITCHING...';
       if (nextSlide) {
         switch (nextSlide.type) {
@@ -124,17 +126,21 @@ export default function Home() {
       }
 
       setTransitionText(text);
-      setShowTransition(true);
+      // Only show overlay for YouTube or when fade/slide is explicitly selected
+      setShowTransition(isNextYouTube || transitionEffect === 'fade' || transitionEffect === 'slide');
 
       // Wait for transition overlay to appear, then change slide
       setTimeout(() => {
         setCurrentSlideIndex(nextIndex);
         // Wait for new slide to be fully visible before hiding transition
-        // Base delay: 700ms for most slides (500ms animation + 200ms buffer)
-        // Event slides need more time due to internal animations (up to 400ms delay) and image loading
+        // Adjust hideDelay based on slide type
         let hideDelay = 700;
         if (nextSlide?.type === 'event') {
           hideDelay = 900; // Extra time for event slide animations and image loading
+        } else if (nextSlide?.type === 'youtube') {
+          hideDelay = 0; // RotatingBackground handles its own overlay timing
+        } else {
+          hideDelay = 400; // Faster for slides that load instantly
         }
         setTimeout(() => {
           setShowTransition(false);
@@ -189,6 +195,7 @@ export default function Home() {
               onIndexChange={setCurrentSlideIndex}
               slides={slides.filter(s => s.type === 'youtube')}
               currentSlide={currentSlide}
+              disableInternalOverlay={showTransition}
             />
             
             <div className="top-info-bar">
@@ -432,6 +439,14 @@ export default function Home() {
   };
 
   const transitionEffect = settings.transition_effect || 'tv_static';
+  
+  // Calculate effective effect based on next slide type
+  // Force fade for non-YouTube slides, use configured effect for YouTube
+  const nextIndex = (currentSlideIndex + 1) % slides.length;
+  const nextSlide = slides[nextIndex];
+  const effectiveEffect = nextSlide?.type === 'youtube' 
+    ? transitionEffect 
+    : 'fade'; // Force fade for non-YouTube slides
 
   return (
     <main className="h-screen w-screen overflow-hidden relative bg-black" style={{ margin: 0, padding: 0 }}>
@@ -440,7 +455,7 @@ export default function Home() {
         {showTransition && (
           <TransitionEffectComponent
             key={`transition-${currentSlideIndex}`}
-            effect={transitionEffect}
+            effect={effectiveEffect}
             isVisible={showTransition}
             text={transitionText}
           />
