@@ -136,9 +136,11 @@ export default function Home() {
         // Adjust hideDelay based on slide type
         let hideDelay = 700;
         if (nextSlide?.type === 'event') {
-          hideDelay = 900; // Extra time for event slide animations and image loading
+          hideDelay = 500; // Reduced from 900ms to prevent flickering
         } else if (nextSlide?.type === 'youtube') {
-          hideDelay = 0; // RotatingBackground handles its own overlay timing
+          // For YouTube, keep overlay visible longer to let RotatingBackground take over smoothly
+          // This prevents double overlay flickering
+          hideDelay = 200; // Small delay to ensure smooth handoff
         } else {
           hideDelay = 400; // Faster for slides that load instantly
         }
