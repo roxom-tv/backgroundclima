@@ -61,41 +61,35 @@ export default function RotatingBackground({ activeIndex, onIndexChange, slides,
 
     const prevIndex = activeIndexRef.current;
     const isFirstLoad = prevIndex === undefined || prevIndex === activeIndex;
-    
-    // Add a small delay to check disableInternalOverlay state after slide change
-    // This prevents double overlay when transitioning from external slides
-    const checkDelay = setTimeout(() => {
-      if (!isFirstLoad && !disableInternalOverlay) {
-        channelChangeStartTimeRef.current = Date.now();
-        setShowChannelChange(true);
-        
-        if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
-        if (channelChangeTimerRef.current) clearTimeout(channelChangeTimerRef.current);
-        
-        const cleanupDelay = 3000;
-        channelChangeTimerRef.current = setTimeout(() => {
-          if (!iframeLoadedRef.current) {
-            const extendedTimer = setTimeout(() => {
-              setShowChannelChange(false);
-              channelChangeStartTimeRef.current = null;
-            }, 2000);
-            channelChangeTimerRef.current = extendedTimer;
-            return;
-          }
-          setShowChannelChange(false);
-          channelChangeStartTimeRef.current = null;
-        }, cleanupDelay);
-      } else if (disableInternalOverlay) {
-        // If global overlay is active, ensure internal overlay is hidden
+      
+    if (!isFirstLoad && !disableInternalOverlay) {
+      channelChangeStartTimeRef.current = Date.now();
+      setShowChannelChange(true);
+      
+      if (overlayTimerRef.current) clearTimeout(overlayTimerRef.current);
+      if (channelChangeTimerRef.current) clearTimeout(channelChangeTimerRef.current);
+      
+      const cleanupDelay = 3000;
+      channelChangeTimerRef.current = setTimeout(() => {
+        if (!iframeLoadedRef.current) {
+          const extendedTimer = setTimeout(() => {
+            setShowChannelChange(false);
+            channelChangeStartTimeRef.current = null;
+          }, 2000);
+          channelChangeTimerRef.current = extendedTimer;
+          return;
+        }
         setShowChannelChange(false);
         channelChangeStartTimeRef.current = null;
-      }
-    }, 100); // Small delay to let global overlay state settle
+      }, cleanupDelay);
+    } else if (disableInternalOverlay) {
+      // If global overlay is active, ensure internal overlay is hidden
+      setShowChannelChange(false);
+      channelChangeStartTimeRef.current = null;
+    }
     
     activeIndexRef.current = activeIndex;
-    
-    return () => clearTimeout(checkDelay);
-  }, [activeIndex, disableInternalOverlay]);
+  }, [activeIndex]);
 
   // Use direct slide if provided, otherwise calculate from slides array
   const cityIndex = getCityIndex(activeIndex);

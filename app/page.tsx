@@ -24,7 +24,7 @@ import type { Slide, Sponsor } from '@/lib/supabase/types';
 export default function Home() {
   // Current slide index - follows order_index from database
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  
+
   // Transition states
   const [showTransition, setShowTransition] = useState(false);
   const [transitionText, setTransitionText] = useState('');
@@ -40,19 +40,19 @@ export default function Home() {
   }, [slides, currentSlideIndex]);
 
   // Check if we have certain slide types for prefetching
-  const hasYouTubeSlides = useMemo(() => 
+  const hasYouTubeSlides = useMemo(() =>
     slides.some(s => s.type === 'youtube'), [slides]);
-  const hasMarketSlides = useMemo(() => 
+  const hasMarketSlides = useMemo(() =>
     slides.some(s => s.type === 'metals' || s.type === 'fx'), [slides]);
 
   // Get sponsor for current slide
   const getSponsorForSlide = (slide: Slide | null): Sponsor | null => {
     if (!slide || !slide.show_sponsor) return null;
-    
+
     if (slide.sponsor_id) {
       return sponsors.find(s => s.id === slide.sponsor_id && s.is_active) || null;
     }
-    
+
     return sponsors.find(s => s.is_active) || null;
   };
 
@@ -64,7 +64,7 @@ export default function Home() {
       prefetchAllWeatherData().catch(err => console.warn('Weather prefetch failed:', err));
     }
   }, [hasYouTubeSlides]);
-    
+
   // Pre-fetch markets data if there are metals or fx slides
   useEffect(() => {
     if (hasMarketSlides) {
@@ -89,12 +89,12 @@ export default function Home() {
     }
 
     const transitionEffect = settings.transition_effect || 'tv_static';
-    
+
     // Get next slide info early to determine transition behavior
     const nextIndex = (currentSlideIndex + 1) % slides.length;
     const nextSlide = slides[nextIndex];
     const isNextYouTube = nextSlide?.type === 'youtube';
-    
+
     // Different transition delays based on effect and slide type
     // YouTube videos need longer delays, other slides can be faster
     const transitionDelays: Record<string, number> = {
@@ -103,7 +103,7 @@ export default function Home() {
       'slide': isNextYouTube ? 700 : 400,  // Faster for non-YouTube slides
       'tv_static': isNextYouTube ? 1400 : 0,  // Only for YouTube
     };
-    
+
     const transitionDelay = transitionDelays[transitionEffect] || (isNextYouTube ? 1400 : 300);
     const duration = currentSlide.duration_seconds || settings.default_duration_seconds;
 
@@ -126,8 +126,9 @@ export default function Home() {
       }
 
       setTransitionText(text);
-      // Only show overlay for YouTube or when fade/slide is explicitly selected
-      setShowTransition(isNextYouTube || transitionEffect === 'fade' || transitionEffect === 'slide');
+      // YouTube slides handle their own transition overlay via RotatingBackground
+      // Only show global overlay for non-YouTube slides with fade/slide effects
+      setShowTransition(!isNextYouTube && (transitionEffect === 'fade' || transitionEffect === 'slide'));
 
       // Wait for transition overlay to appear, then change slide
       setTimeout(() => {
@@ -136,11 +137,7 @@ export default function Home() {
         // Adjust hideDelay based on slide type
         let hideDelay = 700;
         if (nextSlide?.type === 'event') {
-          hideDelay = 500; // Reduced from 900ms to prevent flickering
-        } else if (nextSlide?.type === 'youtube') {
-          // For YouTube, keep overlay visible longer to let RotatingBackground take over smoothly
-          // This prevents double overlay flickering
-          hideDelay = 200; // Small delay to ensure smooth handoff
+          hideDelay = 900; // Extra time for event slide animations and image loading
         } else {
           hideDelay = 400; // Faster for slides that load instantly
         }
@@ -192,29 +189,29 @@ export default function Home() {
       case 'youtube':
         return (
           <>
-            <RotatingBackground 
-              activeIndex={currentSlideIndex} 
+            <RotatingBackground
+              activeIndex={currentSlideIndex}
               onIndexChange={setCurrentSlideIndex}
               slides={slides.filter(s => s.type === 'youtube')}
               currentSlide={currentSlide}
               disableInternalOverlay={showTransition}
             />
-            
+
             <div className="top-info-bar">
-              <DateDisplay 
-                activeIndex={currentSlideIndex} 
+              <DateDisplay
+                activeIndex={currentSlideIndex}
                 timezone={currentSlide.timezone || undefined}
               />
               <LiveIndicator visible={settings.show_live_indicator} />
             </div>
-            
+
             <div className="bottom-info-bar">
-              <WeatherBar 
-                activeIndex={currentSlideIndex} 
+              <WeatherBar
+                activeIndex={currentSlideIndex}
                 currentSlide={currentSlide}
                 visible={currentSlide.show_weather}
               />
-              <SponsorDisplay 
+              <SponsorDisplay
                 sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
                 visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
               />
@@ -229,8 +226,8 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ 
-              duration: 0.5, 
+            transition={{
+              duration: 0.5,
               ease: [0.4, 0, 0.2, 1],
               opacity: { duration: 0.4 }
             }}
@@ -254,8 +251,8 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ 
-              duration: 0.5, 
+            transition={{
+              duration: 0.5,
               ease: [0.4, 0, 0.2, 1],
               opacity: { duration: 0.4 }
             }}
@@ -279,8 +276,8 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ 
-              duration: 0.5, 
+            transition={{
+              duration: 0.5,
               ease: [0.4, 0, 0.2, 1],
               opacity: { duration: 0.4 }
             }}
@@ -304,8 +301,8 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ 
-              duration: 0.5, 
+            transition={{
+              duration: 0.5,
               ease: [0.4, 0, 0.2, 1],
               opacity: { duration: 0.4 }
             }}
@@ -314,7 +311,7 @@ export default function Home() {
           >
             <ShowSlide slide={currentSlide} />
             <div className="absolute bottom-4 right-4 z-20">
-              <SponsorDisplay 
+              <SponsorDisplay
                 sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
                 visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
               />
@@ -329,8 +326,8 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ 
-              duration: 0.5, 
+            transition={{
+              duration: 0.5,
               ease: [0.4, 0, 0.2, 1],
               opacity: { duration: 0.4 }
             }}
@@ -339,7 +336,7 @@ export default function Home() {
           >
             <EventSlide slide={currentSlide} events={events} />
             <div className="absolute bottom-4 right-4 z-20">
-              <SponsorDisplay 
+              <SponsorDisplay
                 sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
                 visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
               />
@@ -354,8 +351,8 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ 
-              duration: 0.5, 
+            transition={{
+              duration: 0.5,
               ease: [0.4, 0, 0.2, 1],
               opacity: { duration: 0.4 }
             }}
@@ -364,7 +361,7 @@ export default function Home() {
           >
             <CalendarSlide events={events} />
             <div className="absolute bottom-4 right-4">
-              <SponsorDisplay 
+              <SponsorDisplay
                 sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
                 visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
               />
@@ -379,8 +376,8 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ 
-              duration: 0.5, 
+            transition={{
+              duration: 0.5,
               ease: [0.4, 0, 0.2, 1],
               opacity: { duration: 0.4 }
             }}
@@ -389,7 +386,7 @@ export default function Home() {
           >
             <NewsSlide slide={currentSlide} duration={currentSlide.duration_seconds} />
             <div className="absolute bottom-4 right-4 z-20">
-              <SponsorDisplay 
+              <SponsorDisplay
                 sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
                 visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
               />
@@ -404,16 +401,16 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ 
-              duration: 0.5, 
+            transition={{
+              duration: 0.5,
               ease: [0.4, 0, 0.2, 1],
               opacity: { duration: 0.4 }
             }}
             className="h-full w-full bg-black relative"
             style={{ position: 'absolute', inset: 0 }}
           >
-            <VideoSlide 
-              slide={currentSlide} 
+            <VideoSlide
+              slide={currentSlide}
               onVideoEnd={() => {
                 // When video ends (if loop_count is set and all loops completed), advance to next slide
                 if (currentSlide.loop_count !== null) {
@@ -423,7 +420,7 @@ export default function Home() {
               }}
             />
             <div className="absolute bottom-4 right-4 z-20">
-              <SponsorDisplay 
+              <SponsorDisplay
                 sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
                 visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
               />
@@ -441,13 +438,13 @@ export default function Home() {
   };
 
   const transitionEffect = settings.transition_effect || 'tv_static';
-  
+
   // Calculate effective effect based on next slide type
   // Force fade for non-YouTube slides, use configured effect for YouTube
   const nextIndex = (currentSlideIndex + 1) % slides.length;
   const nextSlide = slides[nextIndex];
-  const effectiveEffect = nextSlide?.type === 'youtube' 
-    ? transitionEffect 
+  const effectiveEffect = nextSlide?.type === 'youtube'
+    ? transitionEffect
     : 'fade'; // Force fade for non-YouTube slides
 
   return (

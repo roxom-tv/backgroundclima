@@ -133,3 +133,6 @@ Todos los tipos de slides tienen:
 - Los eventos deben crearse primero en `/admin/events` antes de usarlos en slides
 - Los sponsors deben crearse primero en `/admin/sponsors` antes de asignarlos
 
+
+
+
