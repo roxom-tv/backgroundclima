@@ -78,7 +78,7 @@ const ModernEventCard = ({ event, index }: { event: CalendarEvent; index: number
                         className="absolute inset-0 bg-cover bg-center"
                         style={{ backgroundImage: `url(${event.image_url})` }}
                     />
-                    <div className="absolute inset-0 bg-black/50" />
+                    <div className="absolute inset-0 bg-black/70" />
                 </>
             ) : (
                 <div
