@@ -103,32 +103,32 @@ const ModernEventCard = ({ event, index }: { event: CalendarEvent; index: number
                 }}
             />
 
-            {/* Content - Centered */}
-            <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 py-8">
-                {/* Date */}
+            {/* Content - Centered with overflow protection */}
+            <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 py-6 overflow-hidden">
+                {/* Date - large */}
                 <p
-                    className="text-[2rem] font-bold mb-2"
+                    className="text-[3.5rem] font-bold mb-2 flex-shrink-0"
                     style={{ color: borderColor }}
                 >
                     {dateRange}
                 </p>
 
-                {/* Title */}
+                {/* Title - large */}
                 <h2
-                    className="text-[1.5rem] leading-tight font-bold text-white uppercase tracking-wide mb-4"
+                    className="text-[2.5rem] leading-tight font-bold text-white uppercase tracking-wide mb-4 flex-shrink-0"
                     style={{
                         fontFamily: event.title_font || 'inherit',
                         color: event.title_color || '#FFFFFF',
-                        textShadow: '2px 2px 8px rgba(0,0,0,0.9)',
+                        textShadow: '3px 3px 12px rgba(0,0,0,0.9)',
                     }}
                 >
                     {event.title}
                 </h2>
 
-                {/* Description */}
+                {/* Description - smaller to fit long text */}
                 {event.description && (
                     <p
-                        className="text-[0.85rem] leading-snug mb-2 max-w-[90%]"
+                        className="text-[1.65rem] leading-snug mb-3 flex-1 overflow-hidden"
                         style={{ color: event.text_color || '#D1D5DB' }}
                     >
                         {event.description}
@@ -138,7 +138,7 @@ const ModernEventCard = ({ event, index }: { event: CalendarEvent; index: number
                 {/* Location */}
                 {event.location && (
                     <p
-                        className="text-[1rem] uppercase tracking-wider font-medium"
+                        className="text-[1.6rem] uppercase tracking-wider font-medium flex-shrink-0"
                         style={{ color: '#A3A3A3' }}
                     >
                         {event.location}
