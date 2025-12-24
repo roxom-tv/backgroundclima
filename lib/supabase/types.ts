@@ -6,6 +6,7 @@
 export type SlideType = 'youtube' | 'debt' | 'metals' | 'fx' | 'show' | 'event' | 'calendar' | 'news' | 'video';
 export type TransitionEffect = 'tv_static' | 'fade' | 'slide' | 'none';
 export type LayoutOrientation = 'horizontal' | 'vertical';
+export type EventSlideStyle = 'classic' | 'modern';
 
 // Schedule time for show slides
 export interface ScheduleTime {
@@ -43,6 +44,8 @@ export interface Slide {
   // Event slide with multiple events
   selected_event_ids: string[] | null;
   layout_orientation: LayoutOrientation | null;
+  event_slide_style: EventSlideStyle | null;
+  event_slide_title: string | null;
   // News slide fields
   headline: string | null;
   source: string | null;
@@ -108,6 +111,8 @@ export interface SlideInsert {
   // Event slide with multiple events
   selected_event_ids?: string[] | null;
   layout_orientation?: LayoutOrientation | null;
+  event_slide_style?: EventSlideStyle | null;
+  event_slide_title?: string | null;
   // News slide fields
   headline?: string | null;
   source?: string | null;
@@ -145,6 +150,8 @@ export interface SlideUpdate {
   // Event slide with multiple events
   selected_event_ids?: string[] | null;
   layout_orientation?: LayoutOrientation | null;
+  event_slide_style?: EventSlideStyle | null;
+  event_slide_title?: string | null;
   // News slide fields
   headline?: string | null;
   source?: string | null;
@@ -192,6 +199,8 @@ export interface CalendarEvent {
   text_color: string | null;
   overlay_opacity: number | null;
   show_date_badge: boolean;
+  // Location/source
+  location: string | null;
   // Multiple timezone times
   schedule_times: ScheduleTime[] | null;
   created_at: string;
@@ -216,6 +225,8 @@ export interface CalendarEventInsert {
   text_color?: string | null;
   overlay_opacity?: number | null;
   show_date_badge?: boolean;
+  // Location/source
+  location?: string | null;
   // Multiple timezone times
   schedule_times?: ScheduleTime[] | null;
 }
@@ -238,6 +249,8 @@ export interface CalendarEventUpdate {
   text_color?: string | null;
   overlay_opacity?: number | null;
   show_date_badge?: boolean;
+  // Location/source
+  location?: string | null;
   // Multiple timezone times
   schedule_times?: ScheduleTime[] | null;
 }

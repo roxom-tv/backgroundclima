@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { getSupabaseClient } from '@/lib/supabase/client';
-import type { Slide, SlideInsert, SlideType, Sponsor, ScheduleTime, CalendarEvent, LayoutOrientation } from '@/lib/supabase/types';
+import type { Slide, SlideInsert, SlideType, Sponsor, ScheduleTime, CalendarEvent, LayoutOrientation, EventSlideStyle } from '@/lib/supabase/types';
 import { convertYouTubeUrlToEmbed, convertEmbedUrlToSimple } from '@/lib/youtube-utils';
 
 interface SlideFormProps {
@@ -77,6 +77,8 @@ export default function SlideForm({
     // Event slide fields
     selected_event_ids: [],
     layout_orientation: 'horizontal' as LayoutOrientation,
+    event_slide_style: 'classic' as EventSlideStyle,
+    event_slide_title: '',
     // News slide fields
     headline: '',
     source: '',
@@ -94,7 +96,7 @@ export default function SlideForm({
   // Fetch sponsors and events on mount
   useEffect(() => {
     const supabase = getSupabaseClient();
-    
+
     const fetchSponsors = async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase.from('sponsors') as any)
@@ -151,6 +153,8 @@ export default function SlideForm({
         // Event slide fields
         selected_event_ids: slide.selected_event_ids || [],
         layout_orientation: slide.layout_orientation || 'horizontal',
+        event_slide_style: slide.event_slide_style || 'classic',
+        event_slide_title: slide.event_slide_title || '',
         // News slide fields
         headline: slide.headline || '',
         source: slide.source || '',
@@ -163,20 +167,20 @@ export default function SlideForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Convert YouTube URL to embed format if needed
     let processedYoutubeUrl = formData.youtube_url?.trim() || null;
     if (processedYoutubeUrl && formData.type === 'youtube') {
       processedYoutubeUrl = convertYouTubeUrlToEmbed(processedYoutubeUrl);
     }
-    
+
     // Clean data - remove empty strings and convert to null where appropriate
     const cleanedData: SlideInsert = {
       type: formData.type,
       // For show slides, if name is empty, use a default value for DB (required field)
       // The component will hide the overlay if only default "Show" name exists without other content
-      name: formData.type === 'show' && !formData.name.trim() 
-        ? 'Show' 
+      name: formData.type === 'show' && !formData.name.trim()
+        ? 'Show'
         : formData.name.trim(),
       country: formData.country?.trim() || null,
       youtube_url: processedYoutubeUrl,
@@ -197,15 +201,19 @@ export default function SlideForm({
       // Show slide fields
       host_name: formData.host_name?.trim() || null,
       show_days: formData.show_days?.trim() || null,
-      schedule_times: formData.schedule_times && formData.schedule_times.length > 0 
-        ? formData.schedule_times 
+      schedule_times: formData.schedule_times && formData.schedule_times.length > 0
+        ? formData.schedule_times
         : null,
       // Event slide fields
-      selected_event_ids: formData.selected_event_ids && formData.selected_event_ids.length > 0 
-        ? formData.selected_event_ids 
+      selected_event_ids: formData.selected_event_ids && formData.selected_event_ids.length > 0
+        ? formData.selected_event_ids
         : null,
-      layout_orientation: formData.selected_event_ids && formData.selected_event_ids.length === 3 
-        ? formData.layout_orientation 
+      layout_orientation: formData.selected_event_ids && formData.selected_event_ids.length === 3
+        ? formData.layout_orientation
+        : null,
+      event_slide_style: formData.type === 'event' ? (formData.event_slide_style || 'classic') : null,
+      event_slide_title: formData.type === 'event' && formData.event_slide_style === 'modern'
+        ? (formData.event_slide_title?.trim() || null)
         : null,
       // News slide fields
       headline: formData.headline?.trim() || null,
@@ -214,7 +222,7 @@ export default function SlideForm({
       video_url: formData.video_url?.trim() || null,
       loop_count: formData.loop_count ?? null,
     };
-    
+
     await onSubmit(cleanedData);
   };
 
@@ -222,7 +230,7 @@ export default function SlideForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target;
-    
+
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
@@ -286,11 +294,10 @@ export default function SlideForm({
               key={type.value}
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, type: type.value }))}
-              className={`p-3 border-2 transition-all text-left font-mono text-xs ${
-                formData.type === type.value
-                  ? 'border-[#00ff00] bg-[#0a0a0a] text-[#00ff00]'
-                  : 'border-[#333] bg-[#1a1a1a] text-white hover:border-[#00ff00]'
-              }`}
+              className={`p-3 border-2 transition-all text-left font-mono text-xs ${formData.type === type.value
+                ? 'border-[#00ff00] bg-[#0a0a0a] text-[#00ff00]'
+                : 'border-[#333] bg-[#1a1a1a] text-white hover:border-[#00ff00]'
+                }`}
             >
               <span className="text-2xl block mb-1 opacity-70">{type.icon}</span>
               <span className="text-xs font-semibold uppercase tracking-wider block mb-1">{type.label}</span>
@@ -378,11 +385,10 @@ export default function SlideForm({
                 />
                 <label
                   htmlFor="show-image-upload"
-                  className={`inline-flex items-center gap-2 px-4 py-2 cursor-pointer transition-colors border-2 font-mono text-xs uppercase tracking-wider ${
-                    isUploading
-                      ? 'bg-[#1a1a1a] text-[#666] border-[#333]'
-                      : 'bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white border-[#00ff00]'
-                  }`}
+                  className={`inline-flex items-center gap-2 px-4 py-2 cursor-pointer transition-colors border-2 font-mono text-xs uppercase tracking-wider ${isUploading
+                    ? 'bg-[#1a1a1a] text-[#666] border-[#333]'
+                    : 'bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white border-[#00ff00]'
+                    }`}
                 >
                   {isUploading ? 'UPLOADING...' : '📷 UPLOAD IMAGE'}
                 </label>
@@ -495,41 +501,39 @@ export default function SlideForm({
                 {availableEvents.map((event) => {
                   const isSelected = (formData.selected_event_ids || []).includes(event.id);
                   const canSelect = isSelected || (formData.selected_event_ids || []).length < 4;
-                  
+
                   return (
                     <div
                       key={event.id}
                       onClick={() => {
                         if (!canSelect && !isSelected) return;
-                        
+
                         const current = formData.selected_event_ids || [];
                         const newIds = isSelected
                           ? current.filter(id => id !== event.id)
                           : [...current, event.id];
-                        
+
                         setFormData(prev => ({ ...prev, selected_event_ids: newIds }));
                       }}
-                      className={`flex items-center gap-3 p-3 cursor-pointer transition-all border-2 font-mono text-xs ${
-                        isSelected
-                          ? 'bg-[#1a1a1a] border-[#00ff00] hover:border-[#00cc00]'
-                          : canSelect
+                      className={`flex items-center gap-3 p-3 cursor-pointer transition-all border-2 font-mono text-xs ${isSelected
+                        ? 'bg-[#1a1a1a] border-[#00ff00] hover:border-[#00cc00]'
+                        : canSelect
                           ? 'bg-[#1a1a1a] border-[#333] hover:border-[#00ff00]'
                           : 'bg-[#0a0a0a] border-[#333] opacity-50 cursor-not-allowed'
-                      }`}
+                        }`}
                     >
                       {/* Checkbox indicator */}
-                      <div className={`w-5 h-5 border-2 flex items-center justify-center flex-shrink-0 font-mono text-xs ${
-                        isSelected ? 'bg-[#00ff00] text-black border-[#00ff00]' : 'bg-[#1a1a1a] border-[#333]'
-                      }`}>
+                      <div className={`w-5 h-5 border-2 flex items-center justify-center flex-shrink-0 font-mono text-xs ${isSelected ? 'bg-[#00ff00] text-black border-[#00ff00]' : 'bg-[#1a1a1a] border-[#333]'
+                        }`}>
                         {isSelected && '✓'}
                       </div>
-                      
+
                       {/* Color indicator */}
                       <div
                         className="w-3 h-10 flex-shrink-0 border-2 border-[#00ff00]"
                         style={{ backgroundColor: event.color }}
                       />
-                      
+
                       {/* Event image */}
                       {event.image_url && (
                         <div className="w-14 h-10 overflow-hidden flex-shrink-0 bg-[#1a1a1a] border-2 border-[#00ff00]">
@@ -540,14 +544,14 @@ export default function SlideForm({
                           />
                         </div>
                       )}
-                      
+
                       {/* Event info */}
                       <div className="flex-1 min-w-0">
                         <p className="text-white font-mono text-xs font-medium truncate uppercase tracking-wider">{event.title}</p>
                         <p className="text-[#888] text-xs font-mono">
-                          📅 {new Date(event.start_date + 'T00:00:00').toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric' 
+                          📅 {new Date(event.start_date + 'T00:00:00').toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
                           })}
                           {event.start_time && ` • ${event.start_time.slice(0, 5)}`}
                         </p>
@@ -557,7 +561,7 @@ export default function SlideForm({
                 })}
               </div>
             )}
-            
+
             {/* Selection count */}
             <div className="flex items-center justify-between mt-2">
               <p className="text-[#888] text-xs font-mono uppercase tracking-wider">
@@ -592,9 +596,8 @@ export default function SlideForm({
                   </div>
                 )}
                 {(formData.selected_event_ids || []).length === 3 && (
-                  <div className={`w-full h-full gap-1 ${
-                    formData.layout_orientation === 'horizontal' ? 'grid grid-cols-3' : 'grid grid-rows-3'
-                  }`}>
+                  <div className={`w-full h-full gap-1 ${formData.layout_orientation === 'horizontal' ? 'grid grid-cols-3' : 'grid grid-rows-3'
+                    }`}>
                     <div className="bg-[#00ff00]/20 border-2 border-[#00ff00] flex items-center justify-center text-[#00ff00] text-xs font-mono">1</div>
                     <div className="bg-[#00ff00]/20 border-2 border-[#00ff00] flex items-center justify-center text-[#00ff00] text-xs font-mono">2</div>
                     <div className="bg-[#00ff00]/20 border-2 border-[#00ff00] flex items-center justify-center text-[#00ff00] text-xs font-mono">3</div>
@@ -609,7 +612,7 @@ export default function SlideForm({
                   </div>
                 )}
               </div>
-              
+
               {/* Orientation selector for 3 events */}
               {(formData.selected_event_ids || []).length === 3 && (
                 <div className="mt-3">
@@ -618,22 +621,20 @@ export default function SlideForm({
                     <button
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, layout_orientation: 'horizontal' }))}
-                      className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider border-2 transition-colors ${
-                        formData.layout_orientation === 'horizontal'
-                          ? 'bg-[#00ff00] text-black border-[#00ff00]'
-                          : 'bg-[#1a1a1a] text-white border-[#333] hover:border-[#00ff00]'
-                      }`}
+                      className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider border-2 transition-colors ${formData.layout_orientation === 'horizontal'
+                        ? 'bg-[#00ff00] text-black border-[#00ff00]'
+                        : 'bg-[#1a1a1a] text-white border-[#333] hover:border-[#00ff00]'
+                        }`}
                     >
                       ▭ HORIZONTAL (3 COLUMNS)
                     </button>
                     <button
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, layout_orientation: 'vertical' }))}
-                      className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider border-2 transition-colors ${
-                        formData.layout_orientation === 'vertical'
-                          ? 'bg-[#00ff00] text-black border-[#00ff00]'
-                          : 'bg-[#1a1a1a] text-white border-[#333] hover:border-[#00ff00]'
-                      }`}
+                      className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wider border-2 transition-colors ${formData.layout_orientation === 'vertical'
+                        ? 'bg-[#00ff00] text-black border-[#00ff00]'
+                        : 'bg-[#1a1a1a] text-white border-[#333] hover:border-[#00ff00]'
+                        }`}
                     >
                       ▯ VERTICAL (3 ROWS)
                     </button>
@@ -642,6 +643,62 @@ export default function SlideForm({
               )}
             </div>
           )}
+
+          {/* Style Selector */}
+          <div className="bg-[#0a0a0a] p-4 border-2 border-[#00ff00]">
+            <p className="text-xs font-mono font-medium text-white uppercase tracking-wider mb-3">SLIDE STYLE</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, event_slide_style: 'classic' }))}
+                className={`p-4 border-2 transition-all text-left font-mono text-xs ${formData.event_slide_style === 'classic'
+                    ? 'border-[#00ff00] bg-[#1a1a1a] text-[#00ff00]'
+                    : 'border-[#333] bg-[#0a0a0a] text-white hover:border-[#00ff00]'
+                  }`}
+              >
+                <span className="text-xl block mb-2">📅</span>
+                <span className="font-semibold uppercase tracking-wider block">CLASSIC</span>
+                <span className="text-[10px] text-[#888] uppercase tracking-wider block mt-1">
+                  Centered badges, traditional layout
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, event_slide_style: 'modern' }))}
+                className={`p-4 border-2 transition-all text-left font-mono text-xs ${formData.event_slide_style === 'modern'
+                    ? 'border-[#00ff00] bg-[#1a1a1a] text-[#00ff00]'
+                    : 'border-[#333] bg-[#0a0a0a] text-white hover:border-[#00ff00]'
+                  }`}
+              >
+                <span className="text-xl block mb-2">🗓️</span>
+                <span className="font-semibold uppercase tracking-wider block">MODERN</span>
+                <span className="text-[10px] text-[#888] uppercase tracking-wider block mt-1">
+                  Bitcoin Calendar style with header
+                </span>
+              </button>
+            </div>
+
+            {/* Custom Title for Modern Style */}
+            {formData.event_slide_style === 'modern' && (
+              <div className="mt-4">
+                <label htmlFor="event_slide_title" className="block text-xs font-mono font-medium text-white uppercase tracking-wider mb-1">
+                  CUSTOM TITLE (HEADER RIGHT)
+                </label>
+                <input
+                  id="event_slide_title"
+                  name="event_slide_title"
+                  type="text"
+                  value={formData.event_slide_title || ''}
+                  onChange={handleChange}
+                  placeholder="e.g., Bitcoin Calendar"
+                  className="w-full px-4 py-2 bg-[#1a1a1a] border-2 border-[#00ff00] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00cc00]"
+                />
+                <p className="text-[#888] text-xs font-mono mt-1 uppercase tracking-wider">
+                  DISPLAYS IN TOP-RIGHT CORNER OF THE SLIDE
+                </p>
+              </div>
+            )}
+          </div>
         </>
       )}
 
@@ -685,11 +742,10 @@ export default function SlideForm({
                 />
                 <label
                   htmlFor="news-image-upload"
-                  className={`inline-flex items-center gap-2 px-4 py-2 cursor-pointer transition-colors border-2 font-mono text-xs uppercase tracking-wider ${
-                    isUploading
-                      ? 'bg-[#1a1a1a] text-[#666] border-[#333]'
-                      : 'bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white border-[#00ff00]'
-                  }`}
+                  className={`inline-flex items-center gap-2 px-4 py-2 cursor-pointer transition-colors border-2 font-mono text-xs uppercase tracking-wider ${isUploading
+                    ? 'bg-[#1a1a1a] text-[#666] border-[#333]'
+                    : 'bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white border-[#00ff00]'
+                    }`}
                 >
                   {isUploading ? 'UPLOADING...' : '📷 UPLOAD IMAGE'}
                 </label>
@@ -793,9 +849,9 @@ export default function SlideForm({
               value={formData.loop_count ?? ''}
               onChange={(e) => {
                 const value = e.target.value;
-                setFormData(prev => ({ 
-                  ...prev, 
-                  loop_count: value === '' ? null : parseInt(value, 10) 
+                setFormData(prev => ({
+                  ...prev,
+                  loop_count: value === '' ? null : parseInt(value, 10)
                 }));
               }}
               placeholder="Leave empty for infinite loop"
@@ -863,7 +919,7 @@ export default function SlideForm({
       {/* Display Options */}
       <div className="space-y-3 bg-[#0a0a0a] p-4 border-2 border-[#00ff00]">
         <p className="text-xs font-mono font-medium text-white uppercase tracking-wider mb-2">DISPLAY OPTIONS</p>
-        
+
         <label className="flex items-center gap-3 cursor-pointer">
           <input type="checkbox" name="is_active" checked={formData.is_active} onChange={handleChange} className="w-5 h-5 bg-[#1a1a1a] border-2 border-[#00ff00] text-[#00ff00] focus:ring-[#00ff00]" />
           <div>
@@ -919,17 +975,17 @@ export default function SlideForm({
 
       {/* Actions */}
       <div className="flex justify-end gap-2 pt-4 border-t-2 border-[#1a1a1a]">
-        <button 
-          type="button" 
-          onClick={onCancel} 
-          disabled={isSubmitting} 
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isSubmitting}
           className="px-4 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white font-mono text-xs uppercase tracking-wider disabled:opacity-50 border-2 border-[#333]"
         >
           CANCEL
         </button>
-        <button 
-          type="submit" 
-          disabled={isSubmitting || isUploading} 
+        <button
+          type="submit"
+          disabled={isSubmitting || isUploading}
           className="px-4 py-2 bg-[#00ff00] hover:bg-[#00cc00] text-black font-mono text-xs uppercase tracking-wider disabled:opacity-50 flex items-center gap-2 border-2 border-[#00ff00]"
         >
           {isSubmitting ? 'SAVING...' : (slide ? 'UPDATE SLIDE' : 'CREATE SLIDE')}

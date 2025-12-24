@@ -3,6 +3,7 @@
 import { useMemo, memo } from 'react';
 import { motion } from 'framer-motion';
 import type { Slide, CalendarEvent, ScheduleTime } from '@/lib/supabase/types';
+import EventSlideModern from './EventSlideModern';
 
 interface EventSlideProps {
   slide: Slide;
@@ -11,7 +12,7 @@ interface EventSlideProps {
 
 // Get font size class based on title_size and layout size - LARGER sizes
 const getTitleSizeClass = (
-  titleSize: string | null | undefined, 
+  titleSize: string | null | undefined,
   layoutSize: 'full' | 'half' | 'third' | 'quarter'
 ) => {
   const sizes = {
@@ -40,7 +41,7 @@ const getTitleSizeClass = (
       xlarge: 'text-4xl md:text-5xl',
     },
   };
-  
+
   const size = titleSize || 'large';
   return sizes[layoutSize][size as keyof typeof sizes.full] || sizes[layoutSize].large;
 };
@@ -71,14 +72,19 @@ const parseScheduleTimes = (times: ScheduleTime[] | string | null | undefined): 
 };
 
 function EventSlideComponent({ slide, events }: EventSlideProps) {
-  // Get selected events in order - memoize with stable reference
+  // Check if modern style is selected
+  if (slide.event_slide_style === 'modern') {
+    return <EventSlideModern slide={slide} events={events} />;
+  }
+
+  // Classic style - Get selected events in order - memoize with stable reference
   const selectedEvents = useMemo(() => {
     const ids = slide.selected_event_ids || [];
     if (ids.length === 0) return [];
-    
+
     // Create a map for O(1) lookup
     const eventsMap = new Map(events.map(e => [e.id, e]));
-    
+
     return ids
       .map(id => eventsMap.get(id))
       .filter((e): e is CalendarEvent => e !== undefined);
@@ -129,7 +135,7 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
     const date = formatDate(event.start_date);
     const todayEvent = isToday(event.start_date);
     const scheduleTimes = parseScheduleTimes(event.schedule_times);
-    
+
     // Style customizations
     const titleFont = event.title_font || 'inherit';
     const titleColor = event.title_color || '#FFFFFF';
@@ -146,17 +152,17 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
       >
         {/* Background */}
         {event.image_url ? (
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${event.image_url})` }}
           >
-            <div 
-              className="absolute inset-0" 
+            <div
+              className="absolute inset-0"
               style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }}
             />
           </div>
         ) : (
-          <div 
+          <div
             className="absolute inset-0"
             style={{ background: `linear-gradient(135deg, ${event.color}40 0%, ${event.color}10 50%, #000 100%)` }}
           />
@@ -166,13 +172,13 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
         <div className="relative z-10 h-full flex flex-col items-center justify-center p-8 md:p-12 text-center">
           {/* Date Badge */}
           {showDateBadge && (
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1 }}
               className="mb-6 md:mb-8"
             >
-              <div 
+              <div
                 className="inline-flex flex-col items-center px-8 md:px-12 py-4 md:py-6 rounded-2xl shadow-2xl"
                 style={{ backgroundColor: event.color }}
               >
@@ -187,12 +193,12 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
           )}
 
           {/* Title - CENTERED & LARGER */}
-          <motion.h1 
+          <motion.h1
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
             className={`font-bold mb-4 md:mb-6 drop-shadow-2xl max-w-6xl text-center ${titleSizeClass}`}
-            style={{ 
+            style={{
               fontFamily: titleFont,
               color: titleColor,
               textShadow: '2px 2px 20px rgba(0,0,0,0.8)',
@@ -203,12 +209,12 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
 
           {/* Description - ALWAYS VISIBLE */}
           {event.description && (
-            <motion.p 
+            <motion.p
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
               className="text-xl md:text-2xl lg:text-3xl mb-6 max-w-4xl text-center leading-relaxed"
-              style={{ 
+              style={{
                 color: textColor,
                 textShadow: '1px 1px 10px rgba(0,0,0,0.6)',
               }}
@@ -219,17 +225,17 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
 
           {/* Multiple Timezone Times */}
           {scheduleTimes.length > 0 && (
-            <motion.div 
+            <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
               className="flex flex-wrap justify-center gap-3 md:gap-4"
             >
               {scheduleTimes.map((schedule, index) => (
-                <div 
+                <div
                   key={index}
                   className="text-xl md:text-2xl font-semibold px-4 md:px-6 py-2 md:py-3 rounded-xl"
-                  style={{ 
+                  style={{
                     color: textColor,
                     backgroundColor: 'rgba(0,0,0,0.5)',
                     border: `1px solid ${event.color}`,
@@ -250,7 +256,7 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
     const date = formatDate(event.start_date);
     const todayEvent = isToday(event.start_date);
     const scheduleTimes = parseScheduleTimes(event.schedule_times);
-    
+
     // Style customizations
     const titleFont = event.title_font || 'inherit';
     const titleColor = event.title_color || '#FFFFFF';
@@ -277,24 +283,24 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
         {/* Background */}
         {event.image_url ? (
           <>
-            <div 
+            <div
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url(${event.image_url})` }}
             />
-            <div 
-              className="absolute inset-0" 
+            <div
+              className="absolute inset-0"
               style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity})` }}
             />
           </>
         ) : (
-          <div 
+          <div
             className="absolute inset-0"
             style={{ background: `linear-gradient(135deg, ${event.color}30 0%, ${event.color}10 100%)` }}
           />
         )}
 
         {/* Accent bar */}
-        <div 
+        <div
           className="absolute left-0 top-0 bottom-0 w-1.5 md:w-2"
           style={{ backgroundColor: event.color }}
         />
@@ -304,7 +310,7 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
           {/* Date badge */}
           {showDateBadge && (
             <div className="mb-3 md:mb-4">
-              <div 
+              <div
                 className="inline-flex flex-col items-center px-3 md:px-4 py-2 rounded-xl shadow-lg"
                 style={{ backgroundColor: event.color }}
               >
@@ -318,9 +324,9 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
           )}
 
           {/* Title - CENTERED */}
-          <h2 
+          <h2
             className={`font-bold mb-2 md:mb-3 drop-shadow-lg text-center ${titleSizeClass}`}
-            style={{ 
+            style={{
               fontFamily: titleFont,
               color: titleColor,
               textShadow: '1px 1px 10px rgba(0,0,0,0.6)',
@@ -335,9 +341,9 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
 
           {/* Description - ALWAYS VISIBLE */}
           {event.description && (
-            <p 
+            <p
               className={`${descSizeClass} mb-2 md:mb-3 text-center leading-snug`}
-              style={{ 
+              style={{
                 color: textColor,
                 textShadow: '1px 1px 5px rgba(0,0,0,0.5)',
                 display: '-webkit-box',
@@ -354,10 +360,10 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
           {scheduleTimes.length > 0 && (
             <div className="mt-auto pt-2 flex flex-wrap justify-center gap-1 md:gap-2">
               {scheduleTimes.slice(0, size === 'quarter' ? 2 : 3).map((schedule, index) => (
-                <div 
+                <div
                   key={index}
                   className={`${config.timeSize} font-medium px-2 md:px-3 py-1 rounded-lg`}
-                  style={{ 
+                  style={{
                     color: textColor,
                     backgroundColor: 'rgba(0,0,0,0.5)',
                   }}
@@ -391,9 +397,8 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
   // 3 events - 3 columns or 3 rows based on orientation
   if (eventCount === 3) {
     return (
-      <div className={`w-full h-full bg-black gap-0.5 ${
-        orientation === 'horizontal' ? 'grid grid-cols-3' : 'grid grid-rows-3'
-      }`}>
+      <div className={`w-full h-full bg-black gap-0.5 ${orientation === 'horizontal' ? 'grid grid-cols-3' : 'grid grid-rows-3'
+        }`}>
         {selectedEvents.map((event) => (
           <EventCard key={event.id} event={event} size="third" />
         ))}
@@ -416,22 +421,22 @@ export default memo(EventSlideComponent, (prevProps, nextProps) => {
   // Only re-render if slide ID or selected event IDs change
   if (prevProps.slide.id !== nextProps.slide.id) return false;
   if (prevProps.slide.selected_event_ids?.join(',') !== nextProps.slide.selected_event_ids?.join(',')) return false;
-  
+
   // Check if any of the selected events have changed
   const prevIds = prevProps.slide.selected_event_ids || [];
   const nextIds = nextProps.slide.selected_event_ids || [];
-  
+
   if (prevIds.length !== nextIds.length) return false;
-  
+
   // Check if the actual event data for selected events has changed
   for (const id of prevIds) {
     const prevEvent = prevProps.events.find(e => e.id === id);
     const nextEvent = nextProps.events.find(e => e.id === id);
-    
+
     if (!prevEvent || !nextEvent) return false;
     if (prevEvent.updated_at !== nextEvent.updated_at) return false;
   }
-  
+
   return true; // Props are equal, skip re-render
 });
 

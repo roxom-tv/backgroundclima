@@ -78,8 +78,10 @@ export default function EventForm({
     show_date_badge: true,
     // Multiple timezone times
     schedule_times: [],
+    // Location
+    location: '',
   });
-  
+
   const [showStyleOptions, setShowStyleOptions] = useState(false);
 
   const [isUploading, setIsUploading] = useState(false);
@@ -108,6 +110,8 @@ export default function EventForm({
         show_date_badge: event.show_date_badge ?? true,
         // Multiple timezone times
         schedule_times: event.schedule_times || [],
+        // Location
+        location: event.location || '',
       });
       // Show style options if any are customized
       if (event.title_font || event.title_size || event.title_color || event.text_color || event.overlay_opacity !== null) {
@@ -118,7 +122,7 @@ export default function EventForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Clean up empty strings to null
     const cleanedData: CalendarEventInsert = {
       ...formData,
@@ -135,9 +139,11 @@ export default function EventForm({
       overlay_opacity: formData.overlay_opacity ?? null,
       show_date_badge: formData.show_date_badge ?? true,
       // Multiple timezone times
-      schedule_times: formData.schedule_times && formData.schedule_times.length > 0 
-        ? formData.schedule_times 
+      schedule_times: formData.schedule_times && formData.schedule_times.length > 0
+        ? formData.schedule_times
         : null,
+      // Location
+      location: formData.location?.trim() || null,
     };
 
     await onSubmit(cleanedData);
@@ -147,7 +153,7 @@ export default function EventForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
-    
+
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
@@ -212,6 +218,25 @@ export default function EventForm({
         />
       </div>
 
+      {/* Location */}
+      <div>
+        <label htmlFor="location" className="block text-xs font-mono font-medium text-white uppercase tracking-wider mb-1">
+          LOCATION / SOURCE
+        </label>
+        <input
+          id="location"
+          name="location"
+          type="text"
+          value={formData.location || ''}
+          onChange={handleChange}
+          placeholder="e.g., ARGENTINA, ROXOM TV, El Salvador"
+          className="w-full px-4 py-2 bg-[#1a1a1a] border-2 border-[#00ff00] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00cc00]"
+        />
+        <p className="text-[#888] text-xs font-mono mt-1 uppercase tracking-wider">
+          DISPLAYED IN MODERN STYLE CARDS
+        </p>
+      </div>
+
       {/* Image Upload */}
       <div>
         <label className="block text-xs font-mono font-medium text-white uppercase tracking-wider mb-1">
@@ -246,11 +271,10 @@ export default function EventForm({
             />
             <label
               htmlFor="event-image-upload"
-              className={`inline-flex items-center gap-2 px-4 py-2 cursor-pointer transition-colors border-2 font-mono text-xs uppercase tracking-wider ${
-                isUploading
-                  ? 'bg-[#1a1a1a] text-[#666] border-[#333]'
-                  : 'bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white border-[#00ff00]'
-              }`}
+              className={`inline-flex items-center gap-2 px-4 py-2 cursor-pointer transition-colors border-2 font-mono text-xs uppercase tracking-wider ${isUploading
+                ? 'bg-[#1a1a1a] text-[#666] border-[#333]'
+                : 'bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white border-[#00ff00]'
+                }`}
             >
               {isUploading ? (
                 <>
@@ -420,11 +444,10 @@ export default function EventForm({
               key={color.value}
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, color: color.value }))}
-              className={`w-8 h-8 transition-all border-2 ${
-                formData.color === color.value
-                  ? 'border-[#00ff00] scale-110'
-                  : 'border-[#333] hover:border-[#00ff00]'
-              }`}
+              className={`w-8 h-8 transition-all border-2 ${formData.color === color.value
+                ? 'border-[#00ff00] scale-110'
+                : 'border-[#333] hover:border-[#00ff00]'
+                }`}
               style={{ backgroundColor: color.value }}
               title={color.label}
             />
@@ -480,11 +503,10 @@ export default function EventForm({
                   key={size.value}
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, title_size: size.value }))}
-                  className={`px-3 py-2 border-2 font-mono text-xs uppercase tracking-wider transition-all ${
-                    formData.title_size === size.value
-                      ? 'bg-[#00ff00] text-black border-[#00ff00]'
-                      : 'bg-[#1a1a1a] text-white border-[#333] hover:border-[#00ff00]'
-                  }`}
+                  className={`px-3 py-2 border-2 font-mono text-xs uppercase tracking-wider transition-all ${formData.title_size === size.value
+                    ? 'bg-[#00ff00] text-black border-[#00ff00]'
+                    : 'bg-[#1a1a1a] text-white border-[#333] hover:border-[#00ff00]'
+                    }`}
                 >
                   {size.label}
                 </button>
@@ -503,11 +525,10 @@ export default function EventForm({
                   key={color.value}
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, title_color: color.value }))}
-                  className={`w-8 h-8 transition-all border-2 ${
-                    formData.title_color === color.value
-                      ? 'border-[#00ff00] scale-110'
-                      : 'border-[#333] hover:border-[#00ff00]'
-                  }`}
+                  className={`w-8 h-8 transition-all border-2 ${formData.title_color === color.value
+                    ? 'border-[#00ff00] scale-110'
+                    : 'border-[#333] hover:border-[#00ff00]'
+                    }`}
                   style={{ backgroundColor: color.value }}
                   title={color.label}
                 />
@@ -534,11 +555,10 @@ export default function EventForm({
                   key={color.value}
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, text_color: color.value }))}
-                  className={`w-8 h-8 rounded-md transition-all border ${
-                    formData.text_color === color.value
-                      ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-800 scale-110'
-                      : 'border-gray-600 hover:scale-105'
-                  }`}
+                  className={`w-8 h-8 rounded-md transition-all border ${formData.text_color === color.value
+                    ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-800 scale-110'
+                    : 'border-gray-600 hover:scale-105'
+                    }`}
                   style={{ backgroundColor: color.value }}
                   title={color.label}
                 />
@@ -592,9 +612,9 @@ export default function EventForm({
           {/* Preview */}
           <div className="border-t-2 border-[#1a1a1a] pt-4">
             <label className="block text-xs font-mono font-medium text-white uppercase tracking-wider mb-2">PREVIEW</label>
-            <div 
+            <div
               className="relative overflow-hidden p-6 border-2 border-[#00ff00]"
-              style={{ 
+              style={{
                 backgroundColor: formData.image_url ? undefined : '#1f2937',
                 backgroundImage: formData.image_url ? `url(${formData.image_url})` : undefined,
                 backgroundSize: 'cover',
@@ -602,20 +622,20 @@ export default function EventForm({
               }}
             >
               {/* Overlay */}
-              <div 
+              <div
                 className="absolute inset-0"
                 style={{ backgroundColor: `rgba(0,0,0,${(formData.overlay_opacity ?? 50) / 100})` }}
               />
               {/* Content */}
               <div className="relative z-10">
-                <h3 
+                <h3
                   className="font-bold mb-1"
-                  style={{ 
+                  style={{
                     fontFamily: formData.title_font || 'Inter',
                     color: formData.title_color || '#FFFFFF',
-                    fontSize: formData.title_size === 'small' ? '1.25rem' : 
-                              formData.title_size === 'medium' ? '1.5rem' : 
-                              formData.title_size === 'xlarge' ? '2.5rem' : '2rem'
+                    fontSize: formData.title_size === 'small' ? '1.25rem' :
+                      formData.title_size === 'medium' ? '1.5rem' :
+                        formData.title_size === 'xlarge' ? '2.5rem' : '2rem'
                   }}
                 >
                   {formData.title || 'Event Title'}
