@@ -243,10 +243,6 @@ export default function CalendarSlide({ events }: CalendarSlideProps) {
   // Grid layouts
   return (
     <div className="w-full h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
-      {/* Header */}
-      <div className="text-center mb-6">
-        <h1 className="text-4xl font-bold text-white">Upcoming Events</h1>
-      </div>
 
       {/* Grid */}
       {layout === 'double' && (

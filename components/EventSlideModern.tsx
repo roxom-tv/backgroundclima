@@ -176,7 +176,7 @@ function EventSlideModernComponent({ slide, events }: EventSlideModernProps) {
         const year = date.getFullYear();
         return `${month} ${year}`;
     }, [selectedEvents]);
-    const customTitle = slide.event_slide_title || 'Bitcoin Calendar';
+    const customTitle = slide.event_slide_title || '';
 
     // No events selected
     if (eventCount === 0) {
