@@ -19,7 +19,7 @@ import VideoSlide from '@/components/VideoSlide';
 import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
 import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
 import { prefetchMarketsData } from '@/hooks/useMarketsSats';
-import type { Slide, Sponsor } from '@/lib/supabase/types';
+import type { Slide, Sponsor, SponsorPosition } from '@/lib/supabase/types';
 
 export default function Home() {
   // Current slide index - follows order_index from database
@@ -45,18 +45,60 @@ export default function Home() {
   const hasMarketSlides = useMemo(() =>
     slides.some(s => s.type === 'metals' || s.type === 'fx'), [slides]);
 
-  // Get sponsor for current slide
-  const getSponsorForSlide = (slide: Slide | null): Sponsor | null => {
+  // Get sponsor for a specific position on the current slide
+  const getSponsorForPosition = (slide: Slide | null, position: SponsorPosition): Sponsor | null => {
     if (!slide || !slide.show_sponsor) return null;
 
-    if (slide.sponsor_id) {
+    // Map position to the corresponding slide field
+    const positionFieldMap: Record<SponsorPosition, keyof Slide> = {
+      top_left: 'sponsor_top_left',
+      top_right: 'sponsor_top_right',
+      bottom_left: 'sponsor_bottom_left',
+      bottom_right: 'sponsor_bottom_right',
+    };
+
+    const sponsorId = slide[positionFieldMap[position]] as string | null;
+
+    if (sponsorId) {
+      return sponsors.find(s => s.id === sponsorId && s.is_active) || null;
+    }
+
+    // Fallback for bottom_right: use legacy sponsor_id if position fields are empty
+    if (position === 'bottom_right' && slide.sponsor_id) {
       return sponsors.find(s => s.id === slide.sponsor_id && s.is_active) || null;
     }
 
-    return sponsors.find(s => s.is_active) || null;
+    return null;
   };
 
-  const currentSlideSponsor = getSponsorForSlide(currentSlide);
+  // Helper to render all positioned sponsors for a slide
+  const renderPositionedSponsors = (slide: Slide) => {
+    if (!settings.show_sponsors || !slide.show_sponsor) return null;
+
+    const positions: SponsorPosition[] = ['top_left', 'top_right', 'bottom_left', 'bottom_right'];
+
+    return (
+      <>
+        {positions.map(position => {
+          const sponsor = getSponsorForPosition(slide, position);
+          if (!sponsor) return null;
+
+          return (
+            <SponsorDisplay
+              key={position}
+              sponsor={sponsor}
+              position={position}
+              visible={true}
+              showLabel={position.startsWith('bottom')} // Only show "Presented by" on bottom positions
+            />
+          );
+        })}
+      </>
+    );
+  };
+
+  // Legacy: Get sponsor for current slide (for backward compat with bottom-right only)
+  const currentSlideSponsor = getSponsorForPosition(currentSlide, 'bottom_right');
 
   // Pre-fetch weather data if there are YouTube slides
   useEffect(() => {
@@ -212,10 +254,13 @@ export default function Home() {
                 visible={currentSlide.show_weather}
               />
               <SponsorDisplay
-                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
+                sponsor={currentSlideSponsor}
+                sponsors={sponsors}
                 visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
               />
             </div>
+            {/* Multi-position sponsors */}
+            {renderPositionedSponsors(currentSlide)}
           </>
         );
 
@@ -235,12 +280,7 @@ export default function Home() {
             style={{ position: 'absolute', inset: 0 }}
           >
             <DebtSlide />
-            <div className="absolute bottom-4 right-4 z-20">
-              <SponsorDisplay
-                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
-                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? false)}
-              />
-            </div>
+            {renderPositionedSponsors(currentSlide)}
           </motion.div>
         );
 
@@ -260,12 +300,7 @@ export default function Home() {
             style={{ position: 'absolute', inset: 0 }}
           >
             <MetalsSlide />
-            <div className="absolute bottom-4 right-4 z-20">
-              <SponsorDisplay
-                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
-                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? false)}
-              />
-            </div>
+            {renderPositionedSponsors(currentSlide)}
           </motion.div>
         );
 
@@ -285,12 +320,7 @@ export default function Home() {
             style={{ position: 'absolute', inset: 0 }}
           >
             <FxSlide />
-            <div className="absolute bottom-4 right-4 z-20">
-              <SponsorDisplay
-                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
-                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? false)}
-              />
-            </div>
+            {renderPositionedSponsors(currentSlide)}
           </motion.div>
         );
 
@@ -310,12 +340,7 @@ export default function Home() {
             style={{ position: 'absolute', inset: 0 }}
           >
             <ShowSlide slide={currentSlide} />
-            <div className="absolute bottom-4 right-4 z-20">
-              <SponsorDisplay
-                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
-                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
-              />
-            </div>
+            {renderPositionedSponsors(currentSlide)}
           </motion.div>
         );
 
@@ -335,12 +360,7 @@ export default function Home() {
             style={{ position: 'absolute', inset: 0 }}
           >
             <EventSlide slide={currentSlide} events={events} />
-            <div className="absolute bottom-4 right-4 z-20">
-              <SponsorDisplay
-                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
-                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
-              />
-            </div>
+            {renderPositionedSponsors(currentSlide)}
           </motion.div>
         );
 
@@ -360,12 +380,7 @@ export default function Home() {
             style={{ position: 'absolute', inset: 0 }}
           >
             <CalendarSlide events={events} />
-            <div className="absolute bottom-4 right-4">
-              <SponsorDisplay
-                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
-                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
-              />
-            </div>
+            {renderPositionedSponsors(currentSlide)}
           </motion.div>
         );
 
@@ -385,12 +400,7 @@ export default function Home() {
             style={{ position: 'absolute', inset: 0 }}
           >
             <NewsSlide slide={currentSlide} duration={currentSlide.duration_seconds} />
-            <div className="absolute bottom-4 right-4 z-20">
-              <SponsorDisplay
-                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
-                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
-              />
-            </div>
+            {renderPositionedSponsors(currentSlide)}
           </motion.div>
         );
 
@@ -419,12 +429,7 @@ export default function Home() {
                 }
               }}
             />
-            <div className="absolute bottom-4 right-4 z-20">
-              <SponsorDisplay
-                sponsors={currentSlideSponsor ? [currentSlideSponsor] : sponsors}
-                visible={settings.show_sponsors && (currentSlide.show_sponsor ?? true)}
-              />
-            </div>
+            {renderPositionedSponsors(currentSlide)}
           </motion.div>
         );
 

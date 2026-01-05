@@ -70,6 +70,11 @@ export default function SlideForm({
     end_time: '',
     color: '#3B82F6',
     sponsor_id: null,
+    // Multi-position sponsors
+    sponsor_top_left: null,
+    sponsor_top_right: null,
+    sponsor_bottom_left: null,
+    sponsor_bottom_right: null,
     // Show slide fields
     host_name: '',
     show_days: '',
@@ -146,6 +151,11 @@ export default function SlideForm({
         end_time: slide.end_time?.slice(0, 5) || '',
         color: slide.color || '#3B82F6',
         sponsor_id: slide.sponsor_id || null,
+        // Multi-position sponsors
+        sponsor_top_left: slide.sponsor_top_left || null,
+        sponsor_top_right: slide.sponsor_top_right || null,
+        sponsor_bottom_left: slide.sponsor_bottom_left || null,
+        sponsor_bottom_right: slide.sponsor_bottom_right || null,
         // Show slide fields
         host_name: slide.host_name || '',
         show_days: slide.show_days || '',
@@ -198,6 +208,11 @@ export default function SlideForm({
       end_time: formData.end_time ? `${formData.end_time}:00` : null,
       color: formData.color || null,
       sponsor_id: formData.show_sponsor ? (formData.sponsor_id || null) : null,
+      // Multi-position sponsors
+      sponsor_top_left: formData.show_sponsor ? (formData.sponsor_top_left || null) : null,
+      sponsor_top_right: formData.show_sponsor ? (formData.sponsor_top_right || null) : null,
+      sponsor_bottom_left: formData.show_sponsor ? (formData.sponsor_bottom_left || null) : null,
+      sponsor_bottom_right: formData.show_sponsor ? (formData.sponsor_bottom_right || null) : null,
       // Show slide fields
       host_name: formData.host_name?.trim() || null,
       show_days: formData.show_days?.trim() || null,
@@ -652,8 +667,8 @@ export default function SlideForm({
                 type="button"
                 onClick={() => setFormData(prev => ({ ...prev, event_slide_style: 'classic' }))}
                 className={`p-4 border-2 transition-all text-left font-mono text-xs ${formData.event_slide_style === 'classic'
-                    ? 'border-[#00ff00] bg-[#1a1a1a] text-[#00ff00]'
-                    : 'border-[#333] bg-[#0a0a0a] text-white hover:border-[#00ff00]'
+                  ? 'border-[#00ff00] bg-[#1a1a1a] text-[#00ff00]'
+                  : 'border-[#333] bg-[#0a0a0a] text-white hover:border-[#00ff00]'
                   }`}
               >
                 <span className="text-xl block mb-2">📅</span>
@@ -666,8 +681,8 @@ export default function SlideForm({
                 type="button"
                 onClick={() => setFormData(prev => ({ ...prev, event_slide_style: 'modern' }))}
                 className={`p-4 border-2 transition-all text-left font-mono text-xs ${formData.event_slide_style === 'modern'
-                    ? 'border-[#00ff00] bg-[#1a1a1a] text-[#00ff00]'
-                    : 'border-[#333] bg-[#0a0a0a] text-white hover:border-[#00ff00]'
+                  ? 'border-[#00ff00] bg-[#1a1a1a] text-[#00ff00]'
+                  : 'border-[#333] bg-[#0a0a0a] text-white hover:border-[#00ff00]'
                   }`}
               >
                 <span className="text-xl block mb-2">🗓️</span>
@@ -946,29 +961,117 @@ export default function SlideForm({
           </div>
         </label>
 
-        {/* Sponsor Selector */}
+        {/* Multi-Position Sponsor Selectors */}
         {formData.show_sponsor && sponsors.length > 0 && (
-          <div className="ml-8 mt-2">
-            <label htmlFor="sponsor_id" className="block text-xs font-mono font-medium text-white uppercase tracking-wider mb-1">
-              SELECT SPONSOR
-            </label>
-            <select
-              id="sponsor_id"
-              name="sponsor_id"
-              value={formData.sponsor_id || ''}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-[#1a1a1a] border-2 border-[#00ff00] text-white font-mono text-xs focus:outline-none focus:border-[#00cc00]"
-            >
-              <option value="">RANDOM / ALL SPONSORS</option>
-              {sponsors.map((sponsor) => (
-                <option key={sponsor.id} value={sponsor.id}>
-                  {sponsor.name}
-                </option>
-              ))}
-            </select>
-            <p className="text-[#888] text-xs font-mono mt-1 uppercase tracking-wider">
-              CHOOSE A SPECIFIC SPONSOR OR LEAVE EMPTY FOR ROTATION
+          <div className="mt-4 p-4 bg-[#0a0a0a] border-2 border-[#00ff00]">
+            <p className="text-xs font-mono font-medium text-white uppercase tracking-wider mb-3">
+              SPONSOR POSITIONS
             </p>
+            <p className="text-[#888] text-xs font-mono mb-4 uppercase tracking-wider">
+              SELECT A SPONSOR FOR EACH CORNER (LEAVE EMPTY TO HIDE)
+            </p>
+
+            {/* Visual Grid */}
+            <div className="grid grid-cols-2 gap-3 max-w-md">
+              {/* Top Left */}
+              <div>
+                <label className="block text-[10px] font-mono text-[#888] mb-1 uppercase tracking-wider">
+                  ↖ TOP LEFT
+                </label>
+                <select
+                  name="sponsor_top_left"
+                  value={formData.sponsor_top_left || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-[#1a1a1a] border-2 border-[#333] text-white font-mono text-xs focus:outline-none focus:border-[#00ff00]"
+                >
+                  <option value="">None</option>
+                  {sponsors.map((sponsor) => (
+                    <option key={sponsor.id} value={sponsor.id}>
+                      {sponsor.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Top Right */}
+              <div>
+                <label className="block text-[10px] font-mono text-[#888] mb-1 uppercase tracking-wider">
+                  TOP RIGHT ↗
+                </label>
+                <select
+                  name="sponsor_top_right"
+                  value={formData.sponsor_top_right || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-[#1a1a1a] border-2 border-[#333] text-white font-mono text-xs focus:outline-none focus:border-[#00ff00]"
+                >
+                  <option value="">None</option>
+                  {sponsors.map((sponsor) => (
+                    <option key={sponsor.id} value={sponsor.id}>
+                      {sponsor.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Bottom Left */}
+              <div>
+                <label className="block text-[10px] font-mono text-[#888] mb-1 uppercase tracking-wider">
+                  ↙ BOTTOM LEFT
+                </label>
+                <select
+                  name="sponsor_bottom_left"
+                  value={formData.sponsor_bottom_left || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-[#1a1a1a] border-2 border-[#333] text-white font-mono text-xs focus:outline-none focus:border-[#00ff00]"
+                >
+                  <option value="">None</option>
+                  {sponsors.map((sponsor) => (
+                    <option key={sponsor.id} value={sponsor.id}>
+                      {sponsor.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Bottom Right */}
+              <div>
+                <label className="block text-[10px] font-mono text-[#888] mb-1 uppercase tracking-wider">
+                  BOTTOM RIGHT ↘
+                </label>
+                <select
+                  name="sponsor_bottom_right"
+                  value={formData.sponsor_bottom_right || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-[#1a1a1a] border-2 border-[#333] text-white font-mono text-xs focus:outline-none focus:border-[#00ff00]"
+                >
+                  <option value="">None</option>
+                  {sponsors.map((sponsor) => (
+                    <option key={sponsor.id} value={sponsor.id}>
+                      {sponsor.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Visual Preview */}
+            <div className="mt-4 p-2 bg-black border border-[#333] aspect-video max-w-xs relative">
+              <div className="absolute top-1 left-1 text-[8px] font-mono text-[#00ff00] px-1 bg-black/80">
+                {formData.sponsor_top_left ? sponsors.find(s => s.id === formData.sponsor_top_left)?.name?.slice(0, 10) : '—'}
+              </div>
+              <div className="absolute top-1 right-1 text-[8px] font-mono text-[#00ff00] px-1 bg-black/80">
+                {formData.sponsor_top_right ? sponsors.find(s => s.id === formData.sponsor_top_right)?.name?.slice(0, 10) : '—'}
+              </div>
+              <div className="absolute bottom-1 left-1 text-[8px] font-mono text-[#00ff00] px-1 bg-black/80">
+                {formData.sponsor_bottom_left ? sponsors.find(s => s.id === formData.sponsor_bottom_left)?.name?.slice(0, 10) : '—'}
+              </div>
+              <div className="absolute bottom-1 right-1 text-[8px] font-mono text-[#00ff00] px-1 bg-black/80">
+                {formData.sponsor_bottom_right ? sponsors.find(s => s.id === formData.sponsor_bottom_right)?.name?.slice(0, 10) : '—'}
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center text-[#333] text-xs font-mono">
+                SLIDE PREVIEW
+              </div>
+            </div>
           </div>
         )}
       </div>

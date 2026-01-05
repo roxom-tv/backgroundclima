@@ -7,6 +7,7 @@ export type SlideType = 'youtube' | 'debt' | 'metals' | 'fx' | 'show' | 'event' 
 export type TransitionEffect = 'tv_static' | 'fade' | 'slide' | 'none';
 export type LayoutOrientation = 'horizontal' | 'vertical';
 export type EventSlideStyle = 'classic' | 'modern';
+export type SponsorPosition = 'top_left' | 'top_right' | 'bottom_left' | 'bottom_right';
 
 // Schedule time for show slides
 export interface ScheduleTime {
@@ -35,8 +36,13 @@ export interface Slide {
   start_time: string | null;
   end_time: string | null;
   color: string | null;
-  // Sponsor selection
+  // Sponsor selection (legacy - use position-based fields)
   sponsor_id: string | null;
+  // Multi-position sponsors
+  sponsor_top_left: string | null;
+  sponsor_top_right: string | null;
+  sponsor_bottom_left: string | null;
+  sponsor_bottom_right: string | null;
   // Show slide fields
   host_name: string | null;
   show_days: string | null;
@@ -102,8 +108,13 @@ export interface SlideInsert {
   start_time?: string | null;
   end_time?: string | null;
   color?: string | null;
-  // Sponsor selection
+  // Sponsor selection (legacy)
   sponsor_id?: string | null;
+  // Multi-position sponsors
+  sponsor_top_left?: string | null;
+  sponsor_top_right?: string | null;
+  sponsor_bottom_left?: string | null;
+  sponsor_bottom_right?: string | null;
   // Show slide fields
   host_name?: string | null;
   show_days?: string | null;
@@ -141,8 +152,13 @@ export interface SlideUpdate {
   start_time?: string | null;
   end_time?: string | null;
   color?: string | null;
-  // Sponsor selection
+  // Sponsor selection (legacy)
   sponsor_id?: string | null;
+  // Multi-position sponsors
+  sponsor_top_left?: string | null;
+  sponsor_top_right?: string | null;
+  sponsor_bottom_left?: string | null;
+  sponsor_bottom_right?: string | null;
   // Show slide fields
   host_name?: string | null;
   show_days?: string | null;
