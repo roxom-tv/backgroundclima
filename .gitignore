@@ -43,3 +43,23 @@ next-env.d.ts
 
 # OS
 Thumbs.db
+
+# AI agents and skills (all patterns)
+.agents/
+.claude/
+.cursor/rules/
+.windsurf/
+.codex/
+.gemini/
+.opencode/
+.replit/
+.antigravity/
+**/skills/
+**/.skills/
+
+# Unnecessary documentation (keep README.md)
+API_CONSUMPTION_REPORT.md
+MARKET_DATA_SETUP.md
+VERCEL_DEPLOYMENT.md
+VERIFICATION_CHECKLIST.md
+docs/*.md
