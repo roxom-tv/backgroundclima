@@ -2,11 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== DESIGN TOKENS ===== */
+:root {
+  /* Admin Panel Colors */
+  --admin-bg: #000;
+  --admin-surface: #0a0a0a;
+  --admin-surface-hover: #1a1a1a;
+  --admin-border: #1a1a1a;
+  --admin-accent: #00ff00;
+  --admin-accent-hover: #00cc00;
+  --admin-danger: #ff0000;
+  --admin-danger-hover: #cc0000;
+  --admin-warning: #ffff00;
+  --admin-info: #00ffff;
+  --admin-text: #fff;
+  --admin-text-muted: #888;
+  --admin-text-dim: #666;
+
+  /* Pixel font text shadow (for broadcast display) */
+  --pixel-shadow:
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000;
+
+  /* Admin spacing */
+  --admin-gap-xs: 0.25rem;
+  --admin-gap-sm: 0.5rem;
+  --admin-gap-md: 1rem;
+  --admin-gap-lg: 1.5rem;
+}
+
 @layer base {
   * {
     box-sizing: border-box;
   }
-  
+
   html, body {
     @apply h-full overflow-hidden;
     margin: 0;
@@ -14,7 +45,7 @@
     width: 100%;
     height: 100%;
   }
-  
+
   #__next {
     @apply h-full;
     margin: 0;
@@ -36,11 +67,7 @@
     @apply text-white font-normal;
     font-family: var(--font-pixel);
     font-size: 56px;
-    text-shadow: 
-      -1px -1px 0 #000,
-       1px -1px 0 #000,
-      -1px  1px 0 #000,
-       1px  1px 0 #000;
+    text-shadow: var(--pixel-shadow);
     letter-spacing: 2px;
     line-height: 1.2;
   }
@@ -59,11 +86,7 @@
     @apply text-white font-normal;
     font-family: var(--font-pixel);
     font-size: 56px;
-    text-shadow: 
-      -1px -1px 0 #000,
-       1px -1px 0 #000,
-      -1px  1px 0 #000,
-       1px  1px 0 #000;
+    text-shadow: var(--pixel-shadow);
     letter-spacing: 3px;
     line-height: 1.2;
   }
@@ -112,24 +135,16 @@
     @apply text-white font-normal;
     font-family: var(--font-pixel);
     font-size: 70px;
-    text-shadow: 
-      -1px -1px 0 #000,
-       1px -1px 0 #000,
-      -1px  1px 0 #000,
-       1px  1px 0 #000;
+    text-shadow: var(--pixel-shadow);
     letter-spacing: 3px;
     line-height: 1.1;
   }
-  
+
   .country-name {
     @apply text-white font-normal mt-2;
     font-family: var(--font-pixel);
     font-size: 38px;
-    text-shadow: 
-      -1px -1px 0 #000,
-       1px -1px 0 #000,
-      -1px  1px 0 #000,
-       1px  1px 0 #000;
+    text-shadow: var(--pixel-shadow);
     letter-spacing: 2px;
     line-height: 1.1;
   }
@@ -158,24 +173,16 @@
     @apply flex items-center gap-3 text-white font-normal;
     font-family: var(--font-pixel);
     font-size: 46px;
-    text-shadow: 
-      -1px -1px 0 #000,
-       1px -1px 0 #000,
-      -1px  1px 0 #000,
-       1px  1px 0 #000;
+    text-shadow: var(--pixel-shadow);
     letter-spacing: 2px;
     line-height: 1.2;
   }
-  
+
   .weather-label {
     @apply text-white font-normal mt-3 text-left;
     font-family: var(--font-pixel);
     font-size: 30px;
-    text-shadow: 
-      -1px -1px 0 #000,
-       1px -1px 0 #000,
-      -1px  1px 0 #000,
-       1px  1px 0 #000;
+    text-shadow: var(--pixel-shadow);
     letter-spacing: 2px;
     line-height: 1.2;
   }
@@ -225,11 +232,7 @@
     @apply text-white font-normal;
     font-family: var(--font-pixel);
     font-size: 28px;
-    text-shadow: 
-      -1px -1px 0 #000,
-       1px -1px 0 #000,
-      -1px  1px 0 #000,
-       1px  1px 0 #000;
+    text-shadow: var(--pixel-shadow);
     letter-spacing: 2px;
     line-height: 1.2;
   }
@@ -332,13 +335,241 @@
     @apply text-white text-6xl font-bold;
     font-family: var(--font-pixel);
     letter-spacing: 6px;
-    text-shadow: 
+    text-shadow:
       -2px -2px 0 #000,
        2px -2px 0 #000,
       -2px  2px 0 #000,
        2px  2px 0 #000,
        0 0 20px rgba(255, 255, 255, 0.5);
     line-height: 1.1;
+  }
+
+  /* ===== ADMIN PANEL COMPONENTS ===== */
+
+  /* Admin Card - Base card component */
+  .admin-card {
+    @apply p-4;
+    background: var(--admin-surface);
+    border: 2px solid var(--admin-accent);
+  }
+
+  .admin-card-muted {
+    @apply p-4;
+    background: var(--admin-surface);
+    border: 2px solid var(--admin-border);
+  }
+
+  /* Admin Button Variants */
+  .admin-btn {
+    @apply px-4 py-2 font-mono text-xs uppercase tracking-wider transition-colors;
+    border: 2px solid var(--admin-accent);
+  }
+
+  .admin-btn-primary {
+    @apply admin-btn;
+    background: var(--admin-accent);
+    color: #000;
+  }
+
+  .admin-btn-primary:hover {
+    background: var(--admin-accent-hover);
+    border-color: var(--admin-accent-hover);
+  }
+
+  .admin-btn-ghost {
+    @apply admin-btn;
+    background: var(--admin-surface);
+    color: var(--admin-accent);
+  }
+
+  .admin-btn-ghost:hover {
+    background: var(--admin-surface-hover);
+  }
+
+  .admin-btn-danger {
+    @apply admin-btn;
+    background: var(--admin-surface);
+    color: var(--admin-danger);
+    border-color: var(--admin-danger);
+  }
+
+  .admin-btn-danger:hover {
+    background: var(--admin-surface-hover);
+  }
+
+  /* Admin Section Header */
+  .admin-header {
+    @apply pb-3 mb-4;
+    border-bottom: 2px solid var(--admin-accent);
+  }
+
+  .admin-header h1 {
+    @apply text-2xl font-mono font-bold uppercase tracking-wider;
+    color: var(--admin-text);
+  }
+
+  .admin-header p {
+    @apply text-xs font-mono mt-1 uppercase tracking-wider;
+    color: var(--admin-text-muted);
+  }
+
+  /* Admin Input */
+  .admin-input {
+    @apply w-full px-4 py-2 font-mono;
+    background: var(--admin-surface-hover);
+    border: 2px solid var(--admin-accent);
+    color: var(--admin-text);
+  }
+
+  .admin-input:focus {
+    @apply outline-none;
+    border-color: var(--admin-accent-hover);
+  }
+
+  /* Admin Toggle Switch */
+  .admin-toggle {
+    @apply relative inline-flex h-7 w-14 flex-shrink-0 cursor-pointer transition-colors duration-200 ease-in-out;
+    border: 2px solid var(--admin-border);
+    background: var(--admin-surface-hover);
+  }
+
+  .admin-toggle.active {
+    background: var(--admin-accent);
+    border-color: var(--admin-accent);
+  }
+
+  .admin-toggle-knob {
+    @apply pointer-events-none inline-block h-5 w-5 bg-black transition duration-200 ease-in-out;
+  }
+
+  /* Admin Notification */
+  .admin-notification {
+    @apply p-3 text-xs font-mono;
+    background: var(--admin-surface);
+    border: 2px solid var(--admin-accent);
+    color: var(--admin-accent);
+  }
+
+  .admin-notification.error {
+    border-color: var(--admin-danger);
+    color: var(--admin-danger);
+  }
+
+  /* Admin Stat Card */
+  .admin-stat {
+    @apply p-4;
+    background: var(--admin-surface);
+    border: 2px solid var(--admin-accent);
+    border-left-width: 4px;
+  }
+
+  .admin-stat-label {
+    @apply text-xs font-mono uppercase tracking-wider mb-1;
+    color: var(--admin-text-muted);
+  }
+
+  .admin-stat-value {
+    @apply text-4xl font-mono font-bold;
+    color: var(--admin-text);
+  }
+
+  .admin-stat-subtitle {
+    @apply text-xs font-mono mt-1;
+    color: var(--admin-text-dim);
+  }
+
+  /* Admin List Item */
+  .admin-list-item {
+    @apply p-3 transition-all;
+    background: var(--admin-surface-hover);
+    border: 1px solid var(--admin-border);
+  }
+
+  .admin-list-item:hover {
+    border-color: var(--admin-text-dim);
+  }
+
+  .admin-list-item.active {
+    border-color: var(--admin-accent);
+    opacity: 1;
+  }
+
+  .admin-list-item.inactive {
+    opacity: 0.5;
+  }
+
+  /* Admin Modal */
+  .admin-modal-overlay {
+    @apply fixed inset-0 flex items-center justify-center p-4 z-50;
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  .admin-modal {
+    @apply w-full max-h-[90vh] overflow-y-auto;
+    background: var(--admin-surface);
+    border: 2px solid var(--admin-accent);
+  }
+
+  .admin-modal-header {
+    @apply p-4 flex items-center justify-between;
+    border-bottom: 2px solid var(--admin-accent);
+  }
+
+  .admin-modal-header h2 {
+    @apply text-lg font-mono font-semibold uppercase tracking-wider;
+    color: var(--admin-text);
+  }
+
+  .admin-modal-close {
+    @apply text-2xl font-mono;
+    color: var(--admin-accent);
+  }
+
+  .admin-modal-close:hover {
+    color: var(--admin-text);
+  }
+
+  /* Admin Filter Tabs */
+  .admin-filter {
+    @apply flex gap-0;
+  }
+
+  .admin-filter-btn {
+    @apply px-3 py-1 text-xs font-mono uppercase tracking-wider transition-colors;
+    background: var(--admin-surface);
+    color: var(--admin-accent);
+    border-right: 2px solid var(--admin-border);
+  }
+
+  .admin-filter-btn:last-child {
+    border-right: none;
+  }
+
+  .admin-filter-btn:hover {
+    background: var(--admin-surface-hover);
+  }
+
+  .admin-filter-btn.active {
+    background: var(--admin-accent);
+    color: #000;
+  }
+
+  /* Admin Info Box */
+  .admin-info {
+    @apply p-4;
+    background: var(--admin-surface);
+    border: 2px solid var(--admin-accent);
+    border-left-width: 4px;
+  }
+
+  .admin-info-title {
+    @apply font-mono font-medium text-xs uppercase tracking-wider mb-2;
+    color: var(--admin-text);
+  }
+
+  .admin-info-text {
+    @apply text-xs font-mono uppercase tracking-wider;
+    color: var(--admin-text-muted);
   }
 }
 
@@ -408,11 +639,7 @@
   font-family: var(--font-pixel);
   font-size: 24px;
   letter-spacing: 3px;
-  text-shadow: 
-    -1px -1px 0 #000,
-     1px -1px 0 #000,
-    -1px  1px 0 #000,
-     1px  1px 0 #000;
+  text-shadow: var(--pixel-shadow);
   animation: channel-text-flicker 0.2s ease-in-out infinite alternate;
 }
 
@@ -673,11 +900,7 @@
   .sponsor-text {
     @apply text-base text-white;
     font-family: var(--font-pixel);
-    text-shadow: 
-      -1px -1px 0 #000,
-       1px -1px 0 #000,
-      -1px  1px 0 #000,
-       1px  1px 0 #000;
+    text-shadow: var(--pixel-shadow);
     letter-spacing: 1px;
   }
 

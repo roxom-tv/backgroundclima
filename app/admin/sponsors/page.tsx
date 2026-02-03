@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useSponsors } from '@/hooks/useSponsors';
 import SponsorForm from '../components/SponsorForm';
+import { PageHeader, Notification, EmptyState, LoadingState, Modal, InfoBox } from '../components/ui';
 import type { Sponsor, SponsorInsert } from '@/lib/supabase/types';
 
 export default function SponsorsPage() {
@@ -24,18 +25,15 @@ export default function SponsorsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // Fetch sponsors on mount
   useEffect(() => {
     fetchSponsors();
   }, [fetchSponsors]);
 
-  // Show notification
   const showNotification = useCallback((type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 3000);
   }, []);
 
-  // Handle drag end
   const handleDragEnd = useCallback(async (result: DropResult) => {
     if (!result.destination) return;
 
@@ -51,16 +49,15 @@ export default function SponsorsPage() {
     const orderedIds = newSponsors.map(s => s.id);
 
     const { error } = await reorderSponsors(orderedIds);
-    
+
     if (error) {
       showNotification('error', 'Failed to reorder sponsors');
       fetchSponsors();
     } else {
-      showNotification('success', 'Sponsors reordered successfully');
+      showNotification('success', 'Order updated');
     }
   }, [sponsors, reorderSponsors, fetchSponsors, showNotification]);
 
-  // Handle form submit
   const handleFormSubmit = useCallback(async (data: SponsorInsert) => {
     setIsSubmitting(true);
 
@@ -70,7 +67,7 @@ export default function SponsorsPage() {
         if (error) {
           showNotification('error', error);
         } else {
-          showNotification('success', 'Sponsor updated successfully');
+          showNotification('success', 'Sponsor updated');
           setIsFormOpen(false);
           setEditingSponsor(null);
           fetchSponsors();
@@ -80,7 +77,7 @@ export default function SponsorsPage() {
         if (error) {
           showNotification('error', error);
         } else {
-          showNotification('success', 'Sponsor added successfully');
+          showNotification('success', 'Sponsor added');
           setIsFormOpen(false);
           fetchSponsors();
         }
@@ -90,41 +87,34 @@ export default function SponsorsPage() {
     }
   }, [editingSponsor, createSponsor, updateSponsor, fetchSponsors, showNotification]);
 
-  // Handle edit
   const handleEdit = useCallback((sponsor: Sponsor) => {
     setEditingSponsor(sponsor);
     setIsFormOpen(true);
   }, []);
 
-  // Handle delete
   const handleDelete = useCallback(async (sponsor: Sponsor) => {
-    if (window.confirm(`Are you sure you want to delete "${sponsor.name}"?`)) {
+    if (window.confirm(`Delete "${sponsor.name}"?`)) {
       const { error } = await deleteSponsor(sponsor.id);
       if (error) {
         showNotification('error', error);
       } else {
-        showNotification('success', 'Sponsor deleted successfully');
+        showNotification('success', 'Sponsor deleted');
       }
     }
   }, [deleteSponsor, showNotification]);
 
-  // Handle toggle active
   const handleToggleActive = useCallback(async (sponsor: Sponsor) => {
     const { error } = await toggleSponsorActive(sponsor.id, !sponsor.is_active);
     if (error) {
       showNotification('error', error);
-    } else {
-      showNotification('success', `Sponsor ${!sponsor.is_active ? 'activated' : 'deactivated'}`);
     }
   }, [toggleSponsorActive, showNotification]);
 
-  // Handle form cancel
   const handleFormCancel = useCallback(() => {
     setIsFormOpen(false);
     setEditingSponsor(null);
   }, []);
 
-  // Handle add new
   const handleAddNew = useCallback(() => {
     setEditingSponsor(null);
     setIsFormOpen(true);
@@ -132,65 +122,34 @@ export default function SponsorsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b-2 border-[#00ff00] pb-3 mb-4">
-        <div>
-          <h1 className="text-2xl font-mono font-bold text-white uppercase tracking-wider">SPONSORS</h1>
-          <p className="text-[#888] text-xs font-mono mt-1 uppercase tracking-wider">
-            MANAGE SPONSORS DISPLAYED ON THE &quot;PRESENTED BY&quot; SECTION
-          </p>
-        </div>
-        <button
-          onClick={handleAddNew}
-          className="bg-[#00ff00] hover:bg-[#00cc00] text-black px-4 py-2 font-mono text-xs uppercase tracking-wider transition-colors flex items-center gap-2 border-2 border-[#00ff00]"
-        >
-          <span>+</span>
-          <span>ADD SPONSOR</span>
-        </button>
-      </div>
-
-      {/* Notification */}
-      {notification && (
-        <div
-          className={`p-3 text-xs font-mono border-2 ${
-            notification.type === 'success'
-              ? 'bg-[#0a0a0a] border-[#00ff00] text-[#00ff00]'
-              : 'bg-[#0a0a0a] border-[#ff0000] text-[#ff0000]'
-          }`}
-        >
-          {notification.message.toUpperCase()}
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <div className="bg-[#0a0a0a] border-2 border-[#ff0000] text-[#ff0000] p-3 text-xs font-mono">
-          {error.toUpperCase()}
-        </div>
-      )}
-
-      {/* Loading State */}
-      {isLoading && !sponsors.length && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 animate-pulse">Loading sponsors...</div>
-        </div>
-      )}
-
-      {/* Sponsors List */}
-      {!isLoading && sponsors.length === 0 ? (
-        <div className="text-center py-12 bg-gray-800 rounded-lg border border-gray-700">
-          <div className="text-6xl mb-4">💼</div>
-          <h3 className="text-xl font-medium text-white mb-2">No sponsors yet</h3>
-          <p className="text-gray-400 mb-4">
-            Add sponsors to display in the &quot;Presented by&quot; section
-          </p>
-          <button
-            onClick={handleAddNew}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
-          >
-            Add First Sponsor
+      <PageHeader
+        title="SPONSORS"
+        subtitle='MANAGE SPONSORS DISPLAYED ON THE "PRESENTED BY" SECTION'
+        action={
+          <button onClick={handleAddNew} className="admin-btn-primary flex items-center gap-2">
+            <span className="text-lg">+</span>
+            <span>ADD SPONSOR</span>
           </button>
-        </div>
+        }
+      />
+
+      {notification && (
+        <Notification type={notification.type} message={notification.message} />
+      )}
+
+      {error && (
+        <div className="admin-notification error">{error.toUpperCase()}</div>
+      )}
+
+      {isLoading && !sponsors.length && <LoadingState />}
+
+      {!isLoading && sponsors.length === 0 ? (
+        <EmptyState
+          icon="💼"
+          title="NO SPONSORS YET"
+          description='Add sponsors to display in the "Presented by" section'
+          action={{ label: 'ADD FIRST SPONSOR', onClick: handleAddNew }}
+        />
       ) : (
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="sponsors">
@@ -217,7 +176,7 @@ export default function SponsorsPage() {
                         {/* Drag Handle */}
                         <div
                           {...provided.dragHandleProps}
-                          className="cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 mb-3"
+                          className="cursor-grab active:cursor-grabbing text-[#666] hover:text-[#888] mb-3"
                         >
                           <svg className="w-5 h-5 mx-auto" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
@@ -225,7 +184,7 @@ export default function SponsorsPage() {
                         </div>
 
                         {/* Logo */}
-                        <div className="h-16 flex items-center justify-center bg-black rounded mb-3">
+                        <div className="h-16 flex items-center justify-center bg-black mb-3">
                           {sponsor.logo_url ? (
                             /* eslint-disable-next-line @next/next/no-img-element */
                             <img
@@ -234,14 +193,14 @@ export default function SponsorsPage() {
                               className="max-h-12 max-w-full object-contain"
                             />
                           ) : (
-                            <span className="text-white font-bold text-lg">
+                            <span className="text-white font-mono font-bold text-sm uppercase tracking-wider">
                               {sponsor.name}
                             </span>
                           )}
                         </div>
 
                         {/* Name */}
-                        <h3 className="text-white font-medium text-center mb-3">
+                        <h3 className="text-white font-mono font-medium text-xs text-center mb-3 uppercase tracking-wider">
                           {sponsor.name}
                         </h3>
 
@@ -249,10 +208,10 @@ export default function SponsorsPage() {
                         <div className="flex justify-center gap-2">
                           <button
                             onClick={() => handleToggleActive(sponsor)}
-                            className={`p-2 rounded transition-colors ${
+                            className={`p-2 border-2 transition-colors font-mono text-xs ${
                               sponsor.is_active
-                                ? 'bg-green-600/20 text-green-400 hover:bg-green-600/30'
-                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                                ? 'bg-[#00ff00] text-black border-[#00ff00] hover:bg-[#00cc00]'
+                                : 'bg-[#1a1a1a] text-[#888] border-[#333] hover:bg-[#2a2a2a]'
                             }`}
                             title={sponsor.is_active ? 'Active' : 'Inactive'}
                           >
@@ -260,14 +219,14 @@ export default function SponsorsPage() {
                           </button>
                           <button
                             onClick={() => handleEdit(sponsor)}
-                            className="p-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded transition-colors"
+                            className="p-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white border-2 border-[#333] transition-colors font-mono text-xs"
                             title="Edit"
                           >
                             ✏️
                           </button>
                           <button
                             onClick={() => handleDelete(sponsor)}
-                            className="p-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded transition-colors"
+                            className="p-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#ff0000] border-2 border-[#ff0000] transition-colors font-mono text-xs"
                             title="Delete"
                           >
                             🗑️
@@ -284,36 +243,26 @@ export default function SponsorsPage() {
         </DragDropContext>
       )}
 
-      {/* Info */}
       {sponsors.length > 0 && (
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-          <p className="text-gray-400 text-sm">
-            💡 The first active sponsor will be displayed on the screen. 
-            Drag to reorder sponsors.
-          </p>
-        </div>
+        <InfoBox icon="💡">
+          The first active sponsor will be displayed on the screen.
+          Drag to reorder sponsors.
+        </InfoBox>
       )}
 
-      {/* Modal Form */}
-      {isFormOpen && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
-          <div className="bg-[#0a0a0a] w-full max-w-lg max-h-[90vh] overflow-y-auto border-2 border-[#00ff00]">
-            <div className="p-4 border-b-2 border-[#00ff00]">
-              <h2 className="text-lg font-mono font-semibold text-white uppercase tracking-wider">
-                {editingSponsor ? 'EDIT SPONSOR' : 'ADD NEW SPONSOR'}
-              </h2>
-            </div>
-            <div className="p-6">
-              <SponsorForm
-                sponsor={editingSponsor}
-                onSubmit={handleFormSubmit}
-                onCancel={handleFormCancel}
-                isSubmitting={isSubmitting}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={isFormOpen}
+        onClose={handleFormCancel}
+        title={editingSponsor ? 'EDIT SPONSOR' : 'ADD NEW SPONSOR'}
+        maxWidth="md"
+      >
+        <SponsorForm
+          sponsor={editingSponsor}
+          onSubmit={handleFormSubmit}
+          onCancel={handleFormCancel}
+          isSubmitting={isSubmitting}
+        />
+      </Modal>
     </div>
   );
 }
