@@ -84,6 +84,7 @@ export default function SlideForm({
     layout_orientation: 'horizontal' as LayoutOrientation,
     event_slide_style: 'classic' as EventSlideStyle,
     event_slide_title: '',
+    event_show_week_text: true,
     // News slide fields
     headline: '',
     source: '',
@@ -165,6 +166,7 @@ export default function SlideForm({
         layout_orientation: slide.layout_orientation || 'horizontal',
         event_slide_style: slide.event_slide_style || 'classic',
         event_slide_title: slide.event_slide_title || '',
+        event_show_week_text: slide.event_show_week_text ?? true,
         // News slide fields
         headline: slide.headline || '',
         source: slide.source || '',
@@ -229,6 +231,9 @@ export default function SlideForm({
       event_slide_style: formData.type === 'event' ? (formData.event_slide_style || 'classic') : null,
       event_slide_title: formData.type === 'event' && formData.event_slide_style === 'modern'
         ? (formData.event_slide_title?.trim() || null)
+        : null,
+      event_show_week_text: formData.type === 'event' && formData.event_slide_style === 'modern'
+        ? formData.event_show_week_text
         : null,
       // News slide fields
       headline: formData.headline?.trim() || null,
@@ -692,6 +697,21 @@ export default function SlideForm({
                 </span>
               </button>
             </div>
+
+            {/* Show week text (Week X - Monday to Friday) */}
+            {formData.event_slide_style === 'modern' && (
+              <label className="mt-4 flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.event_show_week_text ?? true}
+                  onChange={(e) => setFormData(prev => ({ ...prev, event_show_week_text: e.target.checked }))}
+                  className="w-5 h-5 rounded border-2 border-[#00ff00] bg-[#1a1a1a] text-[#00ff00] focus:ring-[#00ff00]"
+                />
+                <span className="text-xs font-mono font-medium text-white uppercase tracking-wider">
+                  Mostrar texto de semana (Week X - Monday to Friday)
+                </span>
+              </label>
+            )}
 
             {/* Custom Title for Modern Style */}
             {formData.event_slide_style === 'modern' && (
