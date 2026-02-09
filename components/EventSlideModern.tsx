@@ -27,30 +27,6 @@ const formatDateRange = (startDate: string, endDate: string | null) => {
     return `${start} - ${end}`;
 };
 
-// Get week info from a date
-const getWeekInfoFromDate = (dateStr: string) => {
-    const date = new Date(dateStr + 'T00:00:00');
-    const startOfYear = new Date(date.getFullYear(), 0, 1);
-    const days = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-    const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7);
-
-    // Calculate week start (Monday) and end (Friday) for that date
-    const dayOfWeek = date.getDay();
-    const monday = new Date(date);
-    monday.setDate(date.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-    const friday = new Date(monday);
-    friday.setDate(monday.getDate() + 4);
-
-    const mondayDay = monday.getDate();
-    const fridayDay = friday.getDate();
-
-    return {
-        weekNumber,
-        monday: `Monday ${mondayDay}`,
-        friday: `Friday ${fridayDay}`,
-    };
-};
-
 // Get current month and year
 const getCurrentMonthYear = () => {
     const now = new Date();
@@ -162,11 +138,6 @@ function EventSlideModernComponent({ slide, events }: EventSlideModernProps) {
     }, [slide.selected_event_ids, events]);
 
     const eventCount = selectedEvents.length;
-    // Get week info from first event, not current date
-    const weekInfo = useMemo(() => {
-        if (selectedEvents.length === 0) return getWeekInfoFromDate(new Date().toISOString().split('T')[0]);
-        return getWeekInfoFromDate(selectedEvents[0].start_date);
-    }, [selectedEvents]);
     // Get month/year from first selected event, not current date
     const monthYear = useMemo(() => {
         if (selectedEvents.length === 0) return getCurrentMonthYear();
@@ -237,7 +208,7 @@ function EventSlideModernComponent({ slide, events }: EventSlideModernProps) {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-start justify-between px-10 pt-8 pb-6"
             >
-                {/* Left: Month/Year + Week Info */}
+                {/* Left: Month/Year + Logo */}
                 <div className="flex flex-col">
                     <h1
                         className="text-[4.5rem] leading-none font-bold tracking-tight"
@@ -256,14 +227,6 @@ function EventSlideModernComponent({ slide, events }: EventSlideModernProps) {
                             alt="ROXOM.TV"
                             className="h-12 w-auto"
                         />
-                        {slide.event_show_week_text !== false && (
-                            <>
-                                <span className="text-gray-600 text-xl">|</span>
-                                <span className="text-gray-400 text-xl font-normal">
-                                    Week {weekInfo.weekNumber} - {weekInfo.monday} to {weekInfo.friday}
-                                </span>
-                            </>
-                        )}
                     </div>
                 </div>
 
@@ -290,7 +253,6 @@ export default memo(EventSlideModernComponent, (prevProps, nextProps) => {
     if (prevProps.slide.id !== nextProps.slide.id) return false;
     if (prevProps.slide.selected_event_ids?.join(',') !== nextProps.slide.selected_event_ids?.join(',')) return false;
     if (prevProps.slide.event_slide_title !== nextProps.slide.event_slide_title) return false;
-    if (prevProps.slide.event_show_week_text !== nextProps.slide.event_show_week_text) return false;
 
     const prevIds = prevProps.slide.selected_event_ids || [];
     for (const id of prevIds) {
