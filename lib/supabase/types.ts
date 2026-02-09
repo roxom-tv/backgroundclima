@@ -52,7 +52,6 @@ export interface Slide {
   layout_orientation: LayoutOrientation | null;
   event_slide_style: EventSlideStyle | null;
   event_slide_title: string | null;
-  event_show_week_text: boolean | null;
   // News slide fields
   headline: string | null;
   source: string | null;
@@ -125,7 +124,6 @@ export interface SlideInsert {
   layout_orientation?: LayoutOrientation | null;
   event_slide_style?: EventSlideStyle | null;
   event_slide_title?: string | null;
-  event_show_week_text?: boolean | null;
   // News slide fields
   headline?: string | null;
   source?: string | null;
@@ -170,7 +168,6 @@ export interface SlideUpdate {
   layout_orientation?: LayoutOrientation | null;
   event_slide_style?: EventSlideStyle | null;
   event_slide_title?: string | null;
-  event_show_week_text?: boolean | null;
   // News slide fields
   headline?: string | null;
   source?: string | null;
