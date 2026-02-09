@@ -256,10 +256,14 @@ function EventSlideModernComponent({ slide, events }: EventSlideModernProps) {
                             alt="ROXOM.TV"
                             className="h-12 w-auto"
                         />
-                        <span className="text-gray-600 text-xl">|</span>
-                        <span className="text-gray-400 text-xl font-normal">
-                            Week {weekInfo.weekNumber} - {weekInfo.monday} to {weekInfo.friday}
-                        </span>
+                        {slide.event_show_week_text !== false && (
+                            <>
+                                <span className="text-gray-600 text-xl">|</span>
+                                <span className="text-gray-400 text-xl font-normal">
+                                    Week {weekInfo.weekNumber} - {weekInfo.monday} to {weekInfo.friday}
+                                </span>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -286,6 +290,7 @@ export default memo(EventSlideModernComponent, (prevProps, nextProps) => {
     if (prevProps.slide.id !== nextProps.slide.id) return false;
     if (prevProps.slide.selected_event_ids?.join(',') !== nextProps.slide.selected_event_ids?.join(',')) return false;
     if (prevProps.slide.event_slide_title !== nextProps.slide.event_slide_title) return false;
+    if (prevProps.slide.event_show_week_text !== nextProps.slide.event_show_week_text) return false;
 
     const prevIds = prevProps.slide.selected_event_ids || [];
     for (const id of prevIds) {
