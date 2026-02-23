@@ -7,6 +7,49 @@ import {
   getMetalsRequestsPerDay,
 } from "@/lib/metals-rate-limit";
 
+// ─── Pyth Network (Hermes REST API) ────────────────────────────────────────
+// Docs: https://hermes.pyth.network/docs
+// Sin API key, sin límite mensual. Rate limit: 30 req / 10 seg por IP.
+// Con cache de 15 min solo hacemos 1 req/15min — muy por debajo del límite.
+const PYTH_HERMES_URL = "https://hermes.pyth.network";
+
+const PYTH_FEED_IDS = {
+  // Metales — IDs estables (64 hex chars cada uno)
+  gold:   "0x765d2ba906dbc32ca17cc11f5310a89e9ee1f6420508c63861f2f8ba4ee34bb2", // XAU/USD
+  silver: "0xf2fb02c32b055c805e7238d628e5e9dadef274376114eb1f012337cabe93871e", // XAG/USD
+  // Petróleo — IDs deben tener 64 hex chars; los anteriores fallaban (WTI tenía 63)
+  // Ver https://hermes.pyth.network/v2/price_feeds para IDs actuales
+  wti:    "0x6a60b0d1ea6809b47dbe599f24a71c8bda335aa5c77e503e7260cde5ba2f4694", // WTI futures (spot no disponible en Pyth)
+  brent:  "0xc96458d393fe9deb7a7d63a0ac41e2898a67a7750dbd166673279e06c868df0a", // BRENT/USD
+} as const;
+
+interface PythPriceData {
+  price: string;   // precio crudo como string entero (ej: "316524000000")
+  conf:  string;   // intervalo de confianza
+  expo:  number;   // exponente: precio_real = parseInt(price) * 10^expo
+  publish_time: number; // unix timestamp
+}
+
+interface PythParsedFeed {
+  id: string;
+  price: PythPriceData;
+  ema_price: PythPriceData;
+}
+
+function parsePythPrice(data: PythPriceData): number {
+  return parseInt(data.price) * Math.pow(10, data.expo);
+}
+
+// change24h: Pyth no lo provee nativamente.
+// Calculamos comparando price vs ema_price como aproximación razonable.
+// EMA price refleja el promedio reciente — la diferencia % es una buena proxy del cambio.
+function approximateChange24h(current: PythPriceData, ema: PythPriceData): number | null {
+  const currentPrice = parsePythPrice(current);
+  const emaPrice = parsePythPrice(ema);
+  if (emaPrice <= 0 || currentPrice <= 0) return null;
+  return ((currentPrice - emaPrice) / emaPrice) * 100;
+}
+
 // Disable caching to ensure real-time data
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
@@ -41,7 +84,7 @@ interface MarketsSatsResponse {
   stale?: boolean;
 }
 
-const MARKETS_CACHE_DURATION = 15 * 60 * 1000; // 15 minutes - mínimo entre Oil (15 min) y FX (30 min)
+const MARKETS_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes — Pyth: 30 req/10s por IP, 1 req/5min está muy por debajo
 let marketsCache: MarketsCacheEntry | null = null;
 
 // Cache separado para Metals.dev (límite gratuito: 100 requests/mes)
@@ -643,45 +686,136 @@ async function fetchFX(apiUrl: string, apiKey?: string): Promise<{
   }
 }
 
+/**
+ * Fetch Gold, Silver, WTI y Brent desde Pyth Network (Hermes REST API)
+ * Sin API key. Rate limit: 30 req/10seg por IP — muy holgado con cache de 15min.
+ *
+ * Reemplaza fetchMetals() y fetchOil() en una sola llamada HTTP.
+ */
+async function fetchPyth(): Promise<{
+  gold:   { usd: number; change24hPct: number | null };
+  silver: { usd: number; change24hPct: number | null };
+  wti:    { usd: number; change24hPct: number | null };
+  brent:  { usd: number; change24hPct: number | null };
+}> {
+  const defaultResult = {
+    gold:   { usd: 0, change24hPct: null },
+    silver: { usd: 0, change24hPct: null },
+    wti:    { usd: 0, change24hPct: null },
+    brent:  { usd: 0, change24hPct: null },
+  };
+
+  try {
+    // Pyth Hermes acepta IDs con o sin 0x; usar sin 0x evita problemas de encoding en algunos entornos
+    const ids = Object.values(PYTH_FEED_IDS).map((id) =>
+      id.startsWith("0x") ? id.slice(2) : id
+    );
+    const params = new URLSearchParams();
+    ids.forEach((id) => params.append("ids[]", id));
+    params.append("parsed", "true");
+
+    const url = `${PYTH_HERMES_URL}/v2/updates/price/latest?${params}`;
+
+    const response = await fetch(url, {
+      next: { revalidate: 0 },
+      cache: "no-store",
+      signal: AbortSignal.timeout(20000),
+      headers: { "Accept": "application/json" },
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("Pyth Hermes HTTP error:", response.status, errText.slice(0, 300));
+      throw new Error(`Pyth Hermes error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = (await response.json()) as { parsed?: PythParsedFeed[] };
+
+    if (!data.parsed || !Array.isArray(data.parsed)) {
+      console.error("Pyth response missing parsed array. Keys:", data ? Object.keys(data) : "null");
+      throw new Error("Pyth response missing 'parsed' array");
+    }
+
+    const feeds: PythParsedFeed[] = data.parsed;
+
+    // Mapear cada feed por ID; la API devuelve id sin 0x — guardamos con y sin 0x para lookup seguro
+    const byId = new Map<string, PythParsedFeed>();
+    feeds.forEach(feed => {
+      const raw = (feed.id.startsWith("0x") ? feed.id.slice(2) : feed.id).toLowerCase();
+      const withPrefix = `0x${raw}`;
+      byId.set(withPrefix, feed);
+      byId.set(raw, feed);
+    });
+
+    const get = (key: keyof typeof PYTH_FEED_IDS) => {
+      const id = PYTH_FEED_IDS[key].toLowerCase();
+      const withPrefix = id.startsWith("0x") ? id : `0x${id}`;
+      const withoutPrefix = withPrefix.replace(/^0x/, "");
+      return byId.get(withPrefix) ?? byId.get(withoutPrefix) ?? null;
+    };
+
+    const goldFeed   = get("gold");
+    const silverFeed = get("silver");
+    const wtiFeed    = get("wti");
+    const brentFeed  = get("brent");
+
+    const result = {
+      gold: goldFeed
+        ? { usd: parsePythPrice(goldFeed.price), change24hPct: approximateChange24h(goldFeed.price, goldFeed.ema_price) }
+        : defaultResult.gold,
+      silver: silverFeed
+        ? { usd: parsePythPrice(silverFeed.price), change24hPct: approximateChange24h(silverFeed.price, silverFeed.ema_price) }
+        : defaultResult.silver,
+      wti: wtiFeed
+        ? { usd: parsePythPrice(wtiFeed.price), change24hPct: approximateChange24h(wtiFeed.price, wtiFeed.ema_price) }
+        : defaultResult.wti,
+      brent: brentFeed
+        ? { usd: parsePythPrice(brentFeed.price), change24hPct: approximateChange24h(brentFeed.price, brentFeed.ema_price) }
+        : defaultResult.brent,
+    };
+
+    console.log("Pyth prices fetched:", {
+      gold:   result.gold.usd,
+      silver: result.silver.usd,
+      wti:    result.wti.usd,
+      brent:  result.brent.usd,
+    });
+
+    return result;
+
+  } catch (error) {
+    console.error("Error fetching Pyth data:", error);
+    return defaultResult;
+  }
+}
+
 export async function GET() {
   const now = Date.now();
-  
-  // Return cached data if still valid (15 minutes)
-  if (marketsCache && (now - marketsCache.timestamp) < MARKETS_CACHE_DURATION) {
+
+  // Solo usar cache si tiene datos válidos de metals (evita devolver cache con ceros)
+  if (
+    marketsCache &&
+    (now - marketsCache.timestamp) < MARKETS_CACHE_DURATION &&
+    (marketsCache.data.metals?.gold?.usd > 0 || marketsCache.data.metals?.silver?.usd > 0)
+  ) {
     return NextResponse.json(marketsCache.data, {
       headers: {
-        "Cache-Control": "public, s-maxage=900, stale-while-revalidate=1800", // 15 min cache
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
       },
     });
   }
 
   try {
     // Get environment variables
-    const metalsApiUrl = process.env.METALS_API_URL;
-    const metalsApiKey = process.env.METALS_API_KEY;
-    const oilApiUrl = process.env.OIL_API_URL;
-    const oilApiKey = process.env.OIL_API_KEY;
     const fxApiUrl = process.env.FX_API_URL;
     const fxApiKey = process.env.FX_API_KEY;
 
     // Debug: Log environment variables (sin mostrar keys completas)
     const configStatus = {
-      metalsApiUrl: metalsApiUrl ? "✓ Set" : "✗ Missing",
-      metalsApiKey: metalsApiKey ? "✓ Set" : "✗ Missing",
-      oilApiUrl: oilApiUrl ? "✓ Set" : "✗ Missing",
-      oilApiKey: oilApiKey ? "✓ Set" : "✗ Missing",
       fxApiUrl: fxApiUrl ? "✓ Set" : "✗ Missing",
       fxApiKey: fxApiKey ? "✓ Set" : "✗ Missing",
     };
     console.log("Markets API Config:", configStatus);
-    
-    // Advertir si faltan las API keys críticas
-    if (!metalsApiKey) {
-      console.warn("⚠️ METALS_API_KEY is missing! Metals data will not be available.");
-    }
-    if (!oilApiKey) {
-      console.warn("⚠️ OIL_API_KEY is missing! Oil data will not be available.");
-    }
 
     // Fetch BTC price first (or use cached version from Roxom)
     const btcUsd = await getBTCPrice();
@@ -692,64 +826,47 @@ export async function GET() {
     
     console.log("BTC Price fetched:", btcUsd);
 
-    // Fetch all market data in parallel (5 requests total: BTC already cached, Metals 2x, Oil 1x, FX 1x)
-    const [metalsData, oilData, fxData] = await Promise.allSettled([
-      metalsApiUrl && metalsApiKey
-        ? fetchMetals(metalsApiUrl, metalsApiKey)
-        : Promise.resolve({ 
-            gold: { usd: 0, change24hPct: null }, 
-            silver: { usd: 0, change24hPct: null },
-            rateLimitInfo: {
-              remaining: getMetalsRemainingRequests(),
-              requestsPerDay: getMetalsRequestsPerDay(),
-              limitReached: false,
-            },
-          }),
-      oilApiUrl && oilApiKey
-        ? fetchOil(oilApiUrl, oilApiKey)
-        : Promise.resolve({ wti: { usd: 0, change24hPct: null }, brent: { usd: 0, change24hPct: null } }),
+    // Pyth + FX en paralelo
+    const [pythData, fxData] = await Promise.allSettled([
+      fetchPyth(), // Una sola llamada trae Gold, Silver, WTI y Brent
       fxApiUrl
         ? fetchFX(fxApiUrl, fxApiKey)
         : Promise.resolve({ EUR: { usdPerUnit: 0 }, JPY: { usdPerUnit: 0 }, GBP: { usdPerUnit: 0 } }),
     ]);
 
-    // Extract results (handle failures gracefully)
-    let metals = metalsData.status === "fulfilled" 
-      ? metalsData.value 
-      : { 
-          gold: { usd: 0, change24hPct: null }, 
-          silver: { usd: 0, change24hPct: null },
-          rateLimitInfo: {
-            remaining: getMetalsRemainingRequests(),
-            requestsPerDay: getMetalsRequestsPerDay(),
-            limitReached: false,
-          },
-        };
-    let oil = oilData.status === "fulfilled" ? oilData.value : { wti: { usd: 0, change24hPct: null }, brent: { usd: 0, change24hPct: null } };
-    let fx = fxData.status === "fulfilled" ? fxData.value : { EUR: { usdPerUnit: 0 }, JPY: { usdPerUnit: 0 }, GBP: { usdPerUnit: 0 } };
+    // Extraer con fallback a cero
+    const pyth = pythData.status === "fulfilled"
+      ? pythData.value
+      : { gold: { usd: 0, change24hPct: null }, silver: { usd: 0, change24hPct: null }, wti: { usd: 0, change24hPct: null }, brent: { usd: 0, change24hPct: null } };
 
-    // Debug: Log results
-    if (metalsData.status === "rejected") {
-      console.error("Metals API failed:", metalsData.reason);
-    } else {
-      console.log("Metals data:", { gold: metals.gold.usd, silver: metals.silver.usd });
+    let fx = fxData.status === "fulfilled"
+      ? fxData.value
+      : { EUR: { usdPerUnit: 0 }, JPY: { usdPerUnit: 0 }, GBP: { usdPerUnit: 0 } };
+
+    // Usar variables con el shape que ya espera el resto del código
+    let metals: {
+      gold: { usd: number; change24hPct: number | null };
+      silver: { usd: number; change24hPct: number | null };
+      rateLimitInfo?: { remaining: number; requestsPerDay: number; limitReached: boolean };
+    } = {
+      gold:   { usd: pyth.gold.usd,   change24hPct: pyth.gold.change24hPct },
+      silver: { usd: pyth.silver.usd, change24hPct: pyth.silver.change24hPct },
+    };
+    let oil = {
+      wti:   { usd: pyth.wti.usd,   change24hPct: pyth.wti.change24hPct },
+      brent: { usd: pyth.brent.usd, change24hPct: pyth.brent.change24hPct },
+    };
+
+    if (pythData.status === "rejected") {
+      console.error("Pyth fetch failed:", pythData.reason);
     }
-    
-    if (oilData.status === "rejected") {
-      console.error("Oil API failed:", oilData.reason);
-    } else {
-      console.log("Oil data:", { wti: oil.wti.usd, brent: oil.brent.usd });
-    }
-    
     if (fxData.status === "rejected") {
-      console.error("FX API failed:", fxData.reason);
-    } else {
-      console.log("FX data:", { EUR: fx.EUR.usdPerUnit, JPY: fx.JPY.usdPerUnit });
+      console.error("FX fetch failed:", fxData.reason);
     }
 
     // Fallback: Use individual cache if API failed or returned zeros
     // Metals fallback - SOLO usar cache si tiene valores válidos (> 0)
-    if ((metals.gold.usd === 0 && metals.silver.usd === 0) || metalsData.status === "rejected") {
+    if ((metals.gold.usd === 0 && metals.silver.usd === 0) || pythData.status === "rejected") {
       if (metalsCache && (now - metalsCache.timestamp) < METALS_CACHE_DURATION * 2) {
         const cachedGold = metalsCache.data.gold?.usd || 0;
         const cachedSilver = metalsCache.data.silver?.usd || 0;
@@ -778,7 +895,7 @@ export async function GET() {
     }
 
     // Oil fallback
-    if ((oil.wti.usd === 0 && oil.brent.usd === 0) || oilData.status === "rejected") {
+    if ((oil.wti.usd === 0 && oil.brent.usd === 0) || pythData.status === "rejected") {
       if (oilCache && (now - oilCache.timestamp) < OIL_CACHE_DURATION * 2) {
         console.log("Using cached oil data as fallback");
         oil = oilCache.data;
@@ -861,7 +978,7 @@ export async function GET() {
 
     return NextResponse.json(result, {
       headers: {
-        "Cache-Control": "public, s-maxage=900, stale-while-revalidate=1800", // 15 min cache
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600", // 5 min cache
       },
     });
   } catch (error) {

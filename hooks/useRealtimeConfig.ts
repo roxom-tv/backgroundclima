@@ -20,9 +20,19 @@ const DEFAULT_SETTINGS: GlobalSettings = {
   default_duration_seconds: 25,
 };
 
+function isSupabaseConfigured(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return false;
+  if (url.includes('your-project') || url.includes('placeholder')) return false;
+  if (key === 'your-anon-key-here' || key === 'placeholder-key') return false;
+  return true;
+}
+
 /**
  * Hook that provides real-time configuration data from Supabase
  * Subscribes to changes in slides, settings, and sponsors tables
+ * When Supabase is not configured, returns empty data without errors
  */
 export function useRealtimeConfig(): RealtimeConfig {
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -34,63 +44,61 @@ export function useRealtimeConfig(): RealtimeConfig {
 
   // Fetch initial data
   const fetchInitialData = useCallback(async () => {
-    try {
-      const supabase = getSupabaseClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const slidesTable = supabase.from('slides') as any;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const settingsTable = supabase.from('settings') as any;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sponsorsTable = supabase.from('sponsors') as any;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const eventsTable = supabase.from('events') as any;
+    if (!isSupabaseConfigured()) {
+      setIsLoading(false);
+      return;
+    }
+    const supabase = getSupabaseClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const from = (table: string) => supabase.from(table) as any;
 
+    try {
       // Fetch slides (only active, ordered)
-      const { data: slidesData, error: slidesError } = await slidesTable
+      const { data: slidesData, error: slidesError } = await from('slides')
         .select('*')
         .eq('is_active', true)
         .order('order_index', { ascending: true });
 
-      if (slidesError) throw slidesError;
+      if (slidesError) console.warn('Slides fetch failed:', slidesError.message || slidesError);
+      setSlides((slidesData as Slide[]) || []);
 
       // Fetch settings
-      const { data: settingsRaw, error: settingsError } = await settingsTable
+      const { data: settingsRaw, error: settingsError } = await from('settings')
         .select('*')
         .eq('key', 'global')
         .single();
 
       if (settingsError && settingsError.code !== 'PGRST116') {
-        throw settingsError;
+        console.warn('Settings fetch failed:', settingsError.message || settingsError);
       }
-
       const settingsData = settingsRaw as { value: GlobalSettings } | null;
+      setSettings(settingsData?.value || DEFAULT_SETTINGS);
 
       // Fetch sponsors (only active, ordered)
-      const { data: sponsorsData, error: sponsorsError } = await sponsorsTable
+      const { data: sponsorsData, error: sponsorsError } = await from('sponsors')
         .select('*')
         .eq('is_active', true)
         .order('order_index', { ascending: true });
 
-      if (sponsorsError) throw sponsorsError;
+      if (sponsorsError) console.warn('Sponsors fetch failed:', sponsorsError.message || sponsorsError);
+      setSponsors((sponsorsData as Sponsor[]) || []);
 
       // Fetch events (only active, ordered by date)
-      const { data: eventsData, error: eventsError } = await eventsTable
+      const { data: eventsData, error: eventsError } = await from('events')
         .select('*')
         .eq('is_active', true)
         .order('start_date', { ascending: true });
 
       if (eventsError && eventsError.code !== 'PGRST116') {
-        console.warn('Events table may not exist yet:', eventsError);
+        console.warn('Events fetch failed:', eventsError.message || eventsError);
       }
-
-      setSlides((slidesData as Slide[]) || []);
-      setSettings(settingsData?.value || DEFAULT_SETTINGS);
-      setSponsors((sponsorsData as Sponsor[]) || []);
       setEvents((eventsData as CalendarEvent[]) || []);
+
       setError(null);
     } catch (err) {
-      console.error('Error fetching config:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch configuration');
+      const msg = err instanceof Error ? err.message : (err && typeof err === 'object' && 'message' in err) ? String((err as { message?: unknown }).message) : 'Failed to fetch configuration';
+      console.warn('Config fetch error:', msg);
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -99,6 +107,8 @@ export function useRealtimeConfig(): RealtimeConfig {
   // Handle realtime updates
   useEffect(() => {
     fetchInitialData();
+
+    if (!isSupabaseConfigured()) return;
 
     const supabase = getSupabaseClient();
 
