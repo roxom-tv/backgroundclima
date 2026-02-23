@@ -180,11 +180,10 @@ export function useMarketsSats(enabled: boolean = true) {
       fetchMarketsDataInternal(setData, setLoading, setError);
     }
 
-    // Then fetch every 15 minutes (matches backend cache duration)
-    // El backend cachea 15 minutos - mínimo entre Oil (15 min) y FX (30 min)
+    // Then fetch every 5 minutes (matches backend cache; Pyth limit 30 req/10s — muy holgado)
     const interval = setInterval(() => {
       fetchMarketsDataInternal(setData, setLoading, setError);
-    }, 15 * 60 * 1000);
+    }, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [enabled]);
