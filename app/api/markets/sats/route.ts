@@ -75,6 +75,7 @@ interface MarketsSatsResponse {
     wti: { usd: number; sats: number; change24hPct: number | null };
     brent: { usd: number; sats: number; change24hPct: number | null };
   };
+  copper: { usd: number; sats: number; change24hPct: number | null };
   fx: {
     EUR: { usdPerUnit: number; satsPerUnit: number };
     JPY: { usdPerUnit: number; satsPerUnit: number };
@@ -687,6 +688,75 @@ async function fetchFX(apiUrl: string, apiKey?: string): Promise<{
 }
 
 /**
+ * Fetch Copper ETF desde Polygon.io (ICOP o CPER)
+ * GET /v2/aggs/ticker/{ticker}/prev — previous day close
+ * Prueba ICOP (iShares) primero; si no hay datos, prueba CPER (US Copper Index).
+ */
+async function fetchPolygonCopperOne(apiKey: string, ticker: string): Promise<{
+  usd: number;
+  change24hPct: number | null;
+}> {
+  const url = `https://api.polygon.io/v2/aggs/ticker/${encodeURIComponent(ticker)}/prev?adjusted=true&apiKey=${apiKey}`;
+  const response = await fetch(url, {
+    next: { revalidate: 0 },
+    cache: "no-store",
+    signal: AbortSignal.timeout(10000),
+    headers: { "Accept": "application/json", "Authorization": `Bearer ${apiKey}` },
+  });
+
+  const rawText = await response.text();
+
+  if (!response.ok) {
+    console.warn("Polygon Copper fetch error:", response.status, ticker, rawText.slice(0, 300));
+    return { usd: 0, change24hPct: null };
+  }
+
+  let data: { results?: Array<{ c?: number; o?: number }>; status?: string; error?: string; message?: string };
+  try {
+    data = JSON.parse(rawText) as typeof data;
+  } catch {
+    console.warn("Polygon Copper: invalid JSON", rawText.slice(0, 200));
+    return { usd: 0, change24hPct: null };
+  }
+
+  if (data.status !== "OK" || !data.results?.[0]) {
+    console.warn("Polygon Copper: no data", { ticker, status: data.status, error: data.error });
+    return { usd: 0, change24hPct: null };
+  }
+
+  const close = Number(data.results[0].c) || 0;
+  const open = Number(data.results[0].o);
+  const change24hPct =
+    open > 0 && close > 0 ? ((close - open) / open) * 100 : null;
+
+  return { usd: close, change24hPct };
+}
+
+async function fetchPolygonCopper(apiKey: string, ticker: string): Promise<{
+  usd: number;
+  change24hPct: number | null;
+}> {
+  try {
+    let result = await fetchPolygonCopperOne(apiKey, ticker);
+    if (result.usd > 0) {
+      console.log("Polygon Copper fetched:", { ticker, usd: result.usd, change24hPct: result.change24hPct });
+      return result;
+    }
+    if (ticker !== "CPER") {
+      result = await fetchPolygonCopperOne(apiKey, "CPER");
+      if (result.usd > 0) {
+        console.log("Polygon Copper fallback CPER:", { usd: result.usd });
+        return result;
+      }
+    }
+    return { usd: 0, change24hPct: null };
+  } catch (error) {
+    console.error("Error fetching Polygon Copper:", error);
+    return { usd: 0, change24hPct: null };
+  }
+}
+
+/**
  * Fetch Gold, Silver, WTI y Brent desde Pyth Network (Hermes REST API)
  * Sin API key. Rate limit: 30 req/10seg por IP — muy holgado con cache de 15min.
  *
@@ -809,11 +879,14 @@ export async function GET() {
     // Get environment variables
     const fxApiUrl = process.env.FX_API_URL;
     const fxApiKey = process.env.FX_API_KEY;
+    const polygonApiKey = process.env.POLYGON_API_KEY;
+    const polygonCopperTicker = process.env.POLYGON_COPPER_TICKER || "ICOP"; // iShares Copper and Metals Mining ETF (NASDAQ)
 
     // Debug: Log environment variables (sin mostrar keys completas)
     const configStatus = {
       fxApiUrl: fxApiUrl ? "✓ Set" : "✗ Missing",
       fxApiKey: fxApiKey ? "✓ Set" : "✗ Missing",
+      polygonApiKey: polygonApiKey ? "✓ Set" : "✗ Missing",
     };
     console.log("Markets API Config:", configStatus);
 
@@ -826,12 +899,15 @@ export async function GET() {
     
     console.log("BTC Price fetched:", btcUsd);
 
-    // Pyth + FX en paralelo
-    const [pythData, fxData] = await Promise.allSettled([
-      fetchPyth(), // Una sola llamada trae Gold, Silver, WTI y Brent
+    // Pyth + FX + Copper (Polygon) en paralelo
+    const [pythData, fxData, copperData] = await Promise.allSettled([
+      fetchPyth(),
       fxApiUrl
         ? fetchFX(fxApiUrl, fxApiKey)
         : Promise.resolve({ EUR: { usdPerUnit: 0 }, JPY: { usdPerUnit: 0 }, GBP: { usdPerUnit: 0 } }),
+      polygonApiKey
+        ? fetchPolygonCopper(polygonApiKey, polygonCopperTicker)
+        : Promise.resolve({ usd: 0, change24hPct: null as number | null }),
     ]);
 
     // Extraer con fallback a cero
@@ -857,11 +933,18 @@ export async function GET() {
       brent: { usd: pyth.brent.usd, change24hPct: pyth.brent.change24hPct },
     };
 
+    const copper = copperData.status === "fulfilled"
+      ? copperData.value
+      : { usd: 0, change24hPct: null as number | null };
+
     if (pythData.status === "rejected") {
       console.error("Pyth fetch failed:", pythData.reason);
     }
     if (fxData.status === "rejected") {
       console.error("FX fetch failed:", fxData.reason);
+    }
+    if (copperData.status === "rejected") {
+      console.error("Polygon Copper fetch failed:", copperData.reason);
     }
 
     // Fallback: Use individual cache if API failed or returned zeros
@@ -950,6 +1033,11 @@ export async function GET() {
           change24hPct: oil.brent.change24hPct,
         },
       },
+      copper: {
+        usd: copper.usd,
+        sats: copper.usd > 0 ? usdToSats(copper.usd, btcUsd) : 0,
+        change24hPct: copper.change24hPct,
+      },
       fx: {
         EUR: {
           usdPerUnit: fx.EUR.usdPerUnit,
@@ -986,8 +1074,14 @@ export async function GET() {
     
     // Return cached data if available, even if expired, with stale flag
     if (marketsCache) {
+      const cached = marketsCache.data;
+      const payload = {
+        ...cached,
+        stale: true,
+        copper: cached.copper ?? { usd: 0, sats: 0, change24hPct: null },
+      };
       return NextResponse.json(
-        { ...marketsCache.data, stale: true },
+        payload,
         {
           status: 200, // Still return 200, but mark as stale
           headers: {
