@@ -707,7 +707,10 @@ async function fetchPolygonCopperOne(apiKey: string, ticker: string): Promise<{
   const rawText = await response.text();
 
   if (!response.ok) {
-    console.warn("Polygon Copper fetch error:", response.status, ticker, rawText.slice(0, 300));
+    console.warn("Polygon Copper fetch error:", response.status, ticker, rawText.slice(0, 400));
+    if (response.status === 401 || response.status === 403) {
+      console.warn("Polygon: revisar API key y que esté configurada en producción (POLYGON_API_KEY)");
+    }
     return { usd: 0, change24hPct: null };
   }
 
@@ -900,13 +903,16 @@ export async function GET() {
     console.log("BTC Price fetched:", btcUsd);
 
     // Pyth + FX + Copper (Polygon) en paralelo
+    if (!polygonApiKey?.trim()) {
+      console.warn("Polygon Copper: POLYGON_API_KEY no está definida — en producción configurarla en Variables de Entorno (Vercel/Netlify/etc.)");
+    }
     const [pythData, fxData, copperData] = await Promise.allSettled([
       fetchPyth(),
       fxApiUrl
         ? fetchFX(fxApiUrl, fxApiKey)
         : Promise.resolve({ EUR: { usdPerUnit: 0 }, JPY: { usdPerUnit: 0 }, GBP: { usdPerUnit: 0 } }),
-      polygonApiKey
-        ? fetchPolygonCopper(polygonApiKey, polygonCopperTicker)
+      polygonApiKey?.trim()
+        ? fetchPolygonCopper(polygonApiKey.trim(), polygonCopperTicker)
         : Promise.resolve({ usd: 0, change24hPct: null as number | null }),
     ]);
 
