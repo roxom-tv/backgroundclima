@@ -696,13 +696,15 @@ async function fetchPolygonCopperOne(apiKey: string, ticker: string): Promise<{
   usd: number;
   change24hPct: number | null;
 }> {
-  // Solo apiKey en query: en Vercel/serverless el header Authorization a veces no llega bien a Polygon
   const url = `https://api.polygon.io/v2/aggs/ticker/${encodeURIComponent(ticker)}/prev?adjusted=true&apiKey=${encodeURIComponent(apiKey)}`;
   const response = await fetch(url, {
     next: { revalidate: 0 },
     cache: "no-store",
     signal: AbortSignal.timeout(10000),
-    headers: { "Accept": "application/json" },
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
   });
 
   const rawText = await response.text();
