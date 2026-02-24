@@ -78,13 +78,23 @@ export default function MetalsSlide() {
 
   return (
     <motion.div
-      className="w-full h-full flex items-center justify-center relative bg-transparent"
+      className="w-full h-full flex items-center justify-center relative bg-black overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Grid 2x2: más alto y más ancho de forma proporcional */}
+      {/* Video de fondo en loop — blanco y negro con blur */}
+      <video
+        src="/stock-index-charts-2026-01-28-03-30-42-utc.mov"
+        className="absolute inset-0 w-full h-full object-cover grayscale blur-[8px] scale-105"
+        autoPlay
+        muted
+        loop
+        playsInline
+        aria-hidden
+      />
+      {/* Grid de recuadros encima */}
       <div className="relative z-10 w-full max-w-none grid grid-cols-2 gap-[4rem] items-start px-[2rem]" style={{ gridAutoRows: "minmax(0, auto)" }}>
         <CommodityCard
           title="GOLD (XAU) – SATS/TROY OZ"
