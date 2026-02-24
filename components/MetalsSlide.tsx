@@ -20,18 +20,18 @@ function CommodityCard({
   change24hPct: number | null;
   loading: boolean;
 }) {
-  const headerFont = { fontSize: "clamp(24px, 1.8vw, 25px)", lineHeight: "1.1", fontWeight: 900 };
+  const headerFont = { fontSize: "clamp(27px, 1.8vw, 28px)", lineHeight: "1.1", fontWeight: 900 };
   const lineFont = { fontSize: "clamp(40px, 2.4vw, 47px)", lineHeight: "1.1", fontWeight: 700 };
   const line24hFont = { fontSize: "clamp(30px, 1.8vw, 37px)", lineHeight: "1.1", fontWeight: 700 };
 
   return (
-    <div className="flex flex-col shadow-xl flex-1 min-h-[260px]">
-      <div className={`${headerBgColor} flex items-center justify-center px-3 py-2 min-h-[52px] shrink-0`}>
+    <div className="flex flex-col shadow-xl flex-1 min-h-[270px]">
+      <div className={`${headerBgColor} flex items-center justify-center px-3 py-2 min-h-[62px] shrink-0`}>
         <h2 className="text-white text-center tracking-wider uppercase truncate" style={headerFont}>
           {title}
         </h2>
       </div>
-      <div className={`flex flex-col items-center justify-center flex-1 min-h-[160px] w-full ${contentBgColor} px-4 py-5`} style={{ textAlign: "center" }}>
+      <div className={`flex flex-col items-center justify-center flex-1 min-h-[170px] w-full ${contentBgColor} px-4 py-5`} style={{ textAlign: "center" }}>
         {loading && usd === 0 ? (
           <div className="text-white/70 text-center" style={lineFont}>
             ...
@@ -85,7 +85,7 @@ export default function MetalsSlide() {
       transition={{ duration: 0.5 }}
     >
       {/* Grid 2x2: más alto y más ancho de forma proporcional */}
-      <div className="relative z-10 w-[94%] max-w-7xl grid grid-cols-2 grid-rows-2 gap-4 h-[620px]">
+      <div className="relative z-10 w-[94%] max-w-7xl grid grid-cols-2 grid-rows-2 gap-[26px] h-[630px]">
         <CommodityCard
           title="GOLD (XAU) – SATS/TROY OZ"
           usd={gold?.usd ?? 0}

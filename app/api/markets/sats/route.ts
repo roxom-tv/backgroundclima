@@ -696,12 +696,13 @@ async function fetchPolygonCopperOne(apiKey: string, ticker: string): Promise<{
   usd: number;
   change24hPct: number | null;
 }> {
-  const url = `https://api.polygon.io/v2/aggs/ticker/${encodeURIComponent(ticker)}/prev?adjusted=true&apiKey=${apiKey}`;
+  // Solo apiKey en query: en Vercel/serverless el header Authorization a veces no llega bien a Polygon
+  const url = `https://api.polygon.io/v2/aggs/ticker/${encodeURIComponent(ticker)}/prev?adjusted=true&apiKey=${encodeURIComponent(apiKey)}`;
   const response = await fetch(url, {
     next: { revalidate: 0 },
     cache: "no-store",
     signal: AbortSignal.timeout(10000),
-    headers: { "Accept": "application/json", "Authorization": `Bearer ${apiKey}` },
+    headers: { "Accept": "application/json" },
   });
 
   const rawText = await response.text();
@@ -943,6 +944,16 @@ export async function GET() {
       ? copperData.value
       : { usd: 0, change24hPct: null as number | null };
 
+    // Diagnóstico para producción: header X-Copper-Status (ver en Network tab)
+    const copperStatus =
+      !polygonApiKey?.trim()
+        ? "no_key"
+        : copperData.status === "rejected"
+          ? "fetch_failed"
+          : copper.usd > 0
+            ? "ok"
+            : "no_data";
+
     if (pythData.status === "rejected") {
       console.error("Pyth fetch failed:", pythData.reason);
     }
@@ -1073,6 +1084,7 @@ export async function GET() {
     return NextResponse.json(result, {
       headers: {
         "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600", // 5 min cache
+        "X-Copper-Status": copperStatus, // Diagnóstico: no_key | fetch_failed | no_data | ok
       },
     });
   } catch (error) {

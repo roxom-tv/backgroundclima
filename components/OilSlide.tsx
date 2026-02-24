@@ -10,7 +10,7 @@ export default function OilSlide() {
   // Estilos estandarizados (mismo que USDStats)
   const headerPadding = "px-4 py-4";
   const contentPadding = "px-6 py-10";
-  const headerFont = { fontSize: 'clamp(24px, 2vw, 36px)', lineHeight: '1', fontWeight: 900 };
+  const headerFont = { fontSize: 'clamp(27px, 2vw, 39px)', lineHeight: '1', fontWeight: 900 };
   const valueFont = { fontSize: 'clamp(32px, 3vw, 56px)', lineHeight: '1', fontWeight: 900 };
   const changeFont = { fontSize: 'clamp(20px, 2vw, 32px)', lineHeight: '1', fontWeight: 900 };
   
