@@ -94,8 +94,8 @@ export default function MetalsSlide() {
         playsInline
         aria-hidden
       />
-      {/* Grid de recuadros encima */}
-      <div className="relative z-10 w-full max-w-none grid grid-cols-2 gap-[4rem] items-start px-[2rem]" style={{ gridAutoRows: "minmax(0, auto)" }}>
+      {/* Grid de recuadros encima — 5px a la izquierda (el video queda fijo) */}
+      <div className="relative z-10 w-full max-w-none grid grid-cols-2 gap-[4rem] items-start px-[2rem] -translate-x-[5px]" style={{ gridAutoRows: "minmax(0, auto)" }}>
         <CommodityCard
           title="GOLD (XAU) – SATS/TROY OZ"
           usd={gold?.usd ?? 0}
