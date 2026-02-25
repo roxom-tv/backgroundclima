@@ -8,7 +8,7 @@ export default function SilverSlide() {
   const { data, loading } = useMarketsSats();
 
   const headerFont = { 
-    fontSize: 'clamp(36px, 4vw, 56px)', 
+    fontSize: 'clamp(39px, 4vw, 59px)', 
     lineHeight: '1', 
     fontWeight: 900,
     textShadow: '-1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black, 1px 1px 0 black, 0 -1px 0 black, 0 1px 0 black, -1px 0 0 black, 1px 0 0 black'
