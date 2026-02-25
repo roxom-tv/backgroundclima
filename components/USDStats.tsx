@@ -41,7 +41,7 @@ export default function USDStats({ perSecond, base, annualFederalSpending, annua
   // Estilos estandarizados
   const headerPadding = "px-4 py-4";
   const contentPadding = "px-6 py-10";
-  const headerFont = { fontSize: 'clamp(24px, 2vw, 36px)', lineHeight: '1', fontWeight: 900 };
+  const headerFont = { fontSize: 'clamp(27px, 2vw, 39px)', lineHeight: '1', fontWeight: 900 };
   const valueFont = { fontSize: 'clamp(32px, 3vw, 56px)', lineHeight: '1', fontWeight: 900 };
   
   // Specific colors from reference
