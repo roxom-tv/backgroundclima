@@ -63,3 +63,12 @@ MARKET_DATA_SETUP.md
 VERCEL_DEPLOYMENT.md
 VERIFICATION_CHECKLIST.md
 docs/*.md
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
