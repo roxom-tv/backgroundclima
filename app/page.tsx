@@ -31,7 +31,7 @@ export default function Home() {
 
   // Get configuration from Supabase with real-time updates
   // slides array is already ordered by order_index and contains only active slides
-  const { slides, settings, sponsors, events, isLoading, error } = useRealtimeConfig();
+  const { slides, settings, sponsors, events, isLoading, error, errorInfo, retry } = useRealtimeConfig();
 
   // Current slide
   const currentSlide = useMemo(() => {
@@ -206,9 +206,47 @@ export default function Home() {
   // Error state
   if (error) {
     return (
-      <main className="h-screen w-screen overflow-hidden relative bg-black flex flex-col items-center justify-center gap-4">
-        <div className="text-red-500 text-2xl font-bold tracking-wider">CONFIGURATION ERROR</div>
-        <div className="text-white text-lg">{error}</div>
+      <main className="h-screen w-screen overflow-hidden relative bg-black flex items-center justify-center p-6">
+        <div className="w-full max-w-3xl border border-red-500/60 bg-[#0a0a0a] rounded-xl p-6 md:p-8 shadow-[0_0_40px_rgba(239,68,68,0.15)]">
+          <div className="text-red-500 text-2xl md:text-3xl font-bold tracking-wider">CONFIGURATION ERROR</div>
+          <div className="text-white text-lg mt-3">{error}</div>
+
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div className="bg-black/50 border border-white/10 rounded-md p-3">
+              <div className="text-gray-400 uppercase tracking-wide text-xs mb-1">Error Code</div>
+              <div className="text-white font-mono">{errorInfo?.code || 'UNKNOWN'}</div>
+            </div>
+            <div className="bg-black/50 border border-white/10 rounded-md p-3">
+              <div className="text-gray-400 uppercase tracking-wide text-xs mb-1">HTTP Status</div>
+              <div className="text-white font-mono">{errorInfo?.status || 500}</div>
+            </div>
+          </div>
+
+          {errorInfo?.hint ? (
+            <div className="mt-4 bg-yellow-500/10 border border-yellow-400/30 rounded-md p-3">
+              <div className="text-yellow-300 uppercase tracking-wide text-xs mb-1">Hint</div>
+              <div className="text-yellow-100">{errorInfo.hint}</div>
+            </div>
+          ) : null}
+
+          {errorInfo?.traceId ? (
+            <div className="mt-4 text-xs text-gray-400 font-mono">
+              traceId: <span className="text-gray-200">{errorInfo.traceId}</span>
+            </div>
+          ) : null}
+
+          <div className="mt-6 flex items-center gap-3">
+            <button
+              onClick={() => {
+                void retry();
+              }}
+              className="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-md text-sm font-semibold tracking-wide transition-colors"
+            >
+              Retry
+            </button>
+            <div className="text-gray-400 text-sm">Reintenta la carga de configuracion sin recargar la pagina.</div>
+          </div>
+        </div>
       </main>
     );
   }

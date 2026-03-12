@@ -14,7 +14,7 @@
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "backgroundclima"
+      "service": "backgroundclima-production"
     }
   ],
   "r2_buckets": [
@@ -67,7 +67,7 @@
         "ROTATION_SECONDS": "25"
       },
       "services": [
-        { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima" }
+        { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-production" }
       ],
       "r2_buckets": [
         { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "backgroundclima-opennext-cache" }

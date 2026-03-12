@@ -10,6 +10,13 @@ interface RealtimeConfig {
   events: CalendarEvent[];
   isLoading: boolean;
   error: string | null;
+  errorInfo: {
+    code?: string;
+    hint?: string;
+    traceId?: string;
+    status?: number;
+  } | null;
+  retry: () => Promise<void>;
 }
 
 interface ConfigApiResponse {
@@ -18,6 +25,17 @@ interface ConfigApiResponse {
   sponsors: Sponsor[];
   events: CalendarEvent[];
   version: string;
+}
+
+interface ApiErrorResponse {
+  status?: string;
+  error?: {
+    code?: string;
+    message?: string;
+    hint?: string;
+    traceId?: string;
+  };
+  timestamp?: string;
 }
 
 const DEFAULT_SETTINGS: GlobalSettings = {
@@ -40,7 +58,30 @@ export function useRealtimeConfig(): RealtimeConfig {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorInfo, setErrorInfo] = useState<RealtimeConfig['errorInfo']>(null);
   const currentVersionRef = useRef<string | null>(null);
+
+  const parseApiError = useCallback(
+    async (response: Response): Promise<{ message: string; info: RealtimeConfig['errorInfo'] }> => {
+      let payload: ApiErrorResponse | null = null;
+      try {
+        payload = (await response.json()) as ApiErrorResponse;
+      } catch {
+        // Fallback to generic message when API does not return JSON.
+      }
+
+      return {
+        message: payload?.error?.message || `Config API returned ${response.status}`,
+        info: {
+          code: payload?.error?.code,
+          hint: payload?.error?.hint,
+          traceId: payload?.error?.traceId,
+          status: response.status,
+        },
+      };
+    },
+    []
+  );
 
   const fetchConfig = useCallback(async (options?: { silent?: boolean }) => {
     const silent = options?.silent ?? false;
@@ -51,7 +92,10 @@ export function useRealtimeConfig(): RealtimeConfig {
     try {
       const response = await fetch('/api/config', { cache: 'no-store' });
       if (!response.ok) {
-        throw new Error(`Config API returned ${response.status}`);
+        const parsed = await parseApiError(response);
+        const apiError = new Error(parsed.message) as Error & { info?: RealtimeConfig['errorInfo'] };
+        apiError.info = parsed.info;
+        throw apiError;
       }
 
       const data = (await response.json()) as ConfigApiResponse;
@@ -61,17 +105,23 @@ export function useRealtimeConfig(): RealtimeConfig {
       setEvents(data.events || []);
       currentVersionRef.current = data.version || null;
 
-      if (error !== null) setError(null);
+      setError(null);
+      setErrorInfo(null);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to fetch configuration';
       console.warn('Config fetch error:', msg, err);
       setError(msg);
+      if (err && typeof err === 'object' && 'info' in err) {
+        setErrorInfo((err as { info?: RealtimeConfig['errorInfo'] }).info || null);
+      } else {
+        setErrorInfo(null);
+      }
     } finally {
       if (!silent) {
         setIsLoading(false);
       }
     }
-  }, [error]);
+  }, [parseApiError]);
 
   const checkVersionAndRefresh = useCallback(async () => {
     try {
@@ -111,6 +161,8 @@ export function useRealtimeConfig(): RealtimeConfig {
     events,
     isLoading,
     error,
+    errorInfo,
+    retry: () => fetchConfig({ silent: false }),
   };
 }
 
