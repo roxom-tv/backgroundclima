@@ -9,8 +9,11 @@ interface CalendarSlideProps {
 }
 
 export default function CalendarSlide({ events }: CalendarSlideProps) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = useMemo(() => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }, []);
 
   // Filter only upcoming/current events
   const upcomingEvents = useMemo(() => {

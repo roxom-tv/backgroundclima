@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useSlides } from '@/hooks/useSlides';
 import SlideForm from '../components/SlideForm';
@@ -113,8 +114,6 @@ export default function SlidesPage() {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { order_index, ...updateData } = data;
         
-        console.log('Updating slide:', editingSlide.id, updateData);
-        
         const { error } = await updateSlide(editingSlide.id, updateData);
         if (error) {
           console.error('Update error:', error);
@@ -214,14 +213,6 @@ export default function SlidesPage() {
 
   // Check if slide is a system slide (hardcoded content, limited editing)
   const isSystemSlide = (type: string) => ['debt', 'metals', 'fx'].includes(type);
-
-  // Handle toggle sponsor for debt slide
-  const handleToggleSponsor = useCallback(async (slide: Slide) => {
-    const { error } = await updateSlide(slide.id, { show_sponsor: !slide.show_sponsor });
-    if (error) {
-      showNotification('error', error);
-    }
-  }, [updateSlide, showNotification]);
 
   // Handle edit debt slide (open mini-form)
   const handleEditDebt = useCallback((slide: Slide) => {
@@ -397,9 +388,12 @@ export default function SlidesPage() {
                               {/* Image thumbnail for event/show/news */}
                               {(slide.type === 'event' || slide.type === 'show' || slide.type === 'news') && slide.image_url && (
                                 <div className="w-16 h-10 overflow-hidden flex-shrink-0 bg-[#1a1a1a] border-2 border-[#00ff00]">
-                                  <img
+                                  <Image
                                     src={slide.image_url}
                                     alt={slide.name}
+                                    width={64}
+                                    height={40}
+                                    unoptimized
                                     className="w-full h-full object-cover"
                                   />
                                 </div>

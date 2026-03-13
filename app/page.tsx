@@ -107,6 +107,11 @@ export default function Home() {
     }
   }, [hasYouTubeSlides]);
 
+  // Warm up markets data as early as possible to avoid delay on early market slides.
+  useEffect(() => {
+    prefetchMarketsData().catch(err => console.warn('Markets warmup prefetch failed:', err));
+  }, []);
+
   // Pre-fetch markets data if there are metals or fx slides
   useEffect(() => {
     if (hasMarketSlides) {
@@ -271,7 +276,6 @@ export default function Home() {
           <>
             <RotatingBackground
               activeIndex={currentSlideIndex}
-              onIndexChange={setCurrentSlideIndex}
               slides={slides.filter(s => s.type === 'youtube')}
               currentSlide={currentSlide}
               disableInternalOverlay={showTransition}

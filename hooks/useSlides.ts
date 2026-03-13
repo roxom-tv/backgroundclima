@@ -104,8 +104,6 @@ export function useSlides(): UseSlidesReturn {
         }
       });
 
-      console.log('Updating slide:', id, cleanUpdates);
-
       // Update and get the updated data from database
       const { data: updatedData, error: updateError } = await getSlidesTable()
         .update(cleanUpdates)
@@ -123,8 +121,6 @@ export function useSlides(): UseSlidesReturn {
         console.error('No data returned from update');
         throw new Error('No data returned from update');
       }
-
-      console.log('Slide updated successfully:', updatedData);
 
       // Update local state with the actual data from database
       setSlides(prev =>

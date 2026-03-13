@@ -6,13 +6,12 @@ import type { Slide } from '@/lib/supabase/types';
 
 interface RotatingBackgroundProps {
   activeIndex: number;
-  onIndexChange: (index: number) => void;
   slides: Slide[];
   currentSlide?: Slide; // Direct slide if provided
   disableInternalOverlay?: boolean; // Disable internal overlay when global overlay is active
 }
 
-export default function RotatingBackground({ activeIndex, onIndexChange, slides, currentSlide: directSlide, disableInternalOverlay = false }: RotatingBackgroundProps) {
+export default function RotatingBackground({ activeIndex, slides, currentSlide: directSlide, disableInternalOverlay = false }: RotatingBackgroundProps) {
   const [showChannelChange, setShowChannelChange] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout>();
@@ -89,7 +88,7 @@ export default function RotatingBackground({ activeIndex, onIndexChange, slides,
     }
     
     activeIndexRef.current = activeIndex;
-  }, [activeIndex]);
+  }, [activeIndex, disableInternalOverlay]);
 
   // Use direct slide if provided, otherwise calculate from slides array
   const cityIndex = getCityIndex(activeIndex);

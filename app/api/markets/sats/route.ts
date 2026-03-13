@@ -143,6 +143,8 @@ async function getBTCPrice(): Promise<number> {
  * API: https://api.metals.dev/v1/metal/spot
  * Rate limit: 100 requests/mes - usa cache separado de 8 horas
  */
+// Legacy fallback kept for reference/testing; currently not called in active flow.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function fetchMetals(apiUrl: string, apiKey: string): Promise<{
   gold: { usd: number; change24hPct: number | null };
   silver: { usd: number; change24hPct: number | null };
@@ -408,6 +410,8 @@ async function fetchMetals(apiUrl: string, apiKey: string): Promise<{
  * API: https://api.oilpriceapi.com/v1/prices/latest
  * Uses separate 15-minute cache
  */
+// Legacy fallback kept for reference/testing; currently not called in active flow.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function fetchOil(apiUrl: string, apiKey: string): Promise<{
   wti: { usd: number; change24hPct: number | null };
   brent: { usd: number; change24hPct: number | null };

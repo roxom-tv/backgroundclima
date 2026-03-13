@@ -31,22 +31,16 @@
   },
   "vars": {
     "FX_API_URL": "https://api.exchangerate.host/latest",
-    "METALS_API_URL": "https://api.metals.dev",
-    "OIL_API_URL": "https://api.oilpriceapi.com/v1/prices/latest",
     "OPENWEATHER_LANG": "en",
-    "OPENWEATHER_UNITS": "metric",
-    "ROTATION_SECONDS": "25"
+    "OPENWEATHER_UNITS": "metric"
   },
   "env": {
     "preview": {
       "vars": {
         "NEXT_PUBLIC_SUPABASE_URL": "https://mcfhqyekclrtovqquone.supabase.co",
         "FX_API_URL": "https://api.exchangerate.host/latest",
-        "METALS_API_URL": "https://api.metals.dev",
-        "OIL_API_URL": "https://api.oilpriceapi.com/v1/prices/latest",
         "OPENWEATHER_LANG": "en",
-        "OPENWEATHER_UNITS": "metric",
-        "ROTATION_SECONDS": "25"
+        "OPENWEATHER_UNITS": "metric"
       },
       "services": [
         { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-preview" }
@@ -60,11 +54,8 @@
       "vars": {
         "NEXT_PUBLIC_SUPABASE_URL": "https://daolkfjwksbiofsrmuju.supabase.co",
         "FX_API_URL": "https://api.exchangerate.host/latest",
-        "METALS_API_URL": "https://api.metals.dev",
-        "OIL_API_URL": "https://api.oilpriceapi.com/v1/prices/latest",
         "OPENWEATHER_LANG": "en",
-        "OPENWEATHER_UNITS": "metric",
-        "ROTATION_SECONDS": "25"
+        "OPENWEATHER_UNITS": "metric"
       },
       "services": [
         { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-production" }

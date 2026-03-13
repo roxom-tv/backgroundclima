@@ -13,8 +13,8 @@ function buildConfigErrorResponse(error: unknown) {
   const hint = isMissingEnv
     ? 'Set SUPABASE_URL/SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY.'
     : isFetchFailure
-      ? 'Cannot reach Supabase. Check URL/key values and local network access.'
-      : 'Check API logs using the traceId for more details.';
+      ? 'Cannot reach Supabase. Check URL/key values and network access.'
+      : 'Check API logs using traceId for more details.';
 
   return NextResponse.json(
     {

@@ -136,17 +136,22 @@ export function useRealtimeConfig(): RealtimeConfig {
 
       if (!currentVersionRef.current) {
         currentVersionRef.current = latestVersion;
+        // If initial snapshot fetch failed, recover automatically once version endpoint is reachable.
+        if (error) {
+          await fetchConfig({ silent: true });
+        }
         return;
       }
 
-      if (latestVersion !== currentVersionRef.current) {
+      // Keep retrying in error state even without version changes.
+      if (error || latestVersion !== currentVersionRef.current) {
         await fetchConfig({ silent: true });
       }
     } catch (err) {
       // Keep UI stable on version endpoint failures; next interval can recover.
       console.warn('Version check failed:', err);
     }
-  }, [fetchConfig]);
+  }, [fetchConfig, error]);
 
   useEffect(() => {
     fetchConfig();
@@ -187,5 +192,3 @@ export function useSpecialSlides() {
 
   return { slides: specialSlides, isLoading, error };
 }
-
-

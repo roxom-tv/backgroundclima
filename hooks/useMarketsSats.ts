@@ -95,6 +95,7 @@ async function fetchMarketsDataInternal(setData?: (data: MarketsSatsData | null)
   }
 
   fetchPromise = (async () => {
+    sharedLoading = true;
     try {
       // Solo mostrar loading si no hay datos cached
       if (!sharedMarketsData && setLoading) {
@@ -157,6 +158,7 @@ async function fetchMarketsDataInternal(setData?: (data: MarketsSatsData | null)
         if (setError) setError(null);
       }
     } finally {
+      sharedLoading = false;
       if (setLoading) setLoading(false);
       fetchPromise = null;
     }
@@ -167,7 +169,7 @@ async function fetchMarketsDataInternal(setData?: (data: MarketsSatsData | null)
 
 export function useMarketsSats(enabled: boolean = true) {
   const [data, setData] = useState<MarketsSatsData | null>(sharedMarketsData);
-  const [loading, setLoading] = useState(!sharedMarketsData && sharedLoading);
+  const [loading, setLoading] = useState(!sharedMarketsData || sharedLoading);
   const [error, setError] = useState<Error | null>(sharedError);
 
   useEffect(() => {
@@ -181,6 +183,10 @@ export function useMarketsSats(enabled: boolean = true) {
       setData(sharedMarketsData);
       setLoading(false);
       setError(null);
+    }
+
+    if (!sharedMarketsData && sharedLoading) {
+      setLoading(true);
     }
 
     // Fetch inmediatamente si no hay datos

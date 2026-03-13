@@ -11,7 +11,6 @@ interface VideoSlideProps {
 export default function VideoSlide({ slide, onVideoEnd }: VideoSlideProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [loopCount, setLoopCount] = useState(0);
-  const [hasEnded, setHasEnded] = useState(false);
 
   const maxLoops = slide.loop_count ?? null; // null = infinite
   const videoUrl = slide.video_url;
@@ -22,7 +21,6 @@ export default function VideoSlide({ slide, onVideoEnd }: VideoSlideProps) {
 
     // Reset when slide changes
     setLoopCount(0);
-    setHasEnded(false);
     video.currentTime = 0;
     video.load();
 
@@ -41,7 +39,6 @@ export default function VideoSlide({ slide, onVideoEnd }: VideoSlideProps) {
           video.play().catch(console.error);
         } else {
           // All loops completed
-          setHasEnded(true);
           // Small delay before calling onVideoEnd to ensure video is fully stopped
           setTimeout(() => {
             if (onVideoEnd) {

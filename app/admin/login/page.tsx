@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -135,12 +136,12 @@ export default function AdminLoginPage() {
 
         {/* Back to display link */}
         <div className="text-center mt-6">
-          <a
+          <Link
             href="/"
             className="text-gray-400 hover:text-white text-sm transition-colors"
           >
             ← Back to Display
-          </a>
+          </Link>
         </div>
       </div>
     </div>
