@@ -1,4 +1,9 @@
 export async function sendSlackAlert(message: string) {
+  const alertsEnabled = process.env.SLACK_ALERTS_ENABLED === "true";
+  if (!alertsEnabled) {
+    return;
+  }
+
   const webhookUrl = process.env.SLACK_WEBHOOK_URL;
 
   if (!webhookUrl) {

@@ -32,7 +32,8 @@
   "vars": {
     "FX_API_URL": "https://api.exchangerate.host/latest",
     "OPENWEATHER_LANG": "en",
-    "OPENWEATHER_UNITS": "metric"
+    "OPENWEATHER_UNITS": "metric",
+    "SLACK_ALERTS_ENABLED": "false"
   },
   "env": {
     "preview": {
@@ -40,7 +41,8 @@
         "NEXT_PUBLIC_SUPABASE_URL": "https://mcfhqyekclrtovqquone.supabase.co",
         "FX_API_URL": "https://api.exchangerate.host/latest",
         "OPENWEATHER_LANG": "en",
-        "OPENWEATHER_UNITS": "metric"
+        "OPENWEATHER_UNITS": "metric",
+        "SLACK_ALERTS_ENABLED": "false"
       },
       "services": [
         { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-preview" }
@@ -55,7 +57,8 @@
         "NEXT_PUBLIC_SUPABASE_URL": "https://daolkfjwksbiofsrmuju.supabase.co",
         "FX_API_URL": "https://api.exchangerate.host/latest",
         "OPENWEATHER_LANG": "en",
-        "OPENWEATHER_UNITS": "metric"
+        "OPENWEATHER_UNITS": "metric",
+        "SLACK_ALERTS_ENABLED": "true"
       },
       "services": [
         { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-production" }

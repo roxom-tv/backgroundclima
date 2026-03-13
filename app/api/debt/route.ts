@@ -56,6 +56,50 @@ interface MtsTable1ApiResponse {
 
 const DEBT_CACHE_DURATION = 15 * 60 * 1000; // 15 minutes - la deuda cambia lentamente (una vez al día)
 let debtCache: DebtCacheEntry | null = null;
+const RETRYABLE_HTTP_STATUS = new Set([408, 425, 429, 500, 502, 503, 504, 520, 522, 523, 524, 525, 526, 530]);
+const TREASURY_RETRY_ATTEMPTS = 3;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  label: string,
+  attempts = TREASURY_RETRY_ATTEMPTS
+): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetch(url, init);
+      if (response.ok) {
+        return response;
+      }
+
+      const status = response.status;
+      if (attempt < attempts && RETRYABLE_HTTP_STATUS.has(status)) {
+        await delay(300 * attempt);
+        continue;
+      }
+
+      throw new Error(`${label} API error: ${status}`);
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        await delay(300 * attempt);
+        continue;
+      }
+    }
+  }
+
+  if (lastError instanceof Error) {
+    throw lastError;
+  }
+  throw new Error(`${label} API request failed`);
+}
 
 async function getFederalSpendingAndDeficit() {
   const now = Date.now();
@@ -76,17 +120,17 @@ async function getFederalSpendingAndDeficit() {
     // 1. Fetch recent "Year-to-Date" records
     const url = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_1?filter=classification_desc:eq:Year-to-Date&sort=-record_date&page[size]=12";
     
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       next: { revalidate: 3600 }, 
       cache: "no-store",
       signal: AbortSignal.timeout(15000),
-    });
+    }, "MTS Table 1");
 
     if (!response.ok) {
       const errorMsg = `MTS Table 1 API error: ${response.status}`;
       // Log but don't break the whole app if just spending data fails, 
       // but alerting is good to know it's broken
-      await sendSlackAlert(errorMsg);
+      void sendSlackAlert(errorMsg);
       throw new Error(errorMsg);
     }
 
@@ -157,11 +201,11 @@ export async function GET() {
     const url =
       "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?fields=record_date,tot_pub_debt_out_amt&sort=-record_date&page[size]=14";
 
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       next: { revalidate: 0 },
       cache: "no-store",
       signal: AbortSignal.timeout(15000),
-    });
+    }, "Treasury");
 
     if (!response.ok) {
       const errorMsg = `Treasury API error: ${response.status}`;
