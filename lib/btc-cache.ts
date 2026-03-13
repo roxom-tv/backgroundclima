@@ -36,8 +36,12 @@ export async function getBTCPriceWithCache(): Promise<number> {
 
   // Fetch new price
   try {
-    const url =
-      "https://rtvapi.roxom.com/btc/info?apiKey=60be7d11-ec67-4ac0-9241-da1cbdcba73d";
+    const roxomApiKey = process.env.ROXOM_API_KEY;
+    if (!roxomApiKey) {
+      throw new Error("Missing ROXOM_API_KEY");
+    }
+
+    const url = `https://rtvapi.roxom.com/btc/info?apiKey=${encodeURIComponent(roxomApiKey)}`;
     const response = await fetch(url, {
       next: { revalidate: 0 },
       cache: "no-store",

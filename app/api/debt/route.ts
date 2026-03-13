@@ -57,32 +57,6 @@ interface MtsTable1ApiResponse {
 const DEBT_CACHE_DURATION = 15 * 60 * 1000; // 15 minutes - la deuda cambia lentamente (una vez al día)
 let debtCache: DebtCacheEntry | null = null;
 
-function buildFallbackDebtResponse(): DebtApiResponse {
-  const btcPriceUsd = 95000;
-  const latestPublishedTotal = 0;
-  const liveEstimateNow = latestPublishedTotal;
-  const perSecond = 0;
-  const estimatedTodayDelta = 0;
-  const lastDailyDelta = 0;
-
-  return {
-    latestRecordDateUTC: new Date().toISOString(),
-    latestPublishedTotal,
-    perSecond,
-    estimatedTodayDelta,
-    liveEstimateNow,
-    lastDailyDelta,
-    btcPriceUsd,
-    latestPublishedTotalBTC: btcPriceUsd > 0 ? latestPublishedTotal / btcPriceUsd : 0,
-    perSecondBTC: btcPriceUsd > 0 ? perSecond / btcPriceUsd : 0,
-    estimatedTodayDeltaBTC: btcPriceUsd > 0 ? estimatedTodayDelta / btcPriceUsd : 0,
-    liveEstimateNowBTC: btcPriceUsd > 0 ? liveEstimateNow / btcPriceUsd : 0,
-    lastDailyDeltaBTC: btcPriceUsd > 0 ? lastDailyDelta / btcPriceUsd : 0,
-    annualFederalSpending: 0,
-    annualBudgetDeficit: 0,
-  };
-}
-
 async function getFederalSpendingAndDeficit() {
   const now = Date.now();
   
@@ -168,11 +142,15 @@ export async function GET() {
   
   // Return cached data if still valid (15 minutes)
   if (debtCache && (now - debtCache.timestamp) < DEBT_CACHE_DURATION) {
-    return NextResponse.json(debtCache.data, {
-      headers: {
-        "Cache-Control": "public, s-maxage=900, stale-while-revalidate=1800", // 15 minutes cache
-      },
-    });
+    return NextResponse.json(
+      { ...debtCache.data, stale: false, source: "live-cache" },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=900, stale-while-revalidate=1800", // 15 minutes cache
+          "X-Debt-Data-Source": "live-cache",
+        },
+      }
+    );
   }
 
   try {
@@ -237,11 +215,16 @@ export async function GET() {
       timestamp: now,
     };
 
-    const nextResponse = NextResponse.json(result);
+    const nextResponse = NextResponse.json({
+      ...result,
+      stale: false,
+      source: "live",
+    });
     nextResponse.headers.set(
       "Cache-Control",
       "public, s-maxage=900, stale-while-revalidate=1800" // 15 minutes cache
     );
+    nextResponse.headers.set("X-Debt-Data-Source", "live");
 
     return nextResponse;
   } catch (error) {
@@ -255,7 +238,7 @@ export async function GET() {
     // Prefer stale cache over hard failure to keep the slide usable.
     if (debtCache?.data) {
       return NextResponse.json(
-        { ...debtCache.data, stale: true },
+        { ...debtCache.data, stale: true, source: "stale-cache" },
         {
           status: 200,
           headers: {
@@ -267,11 +250,14 @@ export async function GET() {
       );
     }
 
-    // Last-resort fallback: avoid 500 so UI can still render.
+    // No synthetic values: if no real cache is available, fail explicitly.
     return NextResponse.json(
-      { ...buildFallbackDebtResponse(), stale: true },
       {
-        status: 200,
+        source: "fallback",
+        error: "Failed to fetch live debt data and no cached snapshot is available",
+      },
+      {
+        status: 503,
         headers: {
           "Cache-Control": "no-store",
           "X-Debt-Data-Source": "fallback",
