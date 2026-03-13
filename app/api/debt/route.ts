@@ -57,6 +57,32 @@ interface MtsTable1ApiResponse {
 const DEBT_CACHE_DURATION = 15 * 60 * 1000; // 15 minutes - la deuda cambia lentamente (una vez al día)
 let debtCache: DebtCacheEntry | null = null;
 
+function buildFallbackDebtResponse(): DebtApiResponse {
+  const btcPriceUsd = 95000;
+  const latestPublishedTotal = 0;
+  const liveEstimateNow = latestPublishedTotal;
+  const perSecond = 0;
+  const estimatedTodayDelta = 0;
+  const lastDailyDelta = 0;
+
+  return {
+    latestRecordDateUTC: new Date().toISOString(),
+    latestPublishedTotal,
+    perSecond,
+    estimatedTodayDelta,
+    liveEstimateNow,
+    lastDailyDelta,
+    btcPriceUsd,
+    latestPublishedTotalBTC: btcPriceUsd > 0 ? latestPublishedTotal / btcPriceUsd : 0,
+    perSecondBTC: btcPriceUsd > 0 ? perSecond / btcPriceUsd : 0,
+    estimatedTodayDeltaBTC: btcPriceUsd > 0 ? estimatedTodayDelta / btcPriceUsd : 0,
+    liveEstimateNowBTC: btcPriceUsd > 0 ? liveEstimateNow / btcPriceUsd : 0,
+    lastDailyDeltaBTC: btcPriceUsd > 0 ? lastDailyDelta / btcPriceUsd : 0,
+    annualFederalSpending: 0,
+    annualBudgetDeficit: 0,
+  };
+}
+
 async function getFederalSpendingAndDeficit() {
   const now = Date.now();
   
@@ -78,6 +104,8 @@ async function getFederalSpendingAndDeficit() {
     
     const response = await fetch(url, {
       next: { revalidate: 3600 }, 
+      cache: "no-store",
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!response.ok) {
@@ -101,8 +129,6 @@ async function getFederalSpendingAndDeficit() {
     if (!targetRow) {
       console.warn("No September record found in last 12 months. Defaulting to latest available.");
       targetRow = json.data[0];
-    } else {
-      console.log(`Using Annual MTS data from: ${targetRow.record_date}`);
     }
     
     const fytdSpending = parseFloat(targetRow.current_month_gross_outly_amt || "0");
@@ -155,7 +181,8 @@ export async function GET() {
 
     const response = await fetch(url, {
       next: { revalidate: 0 },
-      cache: "no-store"
+      cache: "no-store",
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!response.ok) {
@@ -166,7 +193,20 @@ export async function GET() {
 
     const json = await response.json();
     const rows = parseDebtApi(json);
-    const calculation = computeRate(rows);
+    if (rows.length === 0) {
+      throw new Error("Treasury API returned no valid debt rows");
+    }
+
+    const calculation = rows.length >= 2
+      ? computeRate(rows)
+      : {
+          latestDateUTC: rows[0].recordDate.toISOString(),
+          latestTotal: rows[0].totalDebt,
+          perSecond: 0,
+          estimatedTodayDelta: 0,
+          liveNow: rows[0].totalDebt,
+          lastDelta: 0,
+        };
 
     // Get BTC price and calculate BTC equivalents
     const btcPriceUsd = await getBTCPrice();
@@ -209,11 +249,35 @@ export async function GET() {
     
     // Send critical alert
     const errorMsg = error instanceof Error ? error.message : "Unknown error in Debt API";
-    await sendSlackAlert(`CRITICAL FAILURE: ${errorMsg}`);
+    // Do not block response path on alerting/network side-effects.
+    void sendSlackAlert(`CRITICAL FAILURE: ${errorMsg}`);
 
+    // Prefer stale cache over hard failure to keep the slide usable.
+    if (debtCache?.data) {
+      return NextResponse.json(
+        { ...debtCache.data, stale: true },
+        {
+          status: 200,
+          headers: {
+            "Cache-Control": "no-store",
+            "X-Debt-Data-Source": "stale-cache",
+            "X-Debt-Error-Reason": errorMsg.slice(0, 120),
+          },
+        }
+      );
+    }
+
+    // Last-resort fallback: avoid 500 so UI can still render.
     return NextResponse.json(
-      { error: "Failed to fetch debt data" },
-      { status: 500 }
+      { ...buildFallbackDebtResponse(), stale: true },
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "no-store",
+          "X-Debt-Data-Source": "fallback",
+          "X-Debt-Error-Reason": errorMsg.slice(0, 120),
+        },
+      }
     );
   }
 }

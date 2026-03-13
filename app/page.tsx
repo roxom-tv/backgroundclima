@@ -12,6 +12,7 @@ import CalendarSlide from '@/components/CalendarSlide';
 import EventSlide from '@/components/EventSlide';
 import ShowSlide from '@/components/ShowSlide';
 import DebtSlide from '@/components/DebtSlide';
+import { prefetchDebtData } from '@/components/DebtSlide';
 import MetalsSlide from '@/components/MetalsSlide';
 import FxSlide from '@/components/FxSlide';
 import NewsSlide from '@/components/NewsSlide';
@@ -44,6 +45,8 @@ export default function Home() {
     slides.some(s => s.type === 'youtube'), [slides]);
   const hasMarketSlides = useMemo(() =>
     slides.some(s => s.type === 'metals' || s.type === 'fx'), [slides]);
+  const hasDebtSlides = useMemo(() =>
+    slides.some(s => s.type === 'debt'), [slides]);
 
   // Get sponsor for a specific position on the current slide
   const getSponsorForPosition = (slide: Slide | null, position: SponsorPosition): Sponsor | null => {
@@ -118,6 +121,13 @@ export default function Home() {
       prefetchMarketsData().catch(err => console.warn('Markets prefetch failed:', err));
     }
   }, [hasMarketSlides]);
+
+  // Warm up debt data when debt slides are present.
+  useEffect(() => {
+    if (!hasDebtSlides) return;
+    prefetchDebtData()
+      .catch((err) => console.warn('Debt warmup prefetch failed:', err));
+  }, [hasDebtSlides]);
 
   // Reset index when slides change (e.g., reorder, add, remove)
   useEffect(() => {
