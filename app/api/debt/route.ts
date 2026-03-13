@@ -57,7 +57,10 @@ interface MtsTable1ApiResponse {
 const DEBT_CACHE_DURATION = 15 * 60 * 1000; // 15 minutes - la deuda cambia lentamente (una vez al día)
 let debtCache: DebtCacheEntry | null = null;
 const RETRYABLE_HTTP_STATUS = new Set([408, 425, 429, 500, 502, 503, 504, 520, 522, 523, 524, 525, 526, 530]);
-const TREASURY_RETRY_ATTEMPTS = 3;
+const TREASURY_DEBT_RETRY_ATTEMPTS = 2;
+const TREASURY_MTS_RETRY_ATTEMPTS = 1;
+const TREASURY_DEBT_TIMEOUT_MS = 7000;
+const TREASURY_MTS_TIMEOUT_MS = 5000;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => {
@@ -67,14 +70,21 @@ function delay(ms: number): Promise<void> {
 
 async function fetchWithRetry(
   url: string,
-  init: RequestInit,
+  init: Omit<RequestInit, "signal">,
   label: string,
-  attempts = TREASURY_RETRY_ATTEMPTS
+  options: {
+    attempts: number;
+    timeoutMs: number;
+  }
 ): Promise<Response> {
   let lastError: unknown;
+  const { attempts, timeoutMs } = options;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      const response = await fetch(url, init);
+      const response = await fetch(url, {
+        ...init,
+        signal: AbortSignal.timeout(timeoutMs),
+      });
       if (response.ok) {
         return response;
       }
@@ -123,8 +133,10 @@ async function getFederalSpendingAndDeficit() {
     const response = await fetchWithRetry(url, {
       next: { revalidate: 3600 }, 
       cache: "no-store",
-      signal: AbortSignal.timeout(15000),
-    }, "MTS Table 1");
+    }, "MTS Table 1", {
+      attempts: TREASURY_MTS_RETRY_ATTEMPTS,
+      timeoutMs: TREASURY_MTS_TIMEOUT_MS,
+    });
 
     if (!response.ok) {
       const errorMsg = `MTS Table 1 API error: ${response.status}`;
@@ -204,8 +216,10 @@ export async function GET() {
     const response = await fetchWithRetry(url, {
       next: { revalidate: 0 },
       cache: "no-store",
-      signal: AbortSignal.timeout(15000),
-    }, "Treasury");
+    }, "Treasury", {
+      attempts: TREASURY_DEBT_RETRY_ATTEMPTS,
+      timeoutMs: TREASURY_DEBT_TIMEOUT_MS,
+    });
 
     if (!response.ok) {
       const errorMsg = `Treasury API error: ${response.status}`;
@@ -230,11 +244,11 @@ export async function GET() {
           lastDelta: 0,
         };
 
-    // Get BTC price and calculate BTC equivalents
-    const btcPriceUsd = await getBTCPrice();
-    
-    // Get federal spending and deficit data
-    const { annualSpending, annualDeficit } = await getFederalSpendingAndDeficit();
+    // Fetch dependent data in parallel to keep endpoint latency bounded.
+    const [btcPriceUsd, { annualSpending, annualDeficit }] = await Promise.all([
+      getBTCPrice(),
+      getFederalSpendingAndDeficit(),
+    ]);
 
     const result = {
       latestRecordDateUTC: calculation.latestDateUTC,
