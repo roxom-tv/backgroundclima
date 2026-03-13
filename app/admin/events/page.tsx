@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useEvents } from '@/hooks/useEvents';
 import EventForm from '../components/EventForm';
@@ -285,9 +286,12 @@ export default function EventsPage() {
                               {/* Event image */}
                               {event.image_url && (
                                 <div className="w-16 h-12 rounded overflow-hidden flex-shrink-0 bg-gray-700">
-                                  <img
+                                  <Image
                                     src={event.image_url}
                                     alt={event.title}
+                                    width={64}
+                                    height={48}
+                                    unoptimized
                                     className="w-full h-full object-cover"
                                   />
                                 </div>

@@ -72,12 +72,7 @@ const parseScheduleTimes = (times: ScheduleTime[] | string | null | undefined): 
 };
 
 function EventSlideComponent({ slide, events }: EventSlideProps) {
-  // Check if modern style is selected
-  if (slide.event_slide_style === 'modern') {
-    return <EventSlideModern slide={slide} events={events} />;
-  }
-
-  // Classic style - Get selected events in order - memoize with stable reference
+  // Get selected events in order - memoize with stable reference
   const selectedEvents = useMemo(() => {
     const ids = slide.selected_event_ids || [];
     if (ids.length === 0) return [];
@@ -89,6 +84,11 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
       .map(id => eventsMap.get(id))
       .filter((e): e is CalendarEvent => e !== undefined);
   }, [slide.selected_event_ids, events]);
+
+  // Check if modern style is selected
+  if (slide.event_slide_style === 'modern') {
+    return <EventSlideModern slide={slide} events={events} />;
+  }
 
   const eventCount = selectedEvents.length;
   const orientation = slide.layout_orientation || 'horizontal';

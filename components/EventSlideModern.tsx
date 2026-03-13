@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, memo } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import type { Slide, CalendarEvent } from '@/lib/supabase/types';
 
@@ -222,9 +223,11 @@ function EventSlideModernComponent({ slide, events }: EventSlideModernProps) {
                     </h1>
                     <div className="flex items-center gap-4 mt-3">
                         {/* Logo rtvwhite.png only */}
-                        <img
+                        <Image
                             src="/rtvwhite.png"
                             alt="ROXOM.TV"
+                            width={180}
+                            height={48}
                             className="h-12 w-auto"
                         />
                     </div>

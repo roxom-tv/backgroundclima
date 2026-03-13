@@ -20,10 +20,17 @@ export interface DebtCalculation {
   lastDelta: number;
 }
 
+interface DebtApiResponse {
+  data?: Array<{
+    record_date?: string;
+    tot_pub_debt_out_amt?: string;
+  }>;
+}
+
 /**
  * Parse the Treasury API response into an array of debt rows
  */
-export function parseDebtApi(apiResponse: any): DebtRow[] {
+export function parseDebtApi(apiResponse: DebtApiResponse): DebtRow[] {
   if (!apiResponse.data || !Array.isArray(apiResponse.data)) {
     throw new Error("Invalid API response format");
   }

@@ -4,21 +4,28 @@
  */
 
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import type { Database } from './types';
 
-export async function createServerSupabaseClient() {
-  const cookieStore = await cookies();
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+function resolveSupabaseServerEnv() {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
       'Missing Supabase environment variables. ' +
-      'Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.'
+      'Please set SUPABASE_URL and SUPABASE_ANON_KEY.'
     );
   }
+
+  return { supabaseUrl, supabaseAnonKey };
+}
+
+export async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
+
+  const { supabaseUrl, supabaseAnonKey } = resolveSupabaseServerEnv();
 
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -40,6 +47,20 @@ export async function createServerSupabaseClient() {
           // The `delete` method was called from a Server Component.
         }
       },
+    },
+  });
+}
+
+/**
+ * Lightweight server-side client for API routes that don't need cookies/session.
+ */
+export function createServerRouteSupabaseClient() {
+  const { supabaseUrl, supabaseAnonKey } = resolveSupabaseServerEnv();
+
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
     },
   });
 }

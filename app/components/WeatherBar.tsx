@@ -13,22 +13,19 @@ interface WeatherBarProps {
 
 export default function WeatherBar({ activeIndex, currentSlide, visible = true }: WeatherBarProps) {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  // Don't render if not visible or no slide
-  if (!visible || !currentSlide) {
-    return null;
-  }
 
   // Fetch weather data when city changes
   useEffect(() => {
+    if (!visible || !currentSlide) {
+      return;
+    }
+
     const fetchWeather = async () => {
       if (!currentSlide.weather_query) {
         setWeatherData(null);
         return;
       }
 
-      setLoading(true);
       try {
         // Use API route to keep API key secure on server
         const response = await fetch(`/api/weather?query=${encodeURIComponent(currentSlide.weather_query)}`);
@@ -40,13 +37,16 @@ export default function WeatherBar({ activeIndex, currentSlide, visible = true }
       } catch (error) {
         console.error('Error fetching weather:', error);
         setWeatherData(null);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchWeather();
-  }, [currentSlide.weather_query]);
+  }, [visible, currentSlide]);
+
+  // Don't render if not visible or no slide
+  if (!visible || !currentSlide) {
+    return null;
+  }
 
   const cityName = currentSlide.name || 'Unknown';
   const countryName = currentSlide.country || '';

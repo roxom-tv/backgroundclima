@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useMarketsSats } from "@/hooks/useMarketsSats";
-import { formatSats, formatUSDCompact, formatChange24h } from "@/lib/fmt";
+import { formatSats, formatChange24h } from "@/lib/fmt";
 
 export default function SilverSlide() {
   const { data, loading } = useMarketsSats();
@@ -13,7 +13,6 @@ export default function SilverSlide() {
     fontWeight: 900,
     textShadow: '-1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black, 1px 1px 0 black, 0 -1px 0 black, 0 1px 0 black, -1px 0 0 black, 1px 0 0 black'
   };
-  const labelFont = { fontSize: 'clamp(20px, 2vw, 28px)', lineHeight: '1', fontWeight: 700 };
   const valueFont = { fontSize: 'clamp(36px, 4vw, 64px)', lineHeight: '1', fontWeight: 900 };
   const changeFont = { fontSize: 'clamp(24px, 2.5vw, 40px)', lineHeight: '1', fontWeight: 900 };
 

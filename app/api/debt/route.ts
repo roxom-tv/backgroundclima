@@ -22,8 +22,36 @@ const MTS_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours (spending/deficit da
 let mtsCache: MTSCacheEntry | null = null;
 
 interface DebtCacheEntry {
-  data: any;
+  data: DebtApiResponse;
   timestamp: number;
+}
+
+interface DebtApiResponse {
+  latestRecordDateUTC: string;
+  latestPublishedTotal: number;
+  perSecond: number;
+  estimatedTodayDelta: number;
+  liveEstimateNow: number;
+  lastDailyDelta: number;
+  btcPriceUsd: number;
+  latestPublishedTotalBTC: number;
+  perSecondBTC: number;
+  estimatedTodayDeltaBTC: number;
+  liveEstimateNowBTC: number;
+  lastDailyDeltaBTC: number;
+  annualFederalSpending: number;
+  annualBudgetDeficit: number;
+}
+
+interface MtsTable1ApiRow {
+  record_date: string;
+  record_calendar_month: string;
+  current_month_gross_outly_amt: string;
+  current_month_dfct_sur_amt: string;
+}
+
+interface MtsTable1ApiResponse {
+  data?: MtsTable1ApiRow[];
 }
 
 const DEBT_CACHE_DURATION = 15 * 60 * 1000; // 15 minutes - la deuda cambia lentamente (una vez al día)
@@ -60,7 +88,7 @@ async function getFederalSpendingAndDeficit() {
       throw new Error(errorMsg);
     }
 
-    const json = await response.json();
+    const json = (await response.json()) as MtsTable1ApiResponse;
     
     if (!json.data || !Array.isArray(json.data) || json.data.length === 0) {
       throw new Error("No MTS Table 1 data returned");
@@ -68,7 +96,7 @@ async function getFederalSpendingAndDeficit() {
 
     // 2. Find the latest September record (Month 09)
     // This represents the completed fiscal year.
-    let targetRow = json.data.find((r: any) => r.record_calendar_month === "09");
+    let targetRow = json.data.find((r) => r.record_calendar_month === "09");
     
     if (!targetRow) {
       console.warn("No September record found in last 12 months. Defaulting to latest available.");
