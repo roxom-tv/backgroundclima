@@ -51,6 +51,7 @@ interface MtsTable1ApiRow {
 }
 
 interface MtsTable1ApiResponse {
+  success?: boolean;
   data?: MtsTable1ApiRow[];
 }
 
@@ -61,6 +62,9 @@ const TREASURY_DEBT_RETRY_ATTEMPTS = 2;
 const TREASURY_MTS_RETRY_ATTEMPTS = 1;
 const TREASURY_DEBT_TIMEOUT_MS = 7000;
 const TREASURY_MTS_TIMEOUT_MS = 5000;
+const FISCAL_PROXY_BASE_URL = "https://rtv-proxy.vercel.app/api/fiscal";
+const FISCAL_DEBT_URL = `${FISCAL_PROXY_BASE_URL}/debt`;
+const FISCAL_REVENUE_URL = `${FISCAL_PROXY_BASE_URL}/revenue`;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => {
@@ -128,7 +132,7 @@ async function getFederalSpendingAndDeficit() {
     // rather than just the first month of the new fiscal year (~$600B).
     
     // 1. Fetch recent "Year-to-Date" records
-    const url = "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/mts/mts_table_1?filter=classification_desc:eq:Year-to-Date&sort=-record_date&page[size]=12";
+    const url = FISCAL_REVENUE_URL;
     
     const response = await fetchWithRetry(url, {
       next: { revalidate: 3600 }, 
@@ -147,18 +151,45 @@ async function getFederalSpendingAndDeficit() {
     }
 
     const json = (await response.json()) as MtsTable1ApiResponse;
+    if (json.success === false) {
+      throw new Error("Fiscal revenue proxy returned success=false");
+    }
     
     if (!json.data || !Array.isArray(json.data) || json.data.length === 0) {
       throw new Error("No MTS Table 1 data returned");
     }
 
+    const parsedRows = json.data
+      .map((row) => ({
+        row,
+        spending: Number.parseFloat(row.current_month_gross_outly_amt || "0"),
+      }))
+      .filter(({ spending }) => Number.isFinite(spending) && spending > 0);
+
+    if (parsedRows.length === 0) {
+      throw new Error("No valid MTS Table 1 spending rows returned");
+    }
+
+    const pickBestRow = (rows: typeof parsedRows) => {
+      if (rows.length === 0) {
+        return null;
+      }
+      return rows.reduce((best, current) => (current.spending > best.spending ? current : best));
+    };
+
     // 2. Find the latest September record (Month 09)
     // This represents the completed fiscal year.
-    let targetRow = json.data.find((r) => r.record_calendar_month === "09");
+    let targetRow = pickBestRow(
+      parsedRows.filter(({ row }) => row.record_calendar_month === "09")
+    )?.row;
     
     if (!targetRow) {
       console.warn("No September record found in last 12 months. Defaulting to latest available.");
-      targetRow = json.data[0];
+      const latestBestRow = pickBestRow(parsedRows);
+      if (!latestBestRow) {
+        throw new Error("No fallback MTS row available");
+      }
+      targetRow = latestBestRow.row;
     }
     
     const fytdSpending = parseFloat(targetRow.current_month_gross_outly_amt || "0");
@@ -211,7 +242,7 @@ export async function GET() {
 
   try {
     const url =
-      "https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/debt_to_penny?fields=record_date,tot_pub_debt_out_amt&sort=-record_date&page[size]=14";
+      FISCAL_DEBT_URL;
 
     const response = await fetchWithRetry(url, {
       next: { revalidate: 0 },
@@ -228,6 +259,9 @@ export async function GET() {
     }
 
     const json = await response.json();
+    if (json && typeof json === "object" && "success" in json && json.success === false) {
+      throw new Error("Fiscal debt proxy returned success=false");
+    }
     const rows = parseDebtApi(json);
     if (rows.length === 0) {
       throw new Error("Treasury API returned no valid debt rows");
