@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { getSupabaseClient } from '@/lib/supabase/client';
-import type { Slide, SlideInsert, SlideType, Sponsor, ScheduleTime, CalendarEvent, LayoutOrientation, EventSlideStyle } from '@/lib/supabase/types';
+import type { Slide, SlideInsert, SlideType, Sponsor, CalendarEvent, LayoutOrientation, EventSlideStyle } from '@/lib/supabase/types';
 import { convertYouTubeUrlToEmbed, convertEmbedUrlToSimple } from '@/lib/youtube-utils';
 
 interface SlideFormProps {
@@ -31,18 +32,6 @@ const COMMON_TIMEZONES = [
   { value: 'Asia/Hong_Kong', label: 'Hong Kong (HKT)' },
   { value: 'Asia/Dubai', label: 'Dubai (GST)' },
   { value: 'Australia/Sydney', label: 'Sydney (AEST/AEDT)' },
-];
-
-const EVENT_COLORS = [
-  { value: '#1AE784', label: 'Mint Green (Default)' },
-  { value: '#3B82F6', label: 'Blue' },
-  { value: '#10B981', label: 'Green' },
-  { value: '#F59E0B', label: 'Amber' },
-  { value: '#EF4444', label: 'Red' },
-  { value: '#8B5CF6', label: 'Purple' },
-  { value: '#EC4899', label: 'Pink' },
-  { value: '#06B6D4', label: 'Cyan' },
-  { value: '#F97316', label: 'Orange' },
 ];
 
 export default function SlideForm({
@@ -374,10 +363,13 @@ export default function SlideForm({
             <div className="flex items-center gap-4">
               {formData.image_url && (
                 <div className="relative w-48 h-28 overflow-hidden bg-[#1a1a1a] border-2 border-[#00ff00]">
-                  <img
+                  <Image
                     src={formData.image_url}
                     alt="Show preview"
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="192px"
+                    unoptimized
+                    className="object-cover"
                   />
                   <button
                     type="button"
@@ -552,9 +544,12 @@ export default function SlideForm({
                       {/* Event image */}
                       {event.image_url && (
                         <div className="w-14 h-10 overflow-hidden flex-shrink-0 bg-[#1a1a1a] border-2 border-[#00ff00]">
-                          <img
+                          <Image
                             src={event.image_url}
                             alt={event.title}
+                            width={56}
+                            height={40}
+                            unoptimized
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -731,10 +726,13 @@ export default function SlideForm({
             <div className="flex items-center gap-4">
               {formData.image_url && (
                 <div className="relative w-48 h-28 overflow-hidden bg-[#1a1a1a] border-2 border-[#00ff00]">
-                  <img
+                  <Image
                     src={formData.image_url}
                     alt="News preview"
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="192px"
+                    unoptimized
+                    className="object-cover"
                   />
                   <button
                     type="button"

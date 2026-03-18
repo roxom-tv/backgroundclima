@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import type { Slide } from '@/lib/supabase/types';
 
 interface ShowSlideProps {
@@ -20,15 +21,6 @@ export default function ShowSlide({ slide }: ShowSlideProps) {
     }
   }
 
-  // Debug log to see what data we're getting
-  console.log('ShowSlide data:', {
-    name: slide.name,
-    host_name: slide.host_name,
-    show_days: slide.show_days,
-    schedule_times: slide.schedule_times,
-    description: slide.description,
-  });
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -38,10 +30,13 @@ export default function ShowSlide({ slide }: ShowSlideProps) {
     >
       {/* Background Image - Full 1920x1080 */}
       {slide.image_url ? (
-        <img
+        <Image
           src={slide.image_url}
           alt={slide.name}
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          fill
+          sizes="100vw"
+          unoptimized
+          className="absolute inset-0 object-cover object-center"
         />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-black" />

@@ -12,58 +12,100 @@ interface DebtData {
   btcPriceUsd: number;
 }
 
-interface DebtSlideProps {
-  onDataLoaded?: () => void;
+let sharedDebtData: DebtData | null = null;
+let sharedDebtLoading = false;
+let sharedDebtError: string | null = null;
+let fetchPromise: Promise<DebtData | null> | null = null;
+
+async function fetchDebtDataInternal(
+  setData?: (value: DebtData | null) => void,
+  setLoading?: (value: boolean) => void,
+  setError?: (value: string | null) => void
+): Promise<DebtData | null> {
+  if (fetchPromise) {
+    return fetchPromise;
+  }
+
+  fetchPromise = (async () => {
+    sharedDebtLoading = true;
+    if (setLoading) setLoading(true);
+
+    try {
+      const response = await fetch('/api/debt', { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Debt API returned ${response.status}`);
+      }
+
+      const data = await response.json();
+      const normalized: DebtData = {
+        liveEstimateNow: data.liveEstimateNow,
+        perSecond: data.perSecond,
+        annualFederalSpending: data.annualFederalSpending,
+        annualBudgetDeficit: data.annualBudgetDeficit,
+        btcPriceUsd: data.btcPriceUsd,
+      };
+
+      sharedDebtData = normalized;
+      sharedDebtError = null;
+      if (setData) setData(normalized);
+      if (setError) setError(null);
+
+      return normalized;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      sharedDebtError = message;
+      if (setError) setError(message);
+      console.error('Error fetching debt data:', err);
+      return null;
+    } finally {
+      sharedDebtLoading = false;
+      if (setLoading) setLoading(false);
+      fetchPromise = null;
+    }
+  })();
+
+  return fetchPromise;
 }
 
-export default function DebtSlide({ onDataLoaded }: DebtSlideProps) {
-  const [debtData, setDebtData] = useState<DebtData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export async function prefetchDebtData(): Promise<DebtData | null> {
+  if (sharedDebtData) {
+    return sharedDebtData;
+  }
+  return fetchDebtDataInternal();
+}
+
+export default function DebtSlide() {
+  const [debtData, setDebtData] = useState<DebtData | null>(sharedDebtData);
+  const [loading, setLoading] = useState(!sharedDebtData || sharedDebtLoading);
+  const [error, setError] = useState<string | null>(sharedDebtError);
 
   useEffect(() => {
-    const fetchDebtData = async () => {
-      try {
-        const response = await fetch('/api/debt');
-        if (!response.ok) {
-          throw new Error('Failed to fetch debt data');
-        }
-        const data = await response.json();
-        setDebtData({
-          liveEstimateNow: data.liveEstimateNow,
-          perSecond: data.perSecond,
-          annualFederalSpending: data.annualFederalSpending,
-          annualBudgetDeficit: data.annualBudgetDeficit,
-          btcPriceUsd: data.btcPriceUsd,
-        });
-        setError(null);
-        onDataLoaded?.();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        console.error('Error fetching debt data:', err);
-      } finally {
-        setLoading(false);
-      }
+    const load = async () => {
+      await fetchDebtDataInternal(setDebtData, setLoading, setError);
     };
 
-    fetchDebtData();
+    if (sharedDebtData) {
+      setDebtData(sharedDebtData);
+      setLoading(false);
+      setError(null);
+    } else if (sharedDebtLoading) {
+      setLoading(true);
+    }
+
+    load();
+
     // Refresh every 15 minutes
-    const interval = setInterval(fetchDebtData, 15 * 60 * 1000);
+    const interval = setInterval(load, 15 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [onDataLoaded]);
+  }, []);
 
   if (loading) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="h-full w-full bg-black flex items-center justify-center"
-      >
+      <div className="h-full w-full bg-black flex items-center justify-center">
         <div className="text-white text-2xl animate-pulse tracking-wider">
-          LOADING US DEBT DATA...
+          LOADING US DEBT DATA.
         </div>
-      </motion.div>
+      </div>
     );
   }
 

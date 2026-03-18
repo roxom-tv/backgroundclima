@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import RotatingBackground from '@/app/components/RotatingBackground';
@@ -8,7 +8,6 @@ import WeatherBar from '@/app/components/WeatherBar';
 import DateDisplay from '@/app/components/DateDisplay';
 import LiveIndicator from '@/app/components/LiveIndicator';
 import SponsorDisplay from '@/app/components/SponsorDisplay';
-import CalendarSlide from '@/components/CalendarSlide';
 import EventSlide from '@/components/EventSlide';
 import ShowSlide from '@/components/ShowSlide';
 import DebtSlide from '@/components/DebtSlide';
@@ -82,7 +81,6 @@ export default function SlidePreviewPage() {
           <>
             <RotatingBackground
               activeIndex={0}
-              onIndexChange={() => {}}
               slides={[slide]}
               currentSlide={slide}
             />

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import type { CalendarEvent, CalendarEventInsert, EventTextSize, ScheduleTime } from '@/lib/supabase/types';
 
 interface EventFormProps {
@@ -245,10 +246,13 @@ export default function EventForm({
         <div className="flex items-center gap-4">
           {formData.image_url && (
             <div className="relative w-20 h-20 overflow-hidden bg-[#1a1a1a] border-2 border-[#00ff00]">
-              <img
+              <Image
                 src={formData.image_url}
                 alt="Event preview"
-                className="w-full h-full object-cover"
+                fill
+                sizes="80px"
+                unoptimized
+                className="object-cover"
               />
               <button
                 type="button"

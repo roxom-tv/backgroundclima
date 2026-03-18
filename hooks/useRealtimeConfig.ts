@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Slide, Sponsor, GlobalSettings, CalendarEvent } from '@/lib/supabase/types';
 
 interface RealtimeConfig {
@@ -11,6 +10,32 @@ interface RealtimeConfig {
   events: CalendarEvent[];
   isLoading: boolean;
   error: string | null;
+  errorInfo: {
+    code?: string;
+    hint?: string;
+    traceId?: string;
+    status?: number;
+  } | null;
+  retry: () => Promise<void>;
+}
+
+interface ConfigApiResponse {
+  slides: Slide[];
+  settings: GlobalSettings;
+  sponsors: Sponsor[];
+  events: CalendarEvent[];
+  version: string;
+}
+
+interface ApiErrorResponse {
+  status?: string;
+  error?: {
+    code?: string;
+    message?: string;
+    hint?: string;
+    traceId?: string;
+  };
+  timestamp?: string;
 }
 
 const DEFAULT_SETTINGS: GlobalSettings = {
@@ -20,19 +45,11 @@ const DEFAULT_SETTINGS: GlobalSettings = {
   default_duration_seconds: 25,
 };
 
-function isSupabaseConfigured(): boolean {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return false;
-  if (url.includes('your-project') || url.includes('placeholder')) return false;
-  if (key === 'your-anon-key-here' || key === 'placeholder-key') return false;
-  return true;
-}
+const VERSION_POLL_INTERVAL_MS = 10000;
 
 /**
- * Hook that provides real-time configuration data from Supabase
- * Subscribes to changes in slides, settings, and sponsors tables
- * When Supabase is not configured, returns empty data without errors
+ * Hook that provides server-fetched configuration data with lightweight version polling.
+ * This avoids keeping client WebSocket connections open while still updating quickly.
  */
 export function useRealtimeConfig(): RealtimeConfig {
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -41,160 +58,106 @@ export function useRealtimeConfig(): RealtimeConfig {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorInfo, setErrorInfo] = useState<RealtimeConfig['errorInfo']>(null);
+  const currentVersionRef = useRef<string | null>(null);
 
-  // Fetch initial data
-  const fetchInitialData = useCallback(async () => {
-    if (!isSupabaseConfigured()) {
-      setIsLoading(false);
-      return;
+  const parseApiError = useCallback(
+    async (response: Response): Promise<{ message: string; info: RealtimeConfig['errorInfo'] }> => {
+      let payload: ApiErrorResponse | null = null;
+      try {
+        payload = (await response.json()) as ApiErrorResponse;
+      } catch {
+        // Fallback to generic message when API does not return JSON.
+      }
+
+      return {
+        message: payload?.error?.message || `Config API returned ${response.status}`,
+        info: {
+          code: payload?.error?.code,
+          hint: payload?.error?.hint,
+          traceId: payload?.error?.traceId,
+          status: response.status,
+        },
+      };
+    },
+    []
+  );
+
+  const fetchConfig = useCallback(async (options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false;
+    if (!silent) {
+      setIsLoading(true);
     }
-    const supabase = getSupabaseClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const from = (table: string) => supabase.from(table) as any;
 
     try {
-      // Fetch slides (only active, ordered)
-      const { data: slidesData, error: slidesError } = await from('slides')
-        .select('*')
-        .eq('is_active', true)
-        .order('order_index', { ascending: true });
-
-      if (slidesError) console.warn('Slides fetch failed:', slidesError.message || slidesError);
-      setSlides((slidesData as Slide[]) || []);
-
-      // Fetch settings
-      const { data: settingsRaw, error: settingsError } = await from('settings')
-        .select('*')
-        .eq('key', 'global')
-        .single();
-
-      if (settingsError && settingsError.code !== 'PGRST116') {
-        console.warn('Settings fetch failed:', settingsError.message || settingsError);
+      const response = await fetch('/api/config', { cache: 'no-store' });
+      if (!response.ok) {
+        const parsed = await parseApiError(response);
+        const apiError = new Error(parsed.message) as Error & { info?: RealtimeConfig['errorInfo'] };
+        apiError.info = parsed.info;
+        throw apiError;
       }
-      const settingsData = settingsRaw as { value: GlobalSettings } | null;
-      setSettings(settingsData?.value || DEFAULT_SETTINGS);
 
-      // Fetch sponsors (only active, ordered)
-      const { data: sponsorsData, error: sponsorsError } = await from('sponsors')
-        .select('*')
-        .eq('is_active', true)
-        .order('order_index', { ascending: true });
-
-      if (sponsorsError) console.warn('Sponsors fetch failed:', sponsorsError.message || sponsorsError);
-      setSponsors((sponsorsData as Sponsor[]) || []);
-
-      // Fetch events (only active, ordered by date)
-      const { data: eventsData, error: eventsError } = await from('events')
-        .select('*')
-        .eq('is_active', true)
-        .order('start_date', { ascending: true });
-
-      if (eventsError && eventsError.code !== 'PGRST116') {
-        console.warn('Events fetch failed:', eventsError.message || eventsError);
-      }
-      setEvents((eventsData as CalendarEvent[]) || []);
+      const data = (await response.json()) as ConfigApiResponse;
+      setSlides(data.slides || []);
+      setSettings(data.settings || DEFAULT_SETTINGS);
+      setSponsors(data.sponsors || []);
+      setEvents(data.events || []);
+      currentVersionRef.current = data.version || null;
 
       setError(null);
+      setErrorInfo(null);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : (err && typeof err === 'object' && 'message' in err) ? String((err as { message?: unknown }).message) : 'Failed to fetch configuration';
-      console.warn('Config fetch error:', msg);
+      const msg = err instanceof Error ? err.message : 'Failed to fetch configuration';
+      console.warn('Config fetch error:', msg, err);
       setError(msg);
+      if (err && typeof err === 'object' && 'info' in err) {
+        setErrorInfo((err as { info?: RealtimeConfig['errorInfo'] }).info || null);
+      } else {
+        setErrorInfo(null);
+      }
     } finally {
-      setIsLoading(false);
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
-  }, []);
+  }, [parseApiError]);
 
-  // Handle realtime updates
+  const checkVersionAndRefresh = useCallback(async () => {
+    try {
+      const response = await fetch('/api/config/version', { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Version API returned ${response.status}`);
+      }
+
+      const data = (await response.json()) as { version?: string };
+      const latestVersion = data.version || null;
+      if (!latestVersion) return;
+
+      if (!currentVersionRef.current) {
+        currentVersionRef.current = latestVersion;
+        // If initial snapshot fetch failed, recover automatically once version endpoint is reachable.
+        if (error) {
+          await fetchConfig({ silent: true });
+        }
+        return;
+      }
+
+      // Keep retrying in error state even without version changes.
+      if (error || latestVersion !== currentVersionRef.current) {
+        await fetchConfig({ silent: true });
+      }
+    } catch (err) {
+      // Keep UI stable on version endpoint failures; next interval can recover.
+      console.warn('Version check failed:', err);
+    }
+  }, [fetchConfig, error]);
+
   useEffect(() => {
-    fetchInitialData();
-
-    if (!isSupabaseConfigured()) return;
-
-    const supabase = getSupabaseClient();
-
-    // Subscribe to slides changes
-    const slidesChannel = supabase
-      .channel('slides-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'slides',
-        },
-        () => {
-          console.log('Slides change detected');
-          // Refetch all slides to maintain order
-          fetchInitialData();
-        }
-      )
-      .subscribe();
-
-    // Subscribe to settings changes
-    const settingsChannel = supabase
-      .channel('settings-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'settings',
-        },
-        (payload) => {
-          console.log('Settings change:', payload);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const newData = payload.new as any;
-          if (newData && newData.value) {
-            setSettings(newData.value as GlobalSettings);
-          }
-        }
-      )
-      .subscribe();
-
-    // Subscribe to sponsors changes
-    const sponsorsChannel = supabase
-      .channel('sponsors-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'sponsors',
-        },
-        () => {
-          console.log('Sponsors change detected');
-          // Refetch all sponsors to maintain order
-          fetchInitialData();
-        }
-      )
-      .subscribe();
-
-    // Subscribe to events changes
-    const eventsChannel = supabase
-      .channel('events-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'events',
-        },
-        () => {
-          console.log('Events change detected');
-          // Refetch all events to maintain order
-          fetchInitialData();
-        }
-      )
-      .subscribe();
-
-    // Cleanup subscriptions
-    return () => {
-      supabase.removeChannel(slidesChannel);
-      supabase.removeChannel(settingsChannel);
-      supabase.removeChannel(sponsorsChannel);
-      supabase.removeChannel(eventsChannel);
-    };
-  }, [fetchInitialData]);
+    fetchConfig();
+    const intervalId = setInterval(checkVersionAndRefresh, VERSION_POLL_INTERVAL_MS);
+    return () => clearInterval(intervalId);
+  }, [fetchConfig, checkVersionAndRefresh]);
 
   return {
     slides,
@@ -203,6 +166,8 @@ export function useRealtimeConfig(): RealtimeConfig {
     events,
     isLoading,
     error,
+    errorInfo,
+    retry: () => fetchConfig({ silent: false }),
   };
 }
 
@@ -211,9 +176,9 @@ export function useRealtimeConfig(): RealtimeConfig {
  */
 export function useYouTubeSlides() {
   const { slides, isLoading, error } = useRealtimeConfig();
-  
-  const youtubeSlides = slides.filter(slide => slide.type === 'youtube');
-  
+
+  const youtubeSlides = slides.filter((slide) => slide.type === 'youtube');
+
   return { slides: youtubeSlides, isLoading, error };
 }
 
@@ -222,10 +187,8 @@ export function useYouTubeSlides() {
  */
 export function useSpecialSlides() {
   const { slides, isLoading, error } = useRealtimeConfig();
-  
-  const specialSlides = slides.filter(slide => slide.type !== 'youtube');
-  
+
+  const specialSlides = slides.filter((slide) => slide.type !== 'youtube');
+
   return { slides: specialSlides, isLoading, error };
 }
-
-

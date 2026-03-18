@@ -1,4 +1,9 @@
 export async function sendSlackAlert(message: string) {
+  const alertsEnabled = process.env.SLACK_ALERTS_ENABLED === "true";
+  if (!alertsEnabled) {
+    return;
+  }
+
   const webhookUrl = process.env.SLACK_WEBHOOK_URL;
 
   if (!webhookUrl) {
@@ -17,6 +22,7 @@ export async function sendSlackAlert(message: string) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(4000),
     });
 
     if (!response.ok) {
