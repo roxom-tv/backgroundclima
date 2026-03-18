@@ -34,7 +34,11 @@ export function convertYouTubeUrlToEmbed(url: string): string {
   const trimmedUrl = url.trim();
 
   // If already an embed URL, return as-is (but ensure it has autoplay params)
-  if (trimmedUrl.includes('youtube.com/embed/') || trimmedUrl.includes('youtu.be/embed/')) {
+  if (
+    trimmedUrl.includes('youtube.com/embed/') ||
+    trimmedUrl.includes('youtu.be/embed/') ||
+    trimmedUrl.includes('youtube-nocookie.com/embed/')
+  ) {
     return ensureEmbedParams(trimmedUrl);
   }
 
@@ -74,17 +78,16 @@ export function convertYouTubeUrlToEmbed(url: string): string {
   }
 
   // Build embed URL with optimal parameters for background display
-  const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&playsinline=1&rel=0&modestbranding=1&loop=1&playlist=${videoId}&showinfo=0&iv_load_policy=3&disablekb=1&fs=0&vq=hd1440`;
-
-  return embedUrl;
+  const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+  return ensureEmbedParams(embedUrl);
 }
 
 /**
  * Ensures an embed URL has the necessary parameters for background display
  */
 function ensureEmbedParams(url: string): string {
-  // If it already has query parameters, merge them
   const urlObj = new URL(url);
+  const videoId = extractYouTubeVideoId(url);
   
   // Set optimal parameters for background display
   urlObj.searchParams.set('autoplay', '1');
@@ -96,9 +99,8 @@ function ensureEmbedParams(url: string): string {
   urlObj.searchParams.set('loop', '1');
   
   // Extract video ID for playlist parameter
-  const videoIdMatch = url.match(/\/([a-zA-Z0-9_-]{11})/);
-  if (videoIdMatch) {
-    urlObj.searchParams.set('playlist', videoIdMatch[1]);
+  if (videoId) {
+    urlObj.searchParams.set('playlist', videoId);
   }
   
   urlObj.searchParams.set('showinfo', '0');
@@ -106,8 +108,55 @@ function ensureEmbedParams(url: string): string {
   urlObj.searchParams.set('disablekb', '1');
   urlObj.searchParams.set('fs', '0');
   urlObj.searchParams.set('vq', 'hd1440');
+  urlObj.searchParams.set('enablejsapi', '1');
+
+  // Helps YouTube validate embedded player requests in stricter environments.
+  const embedOrigin = resolveEmbedOrigin();
+  if (embedOrigin) {
+    urlObj.searchParams.set('origin', embedOrigin);
+  }
 
   return urlObj.toString();
+}
+
+function resolveEmbedOrigin(): string | null {
+  const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (configuredOrigin) {
+    try {
+      return new URL(configuredOrigin).origin;
+    } catch {
+      // Fall back to browser origin when env var is malformed.
+    }
+  }
+
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin;
+  }
+
+  return null;
+}
+
+/**
+ * Ensures existing embed URLs also include required runtime params.
+ */
+export function normalizeYouTubeEmbedUrl(url: string): string {
+  if (!url || typeof url !== 'string') {
+    return url;
+  }
+
+  const trimmedUrl = url.trim();
+  if (
+    trimmedUrl.includes('youtube.com/embed/') ||
+    trimmedUrl.includes('youtube-nocookie.com/embed/')
+  ) {
+    try {
+      return ensureEmbedParams(trimmedUrl);
+    } catch {
+      return trimmedUrl;
+    }
+  }
+
+  return trimmedUrl;
 }
 
 /**
@@ -123,6 +172,7 @@ export function extractYouTubeVideoId(url: string): string | null {
     /youtube\.com\/live\/([a-zA-Z0-9_-]{11})/,
     /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/,
     /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+    /youtube-nocookie\.com\/embed\/([a-zA-Z0-9_-]{11})/,
   ];
 
   for (const pattern of patterns) {

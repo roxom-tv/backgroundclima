@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Slide } from '@/lib/supabase/types';
+import { normalizeYouTubeEmbedUrl } from '@/lib/youtube-utils';
 
 interface RotatingBackgroundProps {
   activeIndex: number;
@@ -127,6 +128,7 @@ export default function RotatingBackground({ activeIndex, slides, currentSlide: 
     if (name === 'hong kong') return 'hongkong-zoom';
     return '';
   };
+  const iframeSrc = normalizeYouTubeEmbedUrl(currentSlide.youtube_url);
 
   return (
     <>
@@ -155,11 +157,12 @@ export default function RotatingBackground({ activeIndex, slides, currentSlide: 
             <iframe
               key={`${activeIndex}-${currentSlide.name}`}
               ref={iframeRef}
-              src={currentSlide.youtube_url}
+              src={iframeSrc}
               className={`youtube-iframe ${getZoomClass()}`}
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
               loading="lazy"
               onLoad={handleIframeLoad}
               onError={handleIframeError}
