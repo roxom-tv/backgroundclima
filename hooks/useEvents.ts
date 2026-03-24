@@ -55,12 +55,17 @@ export function useEvents() {
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Supabase insert error:', insertError);
+        const msg = insertError.message || insertError.details || insertError.hint || JSON.stringify(insertError);
+        throw new Error(msg);
+      }
 
       setEvents(prev => [...prev, data as CalendarEvent]);
       return { data: data as CalendarEvent, error: null };
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create event';
+      const message = err instanceof Error ? err.message : JSON.stringify(err);
+      console.error('createEvent error:', message);
       return { data: null, error: message };
     }
   }, [supabase]);
@@ -74,12 +79,17 @@ export function useEvents() {
         .select()
         .single();
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Supabase update error:', updateError);
+        const msg = updateError.message || updateError.details || updateError.hint || JSON.stringify(updateError);
+        throw new Error(msg);
+      }
 
       setEvents(prev => prev.map(e => e.id === id ? (data as CalendarEvent) : e));
       return { data: data as CalendarEvent, error: null };
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update event';
+      const message = err instanceof Error ? err.message : JSON.stringify(err);
+      console.error('updateEvent error:', message);
       return { data: null, error: message };
     }
   }, [supabase]);
