@@ -101,12 +101,16 @@ export default function SlideForm({
     };
 
     const fetchEvents = async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase.from('events') as any)
-        .select('*')
-        .eq('is_active', true)
-        .order('start_date', { ascending: true });
-      if (data) setAvailableEvents(data as CalendarEvent[]);
+      try {
+        const response = await fetch('/api/admin/events', { cache: 'no-store' });
+        const result = await response.json();
+        if (response.ok && result.success) {
+          const active = (result.data as CalendarEvent[]).filter(e => e.is_active);
+          setAvailableEvents(active);
+        }
+      } catch {
+        // Silently fail — events dropdown will be empty
+      }
     };
 
     fetchSponsors();

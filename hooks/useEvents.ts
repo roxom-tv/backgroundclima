@@ -1,14 +1,12 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
 import type { CalendarEvent, CalendarEventInsert, CalendarEventUpdate } from '@/lib/supabase/types';
 
 export function useEvents() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const supabase = getSupabaseClient();
 
   // Fetch all events
   const fetchEvents = useCallback(async () => {
@@ -128,26 +126,25 @@ export function useEvents() {
   // Upload event image
   const uploadEventImage = useCallback(async (file: File): Promise<{ url: string | null; error: string | null }> => {
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `event-${Date.now()}.${fileExt}`;
-      const filePath = `events/${fileName}`;
+      const formData = new FormData();
+      formData.append('file', file);
 
-      const { error: uploadError } = await supabase.storage
-        .from('sponsors') // Reusing sponsors bucket for now
-        .upload(filePath, file);
+      const response = await fetch('/api/admin/events/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await response.json();
 
-      if (uploadError) throw uploadError;
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to upload image');
+      }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('sponsors')
-        .getPublicUrl(filePath);
-
-      return { url: publicUrl, error: null };
+      return { url: result.data.url, error: null };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to upload image';
       return { url: null, error: message };
     }
-  }, [supabase]);
+  }, []);
 
   return {
     events,
