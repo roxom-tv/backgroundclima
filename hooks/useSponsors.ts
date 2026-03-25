@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
 import type { Sponsor, SponsorInsert, SponsorUpdate } from '@/lib/supabase/types';
 
 interface UseSponsorsReturn {
@@ -16,13 +15,6 @@ interface UseSponsorsReturn {
   toggleSponsorActive: (id: string, isActive: boolean) => Promise<{ error: string | null }>;
 }
 
-// Helper to get table with proper typing workaround
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getSponsorsTable(): any {
-  const supabase = getSupabaseClient();
-  return supabase.from('sponsors');
-}
-
 export function useSponsors(): UseSponsorsReturn {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,15 +26,13 @@ export function useSponsors(): UseSponsorsReturn {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await getSponsorsTable()
-        .select('*')
-        .order('order_index', { ascending: true });
-
-      if (fetchError) {
-        throw fetchError;
+      const response = await fetch('/api/admin/sponsors', { cache: 'no-store' });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to fetch sponsors');
       }
 
-      setSponsors((data as Sponsor[]) || []);
+      setSponsors((result.data as Sponsor[]) || []);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch sponsors';
       setError(message);
@@ -55,26 +45,18 @@ export function useSponsors(): UseSponsorsReturn {
   // Create a new sponsor
   const createSponsor = useCallback(async (sponsor: SponsorInsert) => {
     try {
-      // Get the highest order_index
-      const { data: maxOrderRaw } = await getSponsorsTable()
-        .select('order_index')
-        .order('order_index', { ascending: false })
-        .limit(1)
-        .single();
-
-      const maxOrderData = maxOrderRaw as { order_index: number } | null;
-      const newOrderIndex = (maxOrderData?.order_index ?? -1) + 1;
-
-      const { data, error: insertError } = await getSponsorsTable()
-        .insert({ ...sponsor, order_index: newOrderIndex })
-        .select()
-        .single();
-
-      if (insertError) {
-        throw insertError;
+      const maxOrderIndex = sponsors.reduce((max, current) => Math.max(max, current.order_index), -1);
+      const response = await fetch('/api/admin/sponsors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...sponsor, order_index: maxOrderIndex + 1 }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to create sponsor');
       }
 
-      const newSponsor = data as Sponsor;
+      const newSponsor = result.data as Sponsor;
       // Update local state
       setSponsors(prev => [...prev, newSponsor]);
 
@@ -84,17 +66,19 @@ export function useSponsors(): UseSponsorsReturn {
       console.error('Error creating sponsor:', err);
       return { data: null, error: message };
     }
-  }, []);
+  }, [sponsors]);
 
   // Update a sponsor
   const updateSponsor = useCallback(async (id: string, updates: SponsorUpdate) => {
     try {
-      const { error: updateError } = await getSponsorsTable()
-        .update(updates)
-        .eq('id', id);
-
-      if (updateError) {
-        throw updateError;
+      const response = await fetch(`/api/admin/sponsors/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to update sponsor');
       }
 
       // Update local state
@@ -115,12 +99,12 @@ export function useSponsors(): UseSponsorsReturn {
   // Delete a sponsor
   const deleteSponsor = useCallback(async (id: string) => {
     try {
-      const { error: deleteError } = await getSponsorsTable()
-        .delete()
-        .eq('id', id);
-
-      if (deleteError) {
-        throw deleteError;
+      const response = await fetch(`/api/admin/sponsors/${id}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to delete sponsor');
       }
 
       // Update local state
@@ -144,13 +128,18 @@ export function useSponsors(): UseSponsorsReturn {
 
       const results = await Promise.all(
         updates.map(({ id, order_index }) =>
-          getSponsorsTable()
-            .update({ order_index })
-            .eq('id', id)
+          fetch(`/api/admin/sponsors/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_index }),
+          }).then(async (response) => {
+            const result = await response.json();
+            return { ok: response.ok, result };
+          })
         )
       );
 
-      const hasError = results.some(result => result.error);
+      const hasError = results.some(result => !result.ok || !result.result.success);
       if (hasError) {
         throw new Error('Failed to reorder some sponsors');
       }

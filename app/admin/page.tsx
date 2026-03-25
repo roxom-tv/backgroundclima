@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
 import { StatCard, QuickAction, PageHeader, InfoBox } from './components/ui';
 
 interface Stats {
@@ -25,20 +24,24 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const supabase = getSupabaseClient();
+        const [slidesResponse, sponsorsResponse] = await Promise.all([
+          fetch('/api/admin/slides', { cache: 'no-store' }),
+          fetch('/api/admin/sponsors', { cache: 'no-store' }),
+        ]);
+        const [slidesResult, sponsorsResult] = await Promise.all([
+          slidesResponse.json(),
+          sponsorsResponse.json(),
+        ]);
 
-        // Fetch slides count
-        const { data: slidesData } = await supabase
-          .from('slides')
-          .select('id, is_active, type');
+        if (!slidesResponse.ok || !slidesResult.success) {
+          throw new Error(slidesResult.error ?? 'Failed to fetch slides stats');
+        }
+        if (!sponsorsResponse.ok || !sponsorsResult.success) {
+          throw new Error(sponsorsResult.error ?? 'Failed to fetch sponsors stats');
+        }
 
-        // Fetch sponsors count
-        const { data: sponsorsData } = await supabase
-          .from('sponsors')
-          .select('id, is_active');
-
-        const slides = slidesData as { id: string; is_active: boolean; type: string }[] | null;
-        const sponsors = sponsorsData as { id: string; is_active: boolean }[] | null;
+        const slides = slidesResult.data as { id: string; is_active: boolean; type: string }[] | null;
+        const sponsors = sponsorsResult.data as { id: string; is_active: boolean }[] | null;
 
         if (slides && sponsors) {
           setStats({

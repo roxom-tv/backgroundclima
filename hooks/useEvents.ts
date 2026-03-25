@@ -4,17 +4,10 @@ import { useState, useCallback } from 'react';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import type { CalendarEvent, CalendarEventInsert, CalendarEventUpdate } from '@/lib/supabase/types';
 
-// Helper to get typed table access
-const getEventsTable = (supabase: ReturnType<typeof getSupabaseClient>) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return supabase.from('events') as any;
-};
-
 export function useEvents() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const supabase = getSupabaseClient();
 
   // Fetch all events
@@ -23,85 +16,72 @@ export function useEvents() {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await getEventsTable(supabase)
-        .select('*')
-        .order('order_index', { ascending: true });
-
-      if (fetchError) throw fetchError;
-
-      setEvents((data as CalendarEvent[]) || []);
+      const response = await fetch('/api/admin/events', { cache: 'no-store' });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to fetch events');
+      }
+      setEvents((result.data as CalendarEvent[]) || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch events');
     } finally {
       setIsLoading(false);
     }
-  }, [supabase]);
+  }, []);
 
   // Create event
   const createEvent = useCallback(async (eventData: CalendarEventInsert) => {
     try {
-      // Get max order_index
-      const { data: maxOrderRaw } = await getEventsTable(supabase)
-        .select('order_index')
-        .order('order_index', { ascending: false })
-        .limit(1)
-        .single();
-
-      const maxOrderData = maxOrderRaw as { order_index: number } | null;
-      const newOrderIndex = (maxOrderData?.order_index ?? -1) + 1;
-
-      const { data, error: insertError } = await getEventsTable(supabase)
-        .insert({ ...eventData, order_index: newOrderIndex })
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error('Supabase insert error:', insertError);
-        const msg = insertError.message || insertError.details || insertError.hint || JSON.stringify(insertError);
-        throw new Error(msg);
+      const maxOrderIndex = events.reduce((max, current) => Math.max(max, current.order_index), -1);
+      const response = await fetch('/api/admin/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...eventData, order_index: maxOrderIndex + 1 }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to create event');
       }
 
-      setEvents(prev => [...prev, data as CalendarEvent]);
-      return { data: data as CalendarEvent, error: null };
+      setEvents(prev => [...prev, result.data as CalendarEvent]);
+      return { data: result.data as CalendarEvent, error: null };
     } catch (err) {
-      const message = err instanceof Error ? err.message : JSON.stringify(err);
-      console.error('createEvent error:', message);
+      const message = err instanceof Error ? err.message : 'Failed to create event';
       return { data: null, error: message };
     }
-  }, [supabase]);
+  }, [events]);
 
   // Update event
   const updateEvent = useCallback(async (id: string, updates: CalendarEventUpdate) => {
     try {
-      const { data, error: updateError } = await getEventsTable(supabase)
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (updateError) {
-        console.error('Supabase update error:', updateError);
-        const msg = updateError.message || updateError.details || updateError.hint || JSON.stringify(updateError);
-        throw new Error(msg);
+      const response = await fetch(`/api/admin/events/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to update event');
       }
 
-      setEvents(prev => prev.map(e => e.id === id ? (data as CalendarEvent) : e));
-      return { data: data as CalendarEvent, error: null };
+      setEvents(prev => prev.map(e => e.id === id ? (result.data as CalendarEvent) : e));
+      return { data: result.data as CalendarEvent, error: null };
     } catch (err) {
-      const message = err instanceof Error ? err.message : JSON.stringify(err);
-      console.error('updateEvent error:', message);
+      const message = err instanceof Error ? err.message : 'Failed to update event';
       return { data: null, error: message };
     }
-  }, [supabase]);
+  }, []);
 
   // Delete event
   const deleteEvent = useCallback(async (id: string) => {
     try {
-      const { error: deleteError } = await getEventsTable(supabase)
-        .delete()
-        .eq('id', id);
-
-      if (deleteError) throw deleteError;
+      const response = await fetch(`/api/admin/events/${id}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to delete event');
+      }
 
       setEvents(prev => prev.filter(e => e.id !== id));
       return { error: null };
@@ -109,7 +89,7 @@ export function useEvents() {
       const message = err instanceof Error ? err.message : 'Failed to delete event';
       return { error: message };
     }
-  }, [supabase]);
+  }, []);
 
   // Toggle active status
   const toggleEventActive = useCallback(async (id: string, isActive: boolean) => {
@@ -125,9 +105,15 @@ export function useEvents() {
       }));
 
       for (const update of updates) {
-        await getEventsTable(supabase)
-          .update({ order_index: update.order_index })
-          .eq('id', update.id);
+        const response = await fetch(`/api/admin/events/${update.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order_index: update.order_index }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.error ?? 'Failed to reorder event');
+        }
       }
 
       // Refetch to ensure consistency
@@ -137,7 +123,7 @@ export function useEvents() {
       const message = err instanceof Error ? err.message : 'Failed to reorder events';
       return { error: message };
     }
-  }, [supabase, fetchEvents]);
+  }, [fetchEvents]);
 
   // Upload event image
   const uploadEventImage = useCallback(async (file: File): Promise<{ url: string | null; error: string | null }> => {

@@ -2,7 +2,6 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
   "name": "backgroundclima",
-  "account_id": "939be7f3eaad96fe02047a7744702446",
   "compatibility_date": "2026-03-10",
   "compatibility_flags": [
     "nodejs_compat"
@@ -38,7 +37,7 @@
   "env": {
     "preview": {
       "vars": {
-        "NEXT_PUBLIC_SUPABASE_URL": "https://mcfhqyekclrtovqquone.supabase.co",
+        "NEXT_PUBLIC_SUPABASE_URL": "SET_IN_CLOUDFLARE_ENV",
         "FX_API_URL": "https://api.exchangerate.host/latest",
         "OPENWEATHER_LANG": "en",
         "OPENWEATHER_UNITS": "metric",
@@ -54,7 +53,7 @@
     },
     "production": {
       "vars": {
-        "NEXT_PUBLIC_SUPABASE_URL": "https://daolkfjwksbiofsrmuju.supabase.co",
+        "NEXT_PUBLIC_SUPABASE_URL": "SET_IN_CLOUDFLARE_ENV",
         "FX_API_URL": "https://api.exchangerate.host/latest",
         "OPENWEATHER_LANG": "en",
         "OPENWEATHER_UNITS": "metric",
