@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
 import type { GlobalSettings, TransitionEffect } from '@/lib/supabase/types';
 
 const DEFAULT_SETTINGS: GlobalSettings = {
@@ -28,27 +27,13 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        // Check if environment variables are configured
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-          console.error('Supabase environment variables are not configured');
-          setNotification({ type: 'error', message: 'Supabase configuration missing. Please check environment variables.' });
-          setIsLoading(false);
-          return;
-        }
-
-        const supabase = getSupabaseClient();
-        const { data, error } = await supabase
-          .from('settings')
-          .select('value')
-          .eq('key', 'global')
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching settings:', error);
+        const response = await fetch('/api/admin/settings', { cache: 'no-store' });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          console.error('Error fetching settings:', result.error);
           setNotification({ type: 'error', message: 'Failed to load settings. Please refresh the page.' });
-        } else if (data) {
-          const settingsData = data as { value: GlobalSettings };
-          setSettings(settingsData.value);
+        } else if (result.data) {
+          setSettings(result.data as GlobalSettings);
         }
       } catch (err) {
         console.error('Error fetching settings:', err);
@@ -75,36 +60,14 @@ export default function SettingsPage() {
     setIsSaving(true);
 
     try {
-      const supabase = getSupabaseClient();
-      
-      // Use RPC or direct SQL-like approach to avoid type issues
-      // First check if exists
-      const { data: existing } = await supabase
-        .from('settings')
-        .select('id')
-        .eq('key', 'global')
-        .maybeSingle();
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const settingsTable = supabase.from('settings') as any;
-      
-      let error;
-      
-      if (existing) {
-        // Update existing
-        const result = await settingsTable
-          .update({ value: settings })
-          .eq('key', 'global');
-        error = result.error;
-      } else {
-        // Insert new
-        const result = await settingsTable
-          .insert({ key: 'global', value: settings });
-        error = result.error;
-      }
-
-      if (error) {
-        throw error;
+      const response = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'global', value: settings }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to save settings');
       }
 
       showNotification('success', 'Settings saved successfully');

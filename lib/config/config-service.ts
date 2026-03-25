@@ -1,5 +1,5 @@
 import type { CalendarEvent, GlobalSettings, Slide, Sponsor } from '@/lib/supabase/types';
-import { createServerRouteSupabaseClient } from '@/lib/supabase/server';
+import { createServerAdminSupabaseClient } from '@/lib/supabase/admin';
 
 export interface AppConfigSnapshot {
   slides: Slide[];
@@ -33,7 +33,7 @@ function resolveVersionTimestamps(values: Array<string | null | undefined>): str
 }
 
 export async function getConfigSnapshot(): Promise<AppConfigSnapshot> {
-  const supabase = createServerRouteSupabaseClient();
+  const supabase = createServerAdminSupabaseClient();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const from = (table: string) => supabase.from(table) as any;
@@ -77,7 +77,7 @@ export async function getConfigSnapshot(): Promise<AppConfigSnapshot> {
 }
 
 export async function getConfigVersion(): Promise<string> {
-  const supabase = createServerRouteSupabaseClient();
+  const supabase = createServerAdminSupabaseClient();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const from = (table: string) => supabase.from(table) as any;

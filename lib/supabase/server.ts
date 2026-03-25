@@ -22,6 +22,7 @@ function resolveSupabaseServerEnv() {
   return { supabaseUrl, supabaseAnonKey };
 }
 
+
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies();
 
@@ -64,5 +65,4 @@ export function createServerRouteSupabaseClient() {
     },
   });
 }
-
 

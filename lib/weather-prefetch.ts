@@ -4,19 +4,7 @@
  */
 
 import { fetchCurrentWeather } from './openweather';
-import { createClient } from '@supabase/supabase-js';
-
-// Create a simple Supabase client for server-side prefetching
-function getSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
-  if (!url || !key) {
-    throw new Error('Missing Supabase environment variables');
-  }
-  
-  return createClient(url, key);
-}
+import { createServerAdminSupabaseClient } from '@/lib/supabase/admin';
 
 interface SlideWithWeather {
   id: string;
@@ -30,7 +18,7 @@ interface SlideWithWeather {
  */
 export async function prefetchAllWeatherData(): Promise<void> {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = createServerAdminSupabaseClient();
     
     // Fetch all active YouTube slides that have weather queries
     const { data: slides, error } = await supabase

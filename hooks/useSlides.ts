@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
 import type { Slide, SlideInsert, SlideUpdate } from '@/lib/supabase/types';
 
 interface UseSlidesReturn {
@@ -17,13 +16,6 @@ interface UseSlidesReturn {
   toggleSlideActive: (id: string, isActive: boolean) => Promise<{ error: string | null }>;
 }
 
-// Helper to get table with proper typing workaround
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getSlidesTable(): any {
-  const supabase = getSupabaseClient();
-  return supabase.from('slides');
-}
-
 export function useSlides(): UseSlidesReturn {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,15 +27,12 @@ export function useSlides(): UseSlidesReturn {
     setError(null);
 
     try {
-      const { data, error: fetchError } = await getSlidesTable()
-        .select('*')
-        .order('order_index', { ascending: true });
-
-      if (fetchError) {
-        throw fetchError;
+      const response = await fetch('/api/admin/slides', { cache: 'no-store' });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to fetch slides');
       }
-
-      setSlides((data as Slide[]) || []);
+      setSlides((result.data as Slide[]) || []);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch slides';
       setError(message);
@@ -51,31 +40,24 @@ export function useSlides(): UseSlidesReturn {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [slides]);
 
   // Create a new slide
   const createSlide = useCallback(async (slide: SlideInsert) => {
     try {
-      // Get the highest order_index
-      const { data: maxOrderRaw } = await getSlidesTable()
-        .select('order_index')
-        .order('order_index', { ascending: false })
-        .limit(1)
-        .single();
+      const maxOrderIndex = slides.reduce((max, current) => Math.max(max, current.order_index), -1);
+      const response = await fetch('/api/admin/slides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...slide, order_index: maxOrderIndex + 1 }),
+      });
+      const result = await response.json();
 
-      const maxOrderData = maxOrderRaw as { order_index: number } | null;
-      const newOrderIndex = (maxOrderData?.order_index ?? -1) + 1;
-
-      const { data, error: insertError } = await getSlidesTable()
-        .insert({ ...slide, order_index: newOrderIndex })
-        .select()
-        .single();
-
-      if (insertError) {
-        throw insertError;
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to create slide');
       }
 
-      const newSlide = data as Slide;
+      const newSlide = result.data as Slide;
       // Update local state
       setSlides(prev => [...prev, newSlide]);
 
@@ -104,20 +86,16 @@ export function useSlides(): UseSlidesReturn {
         }
       });
 
-      // Update and get the updated data from database
-      const { data: updatedData, error: updateError } = await getSlidesTable()
-        .update(cleanUpdates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (updateError) {
-        console.error('Supabase update error:', updateError);
-        console.error('Error details:', JSON.stringify(updateError, null, 2));
-        throw updateError;
+      const response = await fetch(`/api/admin/slides/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cleanUpdates),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to update slide');
       }
-
-      if (!updatedData) {
+      if (!result.data) {
         console.error('No data returned from update');
         throw new Error('No data returned from update');
       }
@@ -125,7 +103,7 @@ export function useSlides(): UseSlidesReturn {
       // Update local state with the actual data from database
       setSlides(prev =>
         prev.map(slide =>
-          slide.id === id ? (updatedData as Slide) : slide
+          slide.id === id ? (result.data as Slide) : slide
         )
       );
 
@@ -140,12 +118,12 @@ export function useSlides(): UseSlidesReturn {
   // Delete a slide
   const deleteSlide = useCallback(async (id: string) => {
     try {
-      const { error: deleteError } = await getSlidesTable()
-        .delete()
-        .eq('id', id);
-
-      if (deleteError) {
-        throw deleteError;
+      const response = await fetch(`/api/admin/slides/${id}`, {
+        method: 'DELETE',
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to delete slide');
       }
 
       // Update local state
@@ -162,15 +140,8 @@ export function useSlides(): UseSlidesReturn {
   // Duplicate a slide
   const duplicateSlide = useCallback(async (slide: Slide) => {
     try {
-      // Get the highest order_index
-      const { data: maxOrderRaw } = await getSlidesTable()
-        .select('order_index')
-        .order('order_index', { ascending: false })
-        .limit(1)
-        .single();
-
-      const maxOrderData = maxOrderRaw as { order_index: number } | null;
-      const newOrderIndex = (maxOrderData?.order_index ?? -1) + 1;
+      const maxOrderIndex = slides.reduce((max, current) => Math.max(max, current.order_index), -1);
+      const newOrderIndex = maxOrderIndex + 1;
 
       // Create a copy without id, created_at, updated_at
       const { id: _id, created_at: _created, updated_at: _updated, ...slideData } = slide;
@@ -181,16 +152,17 @@ export function useSlides(): UseSlidesReturn {
         order_index: newOrderIndex,
       };
 
-      const { data, error: insertError } = await getSlidesTable()
-        .insert(newSlide)
-        .select()
-        .single();
-
-      if (insertError) {
-        throw insertError;
+      const response = await fetch('/api/admin/slides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSlide),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? 'Failed to duplicate slide');
       }
 
-      const duplicatedSlide = data as Slide;
+      const duplicatedSlide = result.data as Slide;
       // Update local state
       setSlides(prev => [...prev, duplicatedSlide]);
 
@@ -200,7 +172,7 @@ export function useSlides(): UseSlidesReturn {
       console.error('Error duplicating slide:', err);
       return { data: null, error: message };
     }
-  }, []);
+  }, [slides]);
 
   // Reorder slides by updating order_index
   const reorderSlides = useCallback(async (orderedIds: string[]) => {
@@ -214,14 +186,19 @@ export function useSlides(): UseSlidesReturn {
       // Use Promise.all to update all slides
       const results = await Promise.all(
         updates.map(({ id, order_index }) =>
-          getSlidesTable()
-            .update({ order_index })
-            .eq('id', id)
+          fetch(`/api/admin/slides/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_index }),
+          }).then(async (response) => {
+            const result = await response.json();
+            return { ok: response.ok, result };
+          })
         )
       );
 
       // Check for errors
-      const hasError = results.some(result => result.error);
+      const hasError = results.some(result => !result.ok || !result.result.success);
       if (hasError) {
         throw new Error('Failed to reorder some slides');
       }

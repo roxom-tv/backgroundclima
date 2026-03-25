@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getSupabaseClient } from '@/lib/supabase/client';
 import RotatingBackground from '@/app/components/RotatingBackground';
 import WeatherBar from '@/app/components/WeatherBar';
 import DateDisplay from '@/app/components/DateDisplay';
@@ -33,18 +32,13 @@ export default function SlidePreviewPage() {
   useEffect(() => {
     const fetchSlide = async () => {
       try {
-        const supabase = getSupabaseClient();
-        const { data, error: fetchError } = await supabase
-          .from('slides')
-          .select('*')
-          .eq('id', slideId)
-          .single();
-
-        if (fetchError) {
-          throw fetchError;
+        const response = await fetch(`/api/admin/slides/${slideId}`, { cache: 'no-store' });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.error ?? 'Failed to load slide');
         }
 
-        setSlide(data as Slide);
+        setSlide(result.data as Slide);
       } catch (err) {
         console.error('Error fetching slide:', err);
         setError(err instanceof Error ? err.message : 'Failed to load slide');
