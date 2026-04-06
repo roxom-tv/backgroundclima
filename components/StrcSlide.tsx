@@ -8,32 +8,32 @@ interface StrcData {
   strc: {
     price: number;
     previousClose: number;
-    change: number;
-    changePercent: number;
+    priceChange: number;
+    priceChangePercent: number;
+    negative: boolean;
     volume: number;
-    high: number;
-    low: number;
-    fiftyTwoWeekHigh: number;
-    fiftyTwoWeekLow: number;
-    sharesOutstanding: number;
   };
   btc: { price: number };
   dividends: Array<{
-    date: string;
+    period: string;
+    recordDate: string;
+    payDate: string;
     usd: number;
-    btcPrice: number;
-    sats: number;
+    rate: number;
+    btc: number;
   }>;
   metrics: {
     parValue: number;
     annualDiv: number;
     annualRate: number;
     monthlyDiv: number;
-    monthlyDivSats: number;
-    annualDivSats: number;
-    yieldPercent: number;
+    monthlyDivBtc: number;
+    annualDivBtc: number;
+    effYield: number;
     marketCap: number;
     sharesOutstanding: number;
+    nextPayoutDate: string;
+    nextRecordDate: string;
   };
   lastUpdate: string;
 }
@@ -160,11 +160,11 @@ export default function StrcSlide() {
 
   // ATM logic
   const today = new Date().toISOString().slice(0, 10);
-  const todayDiv = dividends.find((x) => x.date === today);
+  const todayDiv = dividends.find((x) => x.recordDate === today);
   const isActive = !!todayDiv;
 
   const atmSats = isActive
-    ? todayDiv!.sats
+    ? Math.round(todayDiv!.btc * 1e8)
     : toSats(metrics.monthlyDiv, b);
   const atmUsd = isActive ? todayDiv!.usd : metrics.monthlyDiv;
 
@@ -172,13 +172,13 @@ export default function StrcSlide() {
   let nextLabel = '';
   if (!isActive) {
     const future = dividends
-      .filter((x) => x.date > today)
-      .sort((a, c) => a.date.localeCompare(c.date));
+      .filter((x) => x.recordDate > today)
+      .sort((a, c) => a.recordDate.localeCompare(c.recordDate));
     if (future.length) {
       const days = Math.ceil(
-        (new Date(future[0].date).getTime() - new Date(today).getTime()) / 86400000,
+        (new Date(future[0].recordDate).getTime() - new Date(today).getTime()) / 86400000,
       );
-      nextLabel = `Next: ${future[0].date} (${days}d)`;
+      nextLabel = `Next: ${future[0].recordDate} (${days}d)`;
     } else {
       const now = new Date();
       const nx = new Date(now.getFullYear(), now.getMonth() + 1, 15);
@@ -190,9 +190,9 @@ export default function StrcSlide() {
   const parS = toSats(metrics.parValue, b);
   const stats = [
     { l: 'Par Value', v: fmtSats(parS) + ' sats', u: fmtUSD(metrics.parValue), gold: true },
-    { l: 'Yield', v: metrics.yieldPercent.toFixed(2) + '%', green: true },
-    { l: 'Monthly Div', v: fmtSats(metrics.monthlyDivSats) + ' sats', u: fmtUSD(metrics.monthlyDiv, 4), gold: true },
-    { l: 'Annual Div', v: fmtSats(metrics.annualDivSats) + ' sats', u: fmtUSD(metrics.annualDiv, 4), gold: true },
+    { l: 'Yield', v: (metrics.effYield ?? 0).toFixed(2) + '%', green: true },
+    { l: 'Monthly Div', v: fmtSats(Math.round(metrics.monthlyDivBtc * 1e8)) + ' sats', u: fmtUSD(metrics.monthlyDiv, 4), gold: true },
+    { l: 'Annual Div', v: fmtSats(Math.round(metrics.annualDivBtc * 1e8)) + ' sats', u: fmtUSD(metrics.annualDiv, 4), gold: true },
     { l: 'Market Cap', v: (metrics.marketCap / b).toFixed(0) + ' BTC', u: fmtUSD(metrics.marketCap, 0) },
     { l: 'Volume', v: strc.volume.toLocaleString('en-US') },
     { l: 'Prev Close', v: fmtSats(toSats(strc.previousClose, b)) + ' sats', u: fmtUSD(strc.previousClose) },
