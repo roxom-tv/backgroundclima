@@ -31,8 +31,9 @@ export async function GET() {
       next: { revalidate: 0 },
     });
     if (!res.ok) {
+      const body = await res.text().catch(() => '');
       return NextResponse.json(
-        { error: `STRC upstream returned ${res.status}` },
+        { error: `STRC upstream returned ${res.status}`, target, body: body.slice(0, 200) },
         { status: 502 }
       );
     }
