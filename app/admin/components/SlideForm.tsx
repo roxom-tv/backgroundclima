@@ -19,6 +19,8 @@ const SLIDE_TYPES: { value: SlideType; label: string; icon: string; description:
   { value: 'event', label: 'Event', icon: '📅', description: 'Event with date & details' },
   { value: 'news', label: 'News', icon: '📰', description: 'News with image, headline & source' },
   { value: 'video', label: 'Video', icon: '🎥', description: 'Video playback (1920x1080, no sound)' },
+  { value: 'strc', label: 'STRC', icon: '📊', description: 'STRC dashboard (price, divs, sats via API)' },
+  { value: 'saca', label: 'SACA', icon: '🛰️', description: 'SATA/Strive tracker dashboard' },
 ];
 
 const COMMON_TIMEZONES = [
@@ -227,6 +229,34 @@ export default function SlideForm({
       loop_count: formData.loop_count ?? null,
     };
 
+    // System data slides: no YouTube/weather/video/event fields.
+    if (formData.type === 'strc' || formData.type === 'saca') {
+      Object.assign(cleanedData, {
+        country: null,
+        youtube_url: null,
+        weather_query: null,
+        timezone: null,
+        show_weather: false,
+        description: null,
+        image_url: null,
+        start_date: null,
+        end_date: null,
+        start_time: null,
+        end_time: null,
+        host_name: null,
+        show_days: null,
+        schedule_times: null,
+        selected_event_ids: null,
+        layout_orientation: null,
+        event_slide_style: null,
+        event_slide_title: null,
+        headline: null,
+        source: null,
+        video_url: null,
+        loop_count: null,
+      } satisfies Partial<SlideInsert>);
+    }
+
     await onSubmit(cleanedData);
   };
 
@@ -284,6 +314,8 @@ export default function SlideForm({
   const isShow = formData.type === 'show';
   const isNews = formData.type === 'news';
   const isVideo = formData.type === 'video';
+  const isStrc = formData.type === 'strc';
+  const isSaca = formData.type === 'saca';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -314,7 +346,7 @@ export default function SlideForm({
       {/* Name / Title */}
       <div>
         <label htmlFor="name" className="block text-xs font-mono font-medium text-white uppercase tracking-wider mb-1">
-          {isShow ? 'SHOW TITLE' : isEvent ? 'EVENT TITLE' : isNews ? 'NEWS TITLE' : isVideo ? 'VIDEO TITLE' : 'NAME'} {!isShow && '*'}
+          {isShow ? 'SHOW TITLE' : isEvent ? 'EVENT TITLE' : isNews ? 'NEWS TITLE' : isVideo ? 'VIDEO TITLE' : isStrc ? 'STRC SLIDE NAME' : isSaca ? 'SACA SLIDE NAME' : 'NAME'} {!isShow && '*'}
         </label>
         <input
           id="name"
@@ -323,7 +355,7 @@ export default function SlideForm({
           value={formData.name}
           onChange={handleChange}
           required={!isShow}
-          placeholder={isShow ? 'Show name (optional - image only if empty)...' : isEvent ? 'Event title...' : isNews ? 'News title...' : isVideo ? 'Video title...' : 'e.g., Hong Kong'}
+          placeholder={isShow ? 'Show name (optional - image only if empty)...' : isEvent ? 'Event title...' : isNews ? 'News title...' : isVideo ? 'Video title...' : isStrc ? 'e.g., STRC Dashboard' : isSaca ? 'e.g., SACA Dashboard' : 'e.g., Hong Kong'}
           className="w-full px-4 py-2 bg-[#1a1a1a] border-2 border-[#00ff00] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00cc00]"
         />
         {isShow && (
@@ -332,6 +364,18 @@ export default function SlideForm({
           </p>
         )}
       </div>
+
+      {(isStrc || isSaca) && (
+        <div className="bg-[#0a0a0a] border-2 border-[#00aaff] p-4 text-xs font-mono text-[#aaddff] uppercase tracking-wider space-y-2">
+          <p className="text-white font-semibold">{isSaca ? 'SACA DATA SOURCE' : 'STRC DATA SOURCE'}</p>
+          <p>
+            THE APP CALLS <code className="text-[#00ff00]">{isSaca ? '/api/strc/strive' : '/api/strc/data'}</code> (SAME DEPLOYMENT).{' '}
+            {isSaca
+              ? 'SACA USES STRATEGYTRACKER DATA DIRECTLY FROM THIS PROJECT.'
+              : <>IF YOU STILL USE AN EXTERNAL STRC SERVICE, SET <code className="text-[#00ff00]">STRC_UPSTREAM_URL</code> IN VERCEL OR <code className="text-[#00ff00]">.env.local</code>.</>}
+          </p>
+        </div>
+      )}
 
       {/* ========== SHOW FIELDS ========== */}
       {isShow && (

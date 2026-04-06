@@ -207,12 +207,14 @@ export default function SlidesPage() {
       case 'calendar': return { icon: '📅', label: 'Calendar', color: 'text-blue-400' };
       case 'news': return { icon: '📰', label: 'News', color: 'text-orange-400' };
       case 'video': return { icon: '🎥', label: 'Video', color: 'text-pink-400' };
+      case 'strc': return { icon: '📊', label: 'STRC', color: 'text-sky-400' };
+      case 'saca': return { icon: '🛰️', label: 'SACA', color: 'text-indigo-400' };
       default: return { icon: '📄', label: 'Unknown', color: 'text-gray-400' };
     }
   };
 
   // Check if slide is a system slide (hardcoded content, limited editing)
-  const isSystemSlide = (type: string) => ['debt', 'metals', 'fx'].includes(type);
+  const isSystemSlide = (type: string) => ['debt', 'metals', 'fx', 'strc', 'saca'].includes(type);
 
   // Handle edit debt slide (open mini-form)
   const handleEditDebt = useCallback((slide: Slide) => {
@@ -468,7 +470,7 @@ export default function SlidesPage() {
                                 >
                                   {slide.is_active ? '✓' : '○'}
                                 </button>
-                                {/* System slides (debt, metals, fx): limited editing options */}
+                                {/* System slides: limited editing options */}
                                 {isSystemSlide(slide.type) ? (
                                   <>
                                     <button
@@ -632,6 +634,8 @@ export default function SlidesPage() {
                     {editingDebtSlide.type === 'debt' && 'CONTENT IS FETCHED FROM THE US TREASURY API.'}
                     {editingDebtSlide.type === 'metals' && 'CONTENT IS FETCHED FROM THE METALS API (GOLD & SILVER PRICES).'}
                     {editingDebtSlide.type === 'fx' && 'CONTENT IS FETCHED FROM THE FX API (EUR, JPY, GBP, USD RATES).'}
+                    {editingDebtSlide.type === 'strc' && 'CONTENT IS FETCHED FROM THE STRC DATA API.'}
+                    {editingDebtSlide.type === 'saca' && 'CONTENT IS FETCHED FROM THE SACA/STRIVE DATA API.'}
                   </span>
                 </p>
               </div>

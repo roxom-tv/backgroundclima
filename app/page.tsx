@@ -17,6 +17,11 @@ import MetalsSlide from '@/components/MetalsSlide';
 import FxSlide from '@/components/FxSlide';
 import NewsSlide from '@/components/NewsSlide';
 import VideoSlide from '@/components/VideoSlide';
+<<<<<<< Updated upstream
+=======
+import StrcSlide from '@/components/StrcSlide';
+import SacaSlide from '@/components/SacaSlide';
+>>>>>>> Stashed changes
 import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
 import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
 import { prefetchMarketsData } from '@/hooks/useMarketsSats';
@@ -178,6 +183,11 @@ export default function Home() {
           case 'calendar': text = 'LOADING CALENDAR...'; break;
           case 'news': text = 'LOADING NEWS...'; break;
           case 'video': text = 'LOADING VIDEO...'; break;
+<<<<<<< Updated upstream
+=======
+          case 'strc': text = 'LOADING STRC...'; break;
+          case 'saca': text = 'LOADING SACA...'; break;
+>>>>>>> Stashed changes
           default: text = 'SWITCHING...';
         }
       }
@@ -485,6 +495,49 @@ export default function Home() {
           </motion.div>
         );
 
+<<<<<<< Updated upstream
+=======
+      case 'strc':
+        return (
+          <motion.div
+            key={`strc-${currentSlide.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.5,
+              ease: [0.4, 0, 0.2, 1],
+              opacity: { duration: 0.4 }
+            }}
+            className="h-full w-full bg-black relative"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <StrcSlide />
+            {renderPositionedSponsors(currentSlide)}
+          </motion.div>
+        );
+
+      case 'saca':
+        return (
+          <motion.div
+            key={`saca-${currentSlide.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.5,
+              ease: [0.4, 0, 0.2, 1],
+              opacity: { duration: 0.4 }
+            }}
+            className="h-full w-full bg-black relative"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <SacaSlide />
+            {renderPositionedSponsors(currentSlide)}
+          </motion.div>
+        );
+
+>>>>>>> Stashed changes
       default:
         return (
           <div className="h-full w-full bg-black flex items-center justify-center">
