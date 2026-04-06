@@ -33,7 +33,7 @@
     "OPENWEATHER_LANG": "en",
     "OPENWEATHER_UNITS": "metric",
     "SLACK_ALERTS_ENABLED": "false",
-    "STRC_UPSTREAM_URL": "https://strc-dashboard-dev.external.workers.dev"
+    "STRC_UPSTREAM_URL": "https://strc.roxom.tv"
   },
   "env": {
     "preview": {
@@ -43,7 +43,7 @@
         "OPENWEATHER_LANG": "en",
         "OPENWEATHER_UNITS": "metric",
         "SLACK_ALERTS_ENABLED": "false",
-        "STRC_UPSTREAM_URL": "https://strc-dashboard-dev.external.workers.dev"
+        "STRC_UPSTREAM_URL": "https://strc.roxom.tv"
       },
       "services": [
         { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-preview" }
