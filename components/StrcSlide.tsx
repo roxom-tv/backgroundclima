@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
 interface StrcData {
@@ -90,8 +90,8 @@ export default function StrcSlide() {
   const [data, setData] = useState<StrcData | null>(sharedData);
   const [loading, setLoading] = useState(!sharedData);
   const [error, setError] = useState<string | null>(null);
-  const [prevBtc, setPrevBtc] = useState<number | null>(null);
   const [flash, setFlash] = useState<'up' | 'down' | null>(null);
+  const prevBtcRef = React.useRef<number | null>(null);
 
   const load = useCallback(async () => {
     await fetchStrcInternal(setData, setLoading, setError);
@@ -107,13 +107,14 @@ export default function StrcSlide() {
   useEffect(() => {
     if (!data) return;
     const s = toBtc(data.strc.price, data.btc.price);
-    if (prevBtc !== null && s !== prevBtc) {
-      setFlash(s > prevBtc ? 'up' : 'down');
+    if (prevBtcRef.current !== null && s !== prevBtcRef.current) {
+      setFlash(s > prevBtcRef.current ? 'up' : 'down');
       const t = setTimeout(() => setFlash(null), 1500);
+      prevBtcRef.current = s;
       return () => clearTimeout(t);
     }
-    setPrevBtc(s);
-  }, [data, prevBtc]);
+    prevBtcRef.current = s;
+  }, [data]);
 
   if (loading) {
     return (
