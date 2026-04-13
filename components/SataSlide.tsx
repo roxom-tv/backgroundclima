@@ -136,7 +136,8 @@ async function fetchSataInternal(
 ): Promise<SataData | null> {
   if (fetchPromise) return fetchPromise;
   fetchPromise = (async () => {
-    if (!sharedData) setLoading?.(true);
+    const isFirstLoad = !sharedData;
+    if (isFirstLoad) setLoading?.(true);
     try {
       const res = await fetch('/api/strc/strive', { cache: 'no-store' });
       if (!res.ok) throw new Error(`SATA API returned ${res.status}`);
@@ -151,7 +152,7 @@ async function fetchSataInternal(
       setError?.(err instanceof Error ? err.message : 'Unknown error');
       return null;
     } finally {
-      if (!sharedData) setLoading?.(false);
+      if (isFirstLoad) setLoading?.(false);
       fetchPromise = null;
     }
   })();

@@ -146,7 +146,8 @@ async function fetchStrcInternal(
 ): Promise<StrcData | null> {
   if (fetchPromise) return fetchPromise;
   fetchPromise = (async () => {
-    if (!sharedData) setLoading?.(true);
+    const isFirstLoad = !sharedData;
+    if (isFirstLoad) setLoading?.(true);
     try {
       const res = await fetch(STRC_DATA_URL, { cache: 'no-store' });
       if (!res.ok) throw new Error(`STRC API returned ${res.status}`);
@@ -161,7 +162,7 @@ async function fetchStrcInternal(
       setError?.(err instanceof Error ? err.message : 'Unknown error');
       return null;
     } finally {
-      if (!sharedData) setLoading?.(false);
+      if (isFirstLoad) setLoading?.(false);
       fetchPromise = null;
     }
   })();
