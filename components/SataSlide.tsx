@@ -25,6 +25,9 @@ interface SataData {
     nextPayoutDate: string | null;
     nextRecordDate: string | null;
     companyName: string | null;
+    yearHigh: number | null;
+    yearLow: number | null;
+    avgVolume30D: number | null;
   };
   source?: string;
   lastUpdate: string;
@@ -119,11 +122,11 @@ export default function SataSlide() {
     { l: 'Market Cap', v: metrics.marketCap ? (metrics.marketCap / b).toFixed(0) + ' BTC' : '—', u: metrics.marketCap ? USD(metrics.marketCap, 0) : undefined },
     { l: 'Volume', v: p.volume != null ? p.volume.toLocaleString('en-US') : '—' },
     { l: 'Shares', v: metrics.sharesOutstanding ? (metrics.sharesOutstanding / 1e6).toFixed(2) + 'M' : '—' },
-    { l: 'Company', v: metrics.companyName ?? '—' },
+    { l: '52W Range', v: metrics.yearHigh != null && metrics.yearLow != null ? `${USD(metrics.yearLow)} – ${USD(metrics.yearHigh)}` : '—' },
     { l: 'Next Payout', v: metrics.nextPayoutDate ?? '—' },
     { l: 'Next Record', v: metrics.nextRecordDate ?? '—' },
     { l: 'Ticker', v: p.ticker },
-    { l: 'Source', v: 'StrategyTracker' },
+    { l: 'Avg Vol 30D', v: metrics.avgVolume30D != null ? Math.round(metrics.avgVolume30D).toLocaleString('en-US') : '—' },
   ];
 
   const ts = new Date(lastUpdate);
