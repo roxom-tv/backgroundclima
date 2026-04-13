@@ -44,6 +44,13 @@ const toBtc = (usd: number, btcPrice: number) => btcPrice > 0 ? usd / btcPrice :
 let sharedData: SataData | null = null;
 let fetchPromise: Promise<SataData | null> | null = null;
 
+function hasDataChanged(prev: SataData | null, next: SataData): boolean {
+  if (!prev) return true;
+  return prev.preferred?.price !== next.preferred?.price
+    || prev.btc.price !== next.btc.price
+    || prev.lastUpdate !== next.lastUpdate;
+}
+
 async function fetchSataInternal(
   setData?: (v: SataData | null) => void,
   setLoading?: (v: boolean) => void,
@@ -51,20 +58,22 @@ async function fetchSataInternal(
 ): Promise<SataData | null> {
   if (fetchPromise) return fetchPromise;
   fetchPromise = (async () => {
-    setLoading?.(true);
+    if (!sharedData) setLoading?.(true);
     try {
       const res = await fetch('/api/strc/strive', { cache: 'no-store' });
       if (!res.ok) throw new Error(`SATA API returned ${res.status}`);
       const data: SataData = await res.json();
-      sharedData = data;
-      setData?.(data);
+      if (hasDataChanged(sharedData, data)) {
+        sharedData = data;
+        setData?.(data);
+      }
       setError?.(null);
       return data;
     } catch (err) {
       setError?.(err instanceof Error ? err.message : 'Unknown error');
       return null;
     } finally {
-      setLoading?.(false);
+      if (!sharedData) setLoading?.(false);
       fetchPromise = null;
     }
   })();

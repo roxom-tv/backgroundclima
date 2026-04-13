@@ -54,6 +54,13 @@ const toBtc = (usd: number, btcPrice: number) => btcPrice > 0 ? usd / btcPrice :
 let sharedData: StrcData | null = null;
 let fetchPromise: Promise<StrcData | null> | null = null;
 
+function hasDataChanged(prev: StrcData | null, next: StrcData): boolean {
+  if (!prev) return true;
+  return prev.strc.price !== next.strc.price
+    || prev.btc.price !== next.btc.price
+    || prev.lastUpdate !== next.lastUpdate;
+}
+
 async function fetchStrcInternal(
   setData?: (v: StrcData | null) => void,
   setLoading?: (v: boolean) => void,
@@ -61,20 +68,22 @@ async function fetchStrcInternal(
 ): Promise<StrcData | null> {
   if (fetchPromise) return fetchPromise;
   fetchPromise = (async () => {
-    setLoading?.(true);
+    if (!sharedData) setLoading?.(true);
     try {
       const res = await fetch(STRC_DATA_URL, { cache: 'no-store' });
       if (!res.ok) throw new Error(`STRC API returned ${res.status}`);
       const data: StrcData = await res.json();
-      sharedData = data;
-      setData?.(data);
+      if (hasDataChanged(sharedData, data)) {
+        sharedData = data;
+        setData?.(data);
+      }
       setError?.(null);
       return data;
     } catch (err) {
       setError?.(err instanceof Error ? err.message : 'Unknown error');
       return null;
     } finally {
-      setLoading?.(false);
+      if (!sharedData) setLoading?.(false);
       fetchPromise = null;
     }
   })();
