@@ -36,23 +36,24 @@ export async function getBTCPriceWithCache(): Promise<number> {
 
   // Fetch new price
   try {
-    const roxomApiKey = process.env.ROXOM_API_KEY;
-    if (!roxomApiKey) {
-      throw new Error("Missing ROXOM_API_KEY");
-    }
+    const rtvApiUrl = process.env.RTV_API_URL || 'https://api.roxom.tv';
+    const rtvApiKey = process.env.RTV_API_KEY || process.env.NEXT_PUBLIC_RTV_API_KEY || '';
 
-    const url = `https://rtvapi.roxom.com/btc/info?apiKey=${encodeURIComponent(roxomApiKey)}`;
-    const response = await fetch(url, {
-      next: { revalidate: 0 },
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (rtvApiKey) headers['x-api-key'] = rtvApiKey;
+
+    const response = await fetch(`${rtvApiUrl}/api/btc/info`, {
+      headers,
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });
 
     if (!response.ok) {
-      throw new Error(`Roxom API error: ${response.status}`);
+      throw new Error(`rtv-api error: ${response.status}`);
     }
 
-    const json = await response.json();
+    const envelope = await response.json();
+    const json = envelope?.success && envelope.data ? envelope.data : envelope;
     const livePriceString = json.price?.live_price;
 
     if (!livePriceString || typeof livePriceString !== "string") {

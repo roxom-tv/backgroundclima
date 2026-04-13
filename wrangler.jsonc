@@ -33,6 +33,8 @@
     "OPENWEATHER_LANG": "en",
     "OPENWEATHER_UNITS": "metric",
     "SLACK_ALERTS_ENABLED": "false",
+    "RTV_API_URL": "https://api.roxom.tv",
+    "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV",
     "STRC_UPSTREAM_URL": "https://strc.roxom.tv"
   },
   "env": {
@@ -43,6 +45,8 @@
         "OPENWEATHER_LANG": "en",
         "OPENWEATHER_UNITS": "metric",
         "SLACK_ALERTS_ENABLED": "false",
+        "RTV_API_URL": "https://api.roxom.tv",
+        "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV",
         "STRC_UPSTREAM_URL": "https://strc.roxom.tv"
       },
       "services": [
@@ -60,6 +64,8 @@
         "OPENWEATHER_LANG": "en",
         "OPENWEATHER_UNITS": "metric",
         "SLACK_ALERTS_ENABLED": "true",
+        "RTV_API_URL": "https://api.roxom.tv",
+        "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV",
         "STRC_UPSTREAM_URL": "https://strc.roxom.tv"
       },
       "services": [
