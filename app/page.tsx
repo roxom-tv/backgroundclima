@@ -17,8 +17,8 @@ import MetalsSlide from '@/components/MetalsSlide';
 import FxSlide from '@/components/FxSlide';
 import NewsSlide from '@/components/NewsSlide';
 import VideoSlide from '@/components/VideoSlide';
-import StrcSlide from '@/components/StrcSlide';
-import SataSlide from '@/components/SataSlide';
+import StrcSlide, { prefetchStrcData } from '@/components/StrcSlide';
+import SataSlide, { prefetchSataData } from '@/components/SataSlide';
 import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
 import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
 import { prefetchMarketsData } from '@/hooks/useMarketsSats';
@@ -130,6 +130,12 @@ export default function Home() {
     prefetchDebtData()
       .catch((err) => console.warn('Debt warmup prefetch failed:', err));
   }, [hasDebtSlides]);
+
+  // Prefetch STRC + SATA data on mount
+  useEffect(() => {
+    prefetchStrcData().catch((err) => console.warn('STRC prefetch failed:', err));
+    prefetchSataData().catch((err) => console.warn('SATA prefetch failed:', err));
+  }, []);
 
   // Reset index when slides change (e.g., reorder, add, remove)
   useEffect(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
 interface SataData {
@@ -41,31 +41,58 @@ const USD = (n: number, d = 2) =>
   '$' + n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
 const toBtc = (usd: number, btcPrice: number) => btcPrice > 0 ? usd / btcPrice : 0;
 
+let sharedData: SataData | null = null;
+let fetchPromise: Promise<SataData | null> | null = null;
+
+async function fetchSataInternal(
+  setData?: (v: SataData | null) => void,
+  setLoading?: (v: boolean) => void,
+  setError?: (v: string | null) => void,
+): Promise<SataData | null> {
+  if (fetchPromise) return fetchPromise;
+  fetchPromise = (async () => {
+    setLoading?.(true);
+    try {
+      const res = await fetch('/api/strc/strive', { cache: 'no-store' });
+      if (!res.ok) throw new Error(`SATA API returned ${res.status}`);
+      const data: SataData = await res.json();
+      sharedData = data;
+      setData?.(data);
+      setError?.(null);
+      return data;
+    } catch (err) {
+      setError?.(err instanceof Error ? err.message : 'Unknown error');
+      return null;
+    } finally {
+      setLoading?.(false);
+      fetchPromise = null;
+    }
+  })();
+  return fetchPromise;
+}
+
+export async function prefetchSataData(): Promise<SataData | null> {
+  if (sharedData) return sharedData;
+  return fetchSataInternal();
+}
+
 export default function SataSlide() {
-  const [data, setData] = useState<SataData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<SataData | null>(sharedData);
+  const [loading, setLoading] = useState(!sharedData);
   const [error, setError] = useState<string | null>(null);
   const [prevBtc, setPrevBtc] = useState<number | null>(null);
   const [flash, setFlash] = useState<'up' | 'down' | null>(null);
 
+  const load = useCallback(async () => {
+    await fetchSataInternal(setData, setLoading, setError);
+  }, []);
+
   useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const res = await fetch('/api/strc/strive', { cache: 'no-store' });
-        if (!res.ok) throw new Error(`SATA API returned ${res.status}`);
-        const payload: SataData = await res.json();
-        if (!cancelled) { setData(payload); setError(null); }
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Unknown error');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
+    if (sharedData) { setData(sharedData); setLoading(false); }
     load();
     const interval = setInterval(load, 15_000);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, []);
+    return () => clearInterval(interval);
+  }, [load]);
 
   useEffect(() => {
     if (!data?.preferred) return;
