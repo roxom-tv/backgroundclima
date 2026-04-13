@@ -20,7 +20,7 @@ const SLIDE_TYPES: { value: SlideType; label: string; icon: string; description:
   { value: 'news', label: 'News', icon: '📰', description: 'News with image, headline & source' },
   { value: 'video', label: 'Video', icon: '🎥', description: 'Video playback (1920x1080, no sound)' },
   { value: 'strc', label: 'STRC', icon: '📊', description: 'STRC dashboard (price, divs, sats via API)' },
-  { value: 'saca', label: 'SACA', icon: '🛰️', description: 'SATA/Strive tracker dashboard' },
+  { value: 'sata', label: 'SATA', icon: '🛰️', description: 'SATA/Strive tracker dashboard' },
 ];
 
 const COMMON_TIMEZONES = [
@@ -230,7 +230,7 @@ export default function SlideForm({
     };
 
     // System data slides: no YouTube/weather/video/event fields.
-    if (formData.type === 'strc' || formData.type === 'saca') {
+    if (formData.type === 'strc' || formData.type === 'sata') {
       Object.assign(cleanedData, {
         country: null,
         youtube_url: null,
@@ -315,7 +315,7 @@ export default function SlideForm({
   const isNews = formData.type === 'news';
   const isVideo = formData.type === 'video';
   const isStrc = formData.type === 'strc';
-  const isSaca = formData.type === 'saca';
+  const isSata = formData.type === 'sata';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -346,7 +346,7 @@ export default function SlideForm({
       {/* Name / Title */}
       <div>
         <label htmlFor="name" className="block text-xs font-mono font-medium text-white uppercase tracking-wider mb-1">
-          {isShow ? 'SHOW TITLE' : isEvent ? 'EVENT TITLE' : isNews ? 'NEWS TITLE' : isVideo ? 'VIDEO TITLE' : isStrc ? 'STRC SLIDE NAME' : isSaca ? 'SACA SLIDE NAME' : 'NAME'} {!isShow && '*'}
+          {isShow ? 'SHOW TITLE' : isEvent ? 'EVENT TITLE' : isNews ? 'NEWS TITLE' : isVideo ? 'VIDEO TITLE' : isStrc ? 'STRC SLIDE NAME' : isSata ? 'SATA SLIDE NAME' : 'NAME'} {!isShow && '*'}
         </label>
         <input
           id="name"
@@ -355,7 +355,7 @@ export default function SlideForm({
           value={formData.name}
           onChange={handleChange}
           required={!isShow}
-          placeholder={isShow ? 'Show name (optional - image only if empty)...' : isEvent ? 'Event title...' : isNews ? 'News title...' : isVideo ? 'Video title...' : isStrc ? 'e.g., STRC Dashboard' : isSaca ? 'e.g., SACA Dashboard' : 'e.g., Hong Kong'}
+          placeholder={isShow ? 'Show name (optional - image only if empty)...' : isEvent ? 'Event title...' : isNews ? 'News title...' : isVideo ? 'Video title...' : isStrc ? 'e.g., STRC Dashboard' : isSata ? 'e.g., SATA Dashboard' : 'e.g., Hong Kong'}
           className="w-full px-4 py-2 bg-[#1a1a1a] border-2 border-[#00ff00] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00cc00]"
         />
         {isShow && (
@@ -365,13 +365,13 @@ export default function SlideForm({
         )}
       </div>
 
-      {(isStrc || isSaca) && (
+      {(isStrc || isSata) && (
         <div className="bg-[#0a0a0a] border-2 border-[#00aaff] p-4 text-xs font-mono text-[#aaddff] uppercase tracking-wider space-y-2">
-          <p className="text-white font-semibold">{isSaca ? 'SACA DATA SOURCE' : 'STRC DATA SOURCE'}</p>
+          <p className="text-white font-semibold">{isSata ? 'SATA DATA SOURCE' : 'STRC DATA SOURCE'}</p>
           <p>
-            THE APP CALLS <code className="text-[#00ff00]">{isSaca ? '/api/strc/strive' : '/api/strc/data'}</code> (SAME DEPLOYMENT).{' '}
-            {isSaca
-              ? 'SACA USES STRATEGYTRACKER DATA DIRECTLY FROM THIS PROJECT.'
+            THE APP CALLS <code className="text-[#00ff00]">{isSata ? '/api/strc/strive' : '/api/strc/data'}</code> (SAME DEPLOYMENT).{' '}
+            {isSata
+              ? 'SATA USES STRATEGYTRACKER DATA DIRECTLY FROM THIS PROJECT.'
               : <>IF YOU STILL USE AN EXTERNAL STRC SERVICE, SET <code className="text-[#00ff00]">STRC_UPSTREAM_URL</code> IN VERCEL OR <code className="text-[#00ff00]">.env.local</code>.</>}
           </p>
         </div>

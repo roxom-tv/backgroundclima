@@ -1,48 +1,35 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-interface StrcData {
-  strc: {
+interface SataData {
+  preferred: {
+    ticker: string;
+    name: string;
     price: number;
-    previousClose: number;
     priceChange: number;
     priceChangePercent: number;
-    negative: boolean;
-    volume: number;
-  };
+    volume: number | null;
+    previousClose: number;
+  } | null;
   btc: { price: number };
-  dividends: Array<{
-    period: string;
-    recordDate: string;
-    payDate: string;
-    usd: number;
-    rate: number;
-    btc: number;
-  }>;
   metrics: {
-    parValue: number;
-    annualDiv: number;
-    annualRate: number;
     monthlyDiv: number;
+    annualDiv: number;
     monthlyDivBtc: number;
     annualDivBtc: number;
     effYield: number;
-    marketCap: number;
-    sharesOutstanding: number;
-    nextPayoutDate: string;
-    nextRecordDate: string;
-    sharpeRatio?: number;
-    annualizedVolatility?: number;
-    vwap1mo?: number;
-    mstrPrice?: number;
-    correlations?: { mstr: number; spy: number; btc: number; pff?: number };
+    marketCap: number | null;
+    sharesOutstanding: number | null;
+    nextPayoutDate: string | null;
+    nextRecordDate: string | null;
+    companyName: string | null;
   };
+  source?: string;
   lastUpdate: string;
 }
 
-const STRC_DATA_URL = '/api/strc/data';
 const MONO = "var(--font-ibm-plex-mono), 'IBM Plex Mono', monospace";
 const SANS = "'Inter', sans-serif";
 
@@ -51,62 +38,35 @@ const USD = (n: number, d = 2) =>
   '$' + n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
 const toBtc = (usd: number, btcPrice: number) => btcPrice > 0 ? usd / btcPrice : 0;
 
-let sharedData: StrcData | null = null;
-let fetchPromise: Promise<StrcData | null> | null = null;
-
-async function fetchStrcInternal(
-  setData?: (v: StrcData | null) => void,
-  setLoading?: (v: boolean) => void,
-  setError?: (v: string | null) => void,
-): Promise<StrcData | null> {
-  if (fetchPromise) return fetchPromise;
-  fetchPromise = (async () => {
-    setLoading?.(true);
-    try {
-      const res = await fetch(STRC_DATA_URL, { cache: 'no-store' });
-      if (!res.ok) throw new Error(`STRC API returned ${res.status}`);
-      const data: StrcData = await res.json();
-      sharedData = data;
-      setData?.(data);
-      setError?.(null);
-      return data;
-    } catch (err) {
-      setError?.(err instanceof Error ? err.message : 'Unknown error');
-      return null;
-    } finally {
-      setLoading?.(false);
-      fetchPromise = null;
-    }
-  })();
-  return fetchPromise;
-}
-
-export async function prefetchStrcData(): Promise<StrcData | null> {
-  if (sharedData) return sharedData;
-  return fetchStrcInternal();
-}
-
-export default function StrcSlide() {
-  const [data, setData] = useState<StrcData | null>(sharedData);
-  const [loading, setLoading] = useState(!sharedData);
+export default function SataSlide() {
+  const [data, setData] = useState<SataData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [prevBtc, setPrevBtc] = useState<number | null>(null);
   const [flash, setFlash] = useState<'up' | 'down' | null>(null);
 
-  const load = useCallback(async () => {
-    await fetchStrcInternal(setData, setLoading, setError);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch('/api/strc/strive', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`SATA API returned ${res.status}`);
+        const payload: SataData = await res.json();
+        if (!cancelled) { setData(payload); setError(null); }
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Unknown error');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    const interval = setInterval(load, 15_000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
   useEffect(() => {
-    if (sharedData) { setData(sharedData); setLoading(false); }
-    load();
-    const interval = setInterval(load, 15_000);
-    return () => clearInterval(interval);
-  }, [load]);
-
-  useEffect(() => {
-    if (!data) return;
-    const s = toBtc(data.strc.price, data.btc.price);
+    if (!data?.preferred) return;
+    const s = toBtc(data.preferred.price, data.btc.price);
     if (prevBtc !== null && s !== prevBtc) {
       setFlash(s > prevBtc ? 'up' : 'down');
       const t = setTimeout(() => setFlash(null), 1500);
@@ -118,56 +78,52 @@ export default function StrcSlide() {
   if (loading) {
     return (
       <div style={{ height: '100%', width: '100%', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: '#F8FAFC', fontSize: 24, fontFamily: MONO, animation: 'strc-blink 2s ease-in-out infinite', letterSpacing: 4 }}>LOADING STRC...</div>
+        <div style={{ color: '#F8FAFC', fontSize: 24, fontFamily: MONO, animation: 'sata-blink 2s ease-in-out infinite', letterSpacing: 4 }}>LOADING SATA...</div>
       </div>
     );
   }
 
-  if (!data || error) {
+  if (!data || error || !data.preferred) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ height: '100%', width: '100%', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: '#EF4444', fontSize: 20, fontFamily: MONO }}>Error loading STRC data</div>
+        <div style={{ color: '#EF4444', fontSize: 20, fontFamily: MONO }}>Error loading SATA data</div>
       </motion.div>
     );
   }
 
-  const { strc, btc, dividends, metrics, lastUpdate } = data;
+  const { preferred: p, btc, metrics, lastUpdate } = data;
   const b = btc.price;
-  const s = toBtc(strc.price, b);
-  const ps = toBtc(strc.previousClose, b);
+  const s = toBtc(p.price, b);
+  const ps = toBtc(p.previousClose, b);
   const diff = s - ps;
   const sign = diff >= 0 ? '+' : '';
   const isUp = diff >= 0;
 
   const today = new Date().toISOString().slice(0, 10);
-  const todayDiv = dividends.find((x) => x.payDate === today);
-  const isActive = !!todayDiv;
+  const isActive = metrics.nextPayoutDate === today;
 
-  const atmBtc = isActive
-    ? (todayDiv!.btc ?? toBtc(todayDiv!.usd, b))
-    : toBtc(metrics.monthlyDiv, b);
-  const atmUsd = isActive ? todayDiv!.usd : metrics.monthlyDiv;
+  const atmBtc = toBtc(metrics.monthlyDiv, b);
+  const atmUsd = metrics.monthlyDiv;
 
   let nextLabel = '';
   if (!isActive && metrics.nextPayoutDate) {
     const days = Math.ceil((new Date(metrics.nextPayoutDate).getTime() - new Date(today).getTime()) / 86400000);
-    nextLabel = `Next payout: ${metrics.nextPayoutDate} (${days}d)`;
+    if (days > 0) nextLabel = `Next payout: ${metrics.nextPayoutDate} (${days}d)`;
   }
 
-  const cor = metrics.correlations;
   const stats: Array<{ l: string; v: string; u?: string; c?: string }> = [
-    { l: 'Par Value', v: BTC(toBtc(metrics.parValue, b)), u: USD(metrics.parValue), c: 'gold' },
     { l: 'Eff. Yield', v: (metrics.effYield ?? 0).toFixed(2) + '%', c: 'green' },
     { l: 'Monthly Div', v: BTC(metrics.monthlyDivBtc ?? toBtc(metrics.monthlyDiv, b)), u: USD(metrics.monthlyDiv, 4), c: 'gold' },
     { l: 'Annual Div', v: BTC(metrics.annualDivBtc ?? toBtc(metrics.annualDiv, b)), u: USD(metrics.annualDiv, 2), c: 'gold' },
-    { l: 'Market Cap', v: (metrics.marketCap / b).toFixed(0) + ' BTC', u: USD(metrics.marketCap, 0) },
-    { l: 'Volume', v: strc.volume.toLocaleString('en-US') },
-    { l: 'Shares', v: (metrics.sharesOutstanding / 1e6).toFixed(2) + 'M' },
-    { l: 'MSTR', v: metrics.mstrPrice ? USD(metrics.mstrPrice) : '—' },
-    { l: 'Sharpe', v: metrics.sharpeRatio != null ? metrics.sharpeRatio.toFixed(2) : '—', c: 'green' },
-    { l: 'Ann. Vol', v: metrics.annualizedVolatility != null ? metrics.annualizedVolatility + '%' : '—' },
-    { l: 'VWAP 1M', v: metrics.vwap1mo != null ? USD(metrics.vwap1mo, 2) : '—' },
-    { l: 'Corr', v: cor ? `M${cor.mstr} S${cor.spy} B${cor.btc}` : '—' },
+    { l: 'Prev Close', v: BTC(toBtc(p.previousClose, b)), u: USD(p.previousClose) },
+    { l: 'Market Cap', v: metrics.marketCap ? (metrics.marketCap / b).toFixed(0) + ' BTC' : '—', u: metrics.marketCap ? USD(metrics.marketCap, 0) : undefined },
+    { l: 'Volume', v: p.volume != null ? p.volume.toLocaleString('en-US') : '—' },
+    { l: 'Shares', v: metrics.sharesOutstanding ? (metrics.sharesOutstanding / 1e6).toFixed(2) + 'M' : '—' },
+    { l: 'Company', v: metrics.companyName ?? '—' },
+    { l: 'Next Payout', v: metrics.nextPayoutDate ?? '—' },
+    { l: 'Next Record', v: metrics.nextRecordDate ?? '—' },
+    { l: 'Ticker', v: p.ticker },
+    { l: 'Source', v: 'StrategyTracker' },
   ];
 
   const ts = new Date(lastUpdate);
@@ -179,9 +135,9 @@ export default function StrcSlide() {
       style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#020617', color: '#F8FAFC', fontFamily: SANS }}
     >
       {/* Topbar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', height: 90, borderBottom: '1px solid #1E293B', flexShrink: 0, animation: 'strc-fadeUp 0.3s ease-out' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', height: 90, borderBottom: '1px solid #1E293B', flexShrink: 0, animation: 'sata-fadeUp 0.3s ease-out' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-          <span style={{ fontFamily: MONO, fontSize: 44, fontWeight: 700, letterSpacing: 6, color: '#FBBF24' }}>STRC</span>
+          <span style={{ fontFamily: MONO, fontSize: 44, fontWeight: 700, letterSpacing: 6, color: '#FBBF24' }}>SATA</span>
           <div style={{ width: 1, height: 40, background: '#1E293B' }} />
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
             <span style={{
@@ -191,7 +147,7 @@ export default function StrcSlide() {
             }}>
               {BTC(s)}
             </span>
-            <span style={{ fontFamily: MONO, fontSize: 48, fontWeight: 600, color: '#22C55E' }}>{USD(strc.price)}</span>
+            <span style={{ fontFamily: MONO, fontSize: 48, fontWeight: 600, color: '#22C55E' }}>{USD(p.price)}</span>
             <span style={{ fontFamily: MONO, fontSize: 32, fontWeight: 600, color: isUp ? '#22C55E' : '#EF4444' }}>
               {sign}{diff.toFixed(8)} ₿
             </span>
@@ -201,12 +157,12 @@ export default function StrcSlide() {
           <span style={{ fontFamily: MONO, fontSize: 36, color: '#64748B' }}>
             BTC <span style={{ color: '#CBD5E1', fontWeight: 600 }}>{USD(b, 0)}</span>
           </span>
-          <div style={{ width: 8, height: 8, background: '#22C55E', borderRadius: '50%', animation: 'strc-blink 2s ease-in-out infinite' }} />
+          <div style={{ width: 8, height: 8, background: '#22C55E', borderRadius: '50%', animation: 'sata-blink 2s ease-in-out infinite' }} />
         </div>
       </div>
 
       {/* ATM */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, borderBottom: '1px solid #1E293B', minHeight: 0, animation: 'strc-fadeUp 0.3s ease-out 0.05s both' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, borderBottom: '1px solid #1E293B', minHeight: 0, animation: 'sata-fadeUp 0.3s ease-out 0.05s both' }}>
         <div style={{ fontFamily: MONO, fontSize: 52, fontWeight: 700, letterSpacing: 8, color: '#FBBF24', marginBottom: 16 }}>TODAY&apos;S ATM</div>
         <div style={{
           fontFamily: MONO, fontSize: 38, fontWeight: 700, letterSpacing: 4, padding: '8px 32px', borderRadius: 8, marginBottom: 20,
@@ -227,7 +183,7 @@ export default function StrcSlide() {
       </div>
 
       {/* Stats Grid 4x3 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridTemplateRows: '1fr 1fr 1fr', flexShrink: 0, borderBottom: '1px solid #1E293B', animation: 'strc-fadeUp 0.3s ease-out 0.1s both' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridTemplateRows: '1fr 1fr 1fr', flexShrink: 0, borderBottom: '1px solid #1E293B', animation: 'sata-fadeUp 0.3s ease-out 0.1s both' }}>
         {stats.map((st, i) => (
           <div key={st.l} style={{
             display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center',
@@ -248,8 +204,8 @@ export default function StrcSlide() {
       </div>
 
       <style jsx global>{`
-        @keyframes strc-blink { 0%,100%{opacity:1} 50%{opacity:.2} }
-        @keyframes strc-fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes sata-blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+        @keyframes sata-fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
     </motion.div>
   );

@@ -15,7 +15,7 @@ import FxSlide from '@/components/FxSlide';
 import NewsSlide from '@/components/NewsSlide';
 import VideoSlide from '@/components/VideoSlide';
 import StrcSlide from '@/components/StrcSlide';
-import SacaSlide from '@/components/SacaSlide';
+import SataSlide from '@/components/SataSlide';
 import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
 import type { Slide, Sponsor } from '@/lib/supabase/types';
 
@@ -208,10 +208,10 @@ export default function SlidePreviewPage() {
           </div>
         );
 
-      case 'saca':
+      case 'sata':
         return (
           <div className="h-full w-full bg-black relative" style={{ position: 'absolute', inset: 0 }}>
-            <SacaSlide />
+            <SataSlide />
             <div className="absolute bottom-4 right-4 z-20">
               <SponsorDisplay
                 sponsors={slideSponsor ? [slideSponsor] : sponsors}
