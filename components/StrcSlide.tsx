@@ -57,8 +57,8 @@ let fetchPromise: Promise<StrcData | null> | null = null;
 function hasDataChanged(prev: StrcData | null, next: StrcData): boolean {
   if (!prev) return true;
   return prev.strc.price !== next.strc.price
-    || prev.btc.price !== next.btc.price
-    || prev.lastUpdate !== next.lastUpdate;
+    || prev.strc.volume !== next.strc.volume
+    || prev.btc.price !== next.btc.price;
 }
 
 async function fetchStrcInternal(

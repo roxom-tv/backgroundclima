@@ -47,8 +47,8 @@ let fetchPromise: Promise<SataData | null> | null = null;
 function hasDataChanged(prev: SataData | null, next: SataData): boolean {
   if (!prev) return true;
   return prev.preferred?.price !== next.preferred?.price
-    || prev.btc.price !== next.btc.price
-    || prev.lastUpdate !== next.lastUpdate;
+    || prev.preferred?.volume !== next.preferred?.volume
+    || prev.btc.price !== next.btc.price;
 }
 
 async function fetchSataInternal(
