@@ -17,6 +17,13 @@ OPENWEATHER_UNITS=metric
 OPENWEATHER_LANG=en
 ```
 
+### STRC slide (optional)
+The UI calls `/api/strc/data` on the same Vercel deployment. To point at an existing STRC service that exposes `/api/data`, set a **server** variable (not `NEXT_PUBLIC_*`):
+```
+STRC_UPSTREAM_URL=https://your-strc-service.example.com
+```
+To run everything without a second server, implement that data logic inside `app/api/strc/data/route.ts` and remove the proxy.
+
 ### Market Data APIs (Optional - for metals/FX slides)
 ```
 METALS_API_URL=https://api.metals.dev

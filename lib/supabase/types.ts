@@ -3,7 +3,7 @@
  * These match the schema defined in supabase/migrations/001_initial_schema.sql
  */
 
-export type SlideType = 'youtube' | 'debt' | 'metals' | 'fx' | 'show' | 'event' | 'calendar' | 'news' | 'video';
+export type SlideType = 'youtube' | 'debt' | 'metals' | 'fx' | 'show' | 'event' | 'calendar' | 'news' | 'video' | 'strc' | 'sata';
 export type TransitionEffect = 'tv_static' | 'fade' | 'slide' | 'none';
 export type LayoutOrientation = 'horizontal' | 'vertical';
 export type EventSlideStyle = 'classic' | 'modern';

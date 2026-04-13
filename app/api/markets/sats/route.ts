@@ -692,76 +692,40 @@ async function fetchFX(apiUrl: string, apiKey?: string): Promise<{
 }
 
 /**
- * Fetch Copper ETF desde Polygon.io (ICOP o CPER)
- * GET /v2/aggs/ticker/{ticker}/prev — previous day close
- * Prueba ICOP (iShares) primero; si no hay datos, prueba CPER (US Copper Index).
+ * Fetch Copper ETF (ICOP) from rtv-api market indices.
+ * Replaces Polygon.io — EODHD already tracks ICOP via Yahoo/Apify.
  */
-async function fetchPolygonCopperOne(apiKey: string, ticker: string): Promise<{
-  usd: number;
-  change24hPct: number | null;
-}> {
-  const url = `https://api.polygon.io/v2/aggs/ticker/${encodeURIComponent(ticker)}/prev?adjusted=true&apiKey=${encodeURIComponent(apiKey)}`;
-  const response = await fetch(url, {
-    next: { revalidate: 0 },
-    cache: "no-store",
-    signal: AbortSignal.timeout(10000),
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-  });
-
-  const rawText = await response.text();
-
-  if (!response.ok) {
-    console.warn("Polygon Copper fetch error:", response.status, ticker, rawText.slice(0, 400));
-    if (response.status === 401 || response.status === 403) {
-      console.warn("Polygon: revisar API key y que esté configurada en producción (POLYGON_API_KEY)");
-    }
-    return { usd: 0, change24hPct: null };
-  }
-
-  let data: { results?: Array<{ c?: number; o?: number }>; status?: string; error?: string; message?: string };
-  try {
-    data = JSON.parse(rawText) as typeof data;
-  } catch {
-    console.warn("Polygon Copper: invalid JSON", rawText.slice(0, 200));
-    return { usd: 0, change24hPct: null };
-  }
-
-  if (data.status !== "OK" || !data.results?.[0]) {
-    console.warn("Polygon Copper: no data", { ticker, status: data.status, error: data.error });
-    return { usd: 0, change24hPct: null };
-  }
-
-  const close = Number(data.results[0].c) || 0;
-  const open = Number(data.results[0].o);
-  const change24hPct =
-    open > 0 && close > 0 ? ((close - open) / open) * 100 : null;
-
-  return { usd: close, change24hPct };
-}
-
-async function fetchPolygonCopper(apiKey: string, ticker: string): Promise<{
+async function fetchCopperFromRtvApi(): Promise<{
   usd: number;
   change24hPct: number | null;
 }> {
   try {
-    let result = await fetchPolygonCopperOne(apiKey, ticker);
-    if (result.usd > 0) {
-      console.log("Polygon Copper fetched:", { ticker, usd: result.usd, change24hPct: result.change24hPct });
-      return result;
+    const rtvApiUrl = (process.env.RTV_API_URL || 'https://api.roxom.tv').replace(/\/$/, '');
+    const rtvApiKey = process.env.RTV_API_KEY || process.env.NEXT_PUBLIC_RTV_API_KEY || '';
+
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (rtvApiKey) headers['x-api-key'] = rtvApiKey;
+
+    const res = await fetch(`${rtvApiUrl}/api/market-indices/us`, {
+      headers,
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) {
+      console.warn(`rtv-api market-indices HTTP ${res.status}`);
+      return { usd: 0, change24hPct: null };
     }
-    if (ticker !== "CPER") {
-      result = await fetchPolygonCopperOne(apiKey, "CPER");
-      if (result.usd > 0) {
-        console.log("Polygon Copper fallback CPER:", { usd: result.usd });
-        return result;
-      }
+    const envelope = await res.json() as { success?: boolean; data?: Array<{ symbol: string; priceUSD?: number; changePercentUSD?: number }> };
+    const items = envelope?.success && Array.isArray(envelope.data) ? envelope.data : [];
+    const icop = items.find((i) => i.symbol === 'ICOP');
+    if (!icop || !icop.priceUSD) {
+      console.warn('ICOP not found in rtv-api market-indices response');
+      return { usd: 0, change24hPct: null };
     }
-    return { usd: 0, change24hPct: null };
+    console.log('Copper (ICOP) from rtv-api:', { usd: icop.priceUSD, change: icop.changePercentUSD });
+    return { usd: icop.priceUSD, change24hPct: icop.changePercentUSD ?? null };
   } catch (error) {
-    console.error("Error fetching Polygon Copper:", error);
+    console.error('Error fetching copper from rtv-api:', error);
     return { usd: 0, change24hPct: null };
   }
 }
@@ -886,19 +850,8 @@ export async function GET() {
   }
 
   try {
-    // Get environment variables
     const fxApiUrl = process.env.FX_API_URL;
     const fxApiKey = process.env.FX_API_KEY;
-    const polygonApiKey = process.env.POLYGON_API_KEY;
-    const polygonCopperTicker = process.env.POLYGON_COPPER_TICKER || "ICOP"; // iShares Copper and Metals Mining ETF (NASDAQ)
-
-    // Debug: Log environment variables (sin mostrar keys completas)
-    const configStatus = {
-      fxApiUrl: fxApiUrl ? "✓ Set" : "✗ Missing",
-      fxApiKey: fxApiKey ? "✓ Set" : "✗ Missing",
-      polygonApiKey: polygonApiKey ? "✓ Set" : "✗ Missing",
-    };
-    console.log("Markets API Config:", configStatus);
 
     // Fetch BTC price first (or use cached version from Roxom)
     const btcUsd = await getBTCPrice();
@@ -909,18 +862,13 @@ export async function GET() {
     
     console.log("BTC Price fetched:", btcUsd);
 
-    // Pyth + FX + Copper (Polygon) en paralelo
-    if (!polygonApiKey?.trim()) {
-      console.warn("Polygon Copper: POLYGON_API_KEY no está definida — en producción configurarla en Variables de Entorno (Vercel/Netlify/etc.)");
-    }
+    // Pyth + FX + Copper (rtv-api) en paralelo
     const [pythData, fxData, copperData] = await Promise.allSettled([
       fetchPyth(),
       fxApiUrl
         ? fetchFX(fxApiUrl, fxApiKey)
         : Promise.resolve({ EUR: { usdPerUnit: 0 }, JPY: { usdPerUnit: 0 }, GBP: { usdPerUnit: 0 } }),
-      polygonApiKey?.trim()
-        ? fetchPolygonCopper(polygonApiKey.trim(), polygonCopperTicker)
-        : Promise.resolve({ usd: 0, change24hPct: null as number | null }),
+      fetchCopperFromRtvApi(),
     ]);
 
     // Extraer con fallback a cero
@@ -950,15 +898,12 @@ export async function GET() {
       ? copperData.value
       : { usd: 0, change24hPct: null as number | null };
 
-    // Diagnóstico para producción: header X-Copper-Status (ver en Network tab)
     const copperStatus =
-      !polygonApiKey?.trim()
-        ? "no_key"
-        : copperData.status === "rejected"
-          ? "fetch_failed"
-          : copper.usd > 0
-            ? "ok"
-            : "no_data";
+      copperData.status === "rejected"
+        ? "fetch_failed"
+        : copper.usd > 0
+          ? "ok"
+          : "no_data";
 
     if (pythData.status === "rejected") {
       console.error("Pyth fetch failed:", pythData.reason);
