@@ -7,9 +7,9 @@ import { fetchCurrentWeather } from './openweather';
 import { createServerAdminSupabaseClient } from '@/lib/supabase/admin';
 
 interface SlideWithWeather {
-  id: string;
-  name: string;
-  weather_query: string | null;
+    id: string;
+    name: string;
+    weather_query: string | null;
 }
 
 /**
@@ -17,47 +17,51 @@ interface SlideWithWeather {
  * This should be called once when the app starts
  */
 export async function prefetchAllWeatherData(): Promise<void> {
-  try {
-    const supabase = createServerAdminSupabaseClient();
-    
-    // Fetch all active YouTube slides that have weather queries
-    const { data: slides, error } = await supabase
-      .from('slides')
-      .select('id, name, weather_query')
-      .eq('type', 'youtube')
-      .eq('is_active', true)
-      .not('weather_query', 'is', null);
+    try {
+        const supabase = createServerAdminSupabaseClient();
 
-    if (error) {
-      console.warn('Failed to fetch slides for weather prefetch:', error);
-      return;
+        // Fetch all active YouTube slides that have weather queries
+        const { data: slides, error } = await supabase
+            .from('slides')
+            .select('id, name, weather_query')
+            .eq('type', 'youtube')
+            .eq('is_active', true)
+            .not('weather_query', 'is', null);
+
+        if (error) {
+            console.warn('Failed to fetch slides for weather prefetch:', error);
+
+            return;
+        }
+
+        if (!slides || slides.length === 0) {
+            console.log('No slides with weather queries found');
+
+            return;
+        }
+
+        // Get unique weather queries (avoid duplicate fetches)
+        const uniqueQueries = [
+            ...new Set(
+                (slides as SlideWithWeather[])
+                    .map((s) => s.weather_query)
+                    .filter((q): q is string => q !== null && q.trim() !== ''),
+            ),
+        ];
+
+        // Fetch weather for all unique queries in parallel
+        const promises = uniqueQueries.map((query) =>
+            fetchCurrentWeather(query).catch((error) => {
+                console.warn(`Failed to prefetch weather for "${query}":`, error);
+
+                return null;
+            }),
+        );
+
+        await Promise.allSettled(promises);
+
+        console.log(`Weather data prefetch completed for ${uniqueQueries.length} locations`);
+    } catch (error) {
+        console.warn('Weather prefetch failed:', error);
     }
-
-    if (!slides || slides.length === 0) {
-      console.log('No slides with weather queries found');
-      return;
-    }
-
-    // Get unique weather queries (avoid duplicate fetches)
-    const uniqueQueries = [...new Set(
-      (slides as SlideWithWeather[])
-        .map(s => s.weather_query)
-        .filter((q): q is string => q !== null && q.trim() !== '')
-    )];
-
-    // Fetch weather for all unique queries in parallel
-    const promises = uniqueQueries.map(query => 
-      fetchCurrentWeather(query).catch(error => {
-        console.warn(`Failed to prefetch weather for "${query}":`, error);
-        return null;
-      })
-    );
-
-    await Promise.allSettled(promises);
-    
-    console.log(`Weather data prefetch completed for ${uniqueQueries.length} locations`);
-  } catch (error) {
-    console.warn('Weather prefetch failed:', error);
-  }
 }
-

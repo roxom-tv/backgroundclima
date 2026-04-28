@@ -1,77 +1,81 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "main": ".open-next/worker.js",
-  "name": "backgroundclima",
-  "compatibility_date": "2026-03-10",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
-  "assets": {
-    "directory": ".open-next/assets",
-    "binding": "ASSETS"
-  },
-  "services": [
-    {
-      "binding": "WORKER_SELF_REFERENCE",
-      "service": "backgroundclima-production"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "NEXT_INC_CACHE_R2_BUCKET",
-      "bucket_name": "backgroundclima-opennext-cache"
-    }
-  ],
-  "images": {
-    "binding": "IMAGES"
-  },
-  "observability": {
-    "enabled": true
-  },
-  "vars": {
-    "FX_API_URL": "https://api.exchangerate.host/latest",
-    "OPENWEATHER_LANG": "en",
-    "OPENWEATHER_UNITS": "metric",
-    "SLACK_ALERTS_ENABLED": "false",
-    "RTV_API_URL": "https://api.roxom.tv",
-    "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV"
-  },
-  "env": {
-    "preview": {
-      "vars": {
-        "NEXT_PUBLIC_SUPABASE_URL": "SET_IN_CLOUDFLARE_ENV",
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "main": ".open-next/worker.js",
+    "name": "backgroundclima",
+    "compatibility_date": "2026-03-10",
+    "compatibility_flags": ["nodejs_compat"],
+    "assets": {
+        "directory": ".open-next/assets",
+        "binding": "ASSETS",
+    },
+    "services": [
+        {
+            "binding": "WORKER_SELF_REFERENCE",
+            "service": "backgroundclima-production",
+        },
+    ],
+    "r2_buckets": [
+        {
+            "binding": "NEXT_INC_CACHE_R2_BUCKET",
+            "bucket_name": "backgroundclima-opennext-cache",
+        },
+    ],
+    "images": {
+        "binding": "IMAGES",
+    },
+    "observability": {
+        "enabled": true,
+    },
+    "vars": {
         "FX_API_URL": "https://api.exchangerate.host/latest",
         "OPENWEATHER_LANG": "en",
         "OPENWEATHER_UNITS": "metric",
         "SLACK_ALERTS_ENABLED": "false",
         "RTV_API_URL": "https://api.roxom.tv",
-        "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV"
-      },
-      "services": [
-        { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-preview" }
-      ],
-      "r2_buckets": [
-        { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "backgroundclima-opennext-cache" }
-      ],
-      "images": { "binding": "IMAGES" }
+        "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV",
     },
-    "production": {
-      "vars": {
-        "NEXT_PUBLIC_SUPABASE_URL": "SET_IN_CLOUDFLARE_ENV",
-        "FX_API_URL": "https://api.exchangerate.host/latest",
-        "OPENWEATHER_LANG": "en",
-        "OPENWEATHER_UNITS": "metric",
-        "SLACK_ALERTS_ENABLED": "true",
-        "RTV_API_URL": "https://api.roxom.tv",
-        "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV"
-      },
-      "services": [
-        { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-production" }
-      ],
-      "r2_buckets": [
-        { "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "backgroundclima-opennext-cache" }
-      ],
-      "images": { "binding": "IMAGES" }
-    }
-  }
+    "env": {
+        "preview": {
+            "vars": {
+                "NEXT_PUBLIC_SUPABASE_URL": "SET_IN_CLOUDFLARE_ENV",
+                "FX_API_URL": "https://api.exchangerate.host/latest",
+                "OPENWEATHER_LANG": "en",
+                "OPENWEATHER_UNITS": "metric",
+                "SLACK_ALERTS_ENABLED": "false",
+                "RTV_API_URL": "https://api.roxom.tv",
+                "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV",
+            },
+            "services": [
+                { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-preview" },
+            ],
+            "r2_buckets": [
+                {
+                    "binding": "NEXT_INC_CACHE_R2_BUCKET",
+                    "bucket_name": "backgroundclima-opennext-cache",
+                },
+            ],
+            "images": { "binding": "IMAGES" },
+        },
+        "production": {
+            "vars": {
+                "NEXT_PUBLIC_SUPABASE_URL": "SET_IN_CLOUDFLARE_ENV",
+                "FX_API_URL": "https://api.exchangerate.host/latest",
+                "OPENWEATHER_LANG": "en",
+                "OPENWEATHER_UNITS": "metric",
+                "SLACK_ALERTS_ENABLED": "true",
+                "RTV_API_URL": "https://api.roxom.tv",
+                "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV",
+            },
+            "services": [
+                { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-production" },
+            ],
+            "r2_buckets": [
+                {
+                    "binding": "NEXT_INC_CACHE_R2_BUCKET",
+                    "bucket_name": "backgroundclima-opennext-cache",
+                },
+            ],
+            "images": { "binding": "IMAGES" },
+        },
+    },
 }

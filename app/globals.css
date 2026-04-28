@@ -4,951 +4,975 @@
 
 /* ===== DESIGN TOKENS ===== */
 :root {
-  /* Admin Panel Colors */
-  --admin-bg: #000;
-  --admin-surface: #0a0a0a;
-  --admin-surface-hover: #1a1a1a;
-  --admin-border: #1a1a1a;
-  --admin-accent: #00ff00;
-  --admin-accent-hover: #00cc00;
-  --admin-danger: #ff0000;
-  --admin-danger-hover: #cc0000;
-  --admin-warning: #ffff00;
-  --admin-info: #00ffff;
-  --admin-text: #fff;
-  --admin-text-muted: #888;
-  --admin-text-dim: #666;
+    /* Admin Panel Colors */
+    --admin-bg: #000;
+    --admin-surface: #0a0a0a;
+    --admin-surface-hover: #1a1a1a;
+    --admin-border: #1a1a1a;
+    --admin-accent: #00ff00;
+    --admin-accent-hover: #00cc00;
+    --admin-danger: #ff0000;
+    --admin-danger-hover: #cc0000;
+    --admin-warning: #ffff00;
+    --admin-info: #00ffff;
+    --admin-text: #fff;
+    --admin-text-muted: #888;
+    --admin-text-dim: #666;
 
-  /* Pixel font text shadow (for broadcast display) */
-  --pixel-shadow:
-    -1px -1px 0 #000,
-     1px -1px 0 #000,
-    -1px  1px 0 #000,
-     1px  1px 0 #000;
+    /* Pixel font text shadow (for broadcast display) */
+    --pixel-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 
-  /* Admin spacing */
-  --admin-gap-xs: 0.25rem;
-  --admin-gap-sm: 0.5rem;
-  --admin-gap-md: 1rem;
-  --admin-gap-lg: 1.5rem;
+    /* Admin spacing */
+    --admin-gap-xs: 0.25rem;
+    --admin-gap-sm: 0.5rem;
+    --admin-gap-md: 1rem;
+    --admin-gap-lg: 1.5rem;
 }
 
 @layer base {
-  * {
-    box-sizing: border-box;
-  }
+    * {
+        box-sizing: border-box;
+    }
 
-  html, body {
-    @apply h-full overflow-hidden;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-  }
+    html,
+    body {
+        @apply h-full overflow-hidden;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+    }
 
-  #__next {
-    @apply h-full;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-  }
+    #__next {
+        @apply h-full;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+    }
 }
 
 @layer components {
-  /* ===== TOP INFORMATION BAR ===== */
-  .top-info-bar {
-    @apply fixed top-0 left-0 right-0 z-[10001] flex items-center px-8 py-8;
-    pointer-events: none;
-  }
-
-  /* Date Display - Top Left */
-  .date-display {
-    @apply text-white font-normal;
-    font-family: var(--font-pixel);
-    font-size: 56px;
-    text-shadow: var(--pixel-shadow);
-    letter-spacing: 2px;
-    line-height: 1.2;
-  }
-
-  /* Live Indicator - Top Center */
-  .live-indicator {
-    @apply flex items-center gap-3 absolute left-1/2 transform -translate-x-1/2;
-  }
-
-  .live-dot {
-    @apply w-6 h-6 bg-red-500 rounded-full;
-    animation: live-pulse 2s ease-in-out infinite;
-  }
-
-  .live-text {
-    @apply text-white font-normal;
-    font-family: var(--font-pixel);
-    font-size: 56px;
-    text-shadow: var(--pixel-shadow);
-    letter-spacing: 3px;
-    line-height: 1.2;
-  }
-
-  @keyframes live-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-
-  /* Brand Display - Top Right */
-  .brand-display {
-    @apply flex items-center gap-2 px-4 py-2;
-    background: rgba(0, 0, 0, 0.7);
-    border-radius: 8px;
-    backdrop-filter: blur(10px);
-  }
-
-  .brand-icon {
-    @apply text-white text-xl font-bold;
-    font-family: monospace;
-  }
-
-  .brand-text {
-    @apply text-white text-xl font-normal;
-    font-family: var(--font-pixel);
-    letter-spacing: 2px;
-    line-height: 1.2;
-  }
-
-  /* ===== BOTTOM INFORMATION BAR ===== */
-  .bottom-info-bar {
-    @apply fixed bottom-0 left-0 right-0 z-[10001] flex justify-between items-end px-8 py-10;
-    pointer-events: none;
-  }
-
-  /* Location Display - Bottom Left */
-  .location-display {
-    @apply flex flex-col items-start;
-  }
-
-  .location-content {
-    @apply flex flex-col items-start;
-  }
-
-  .city-name {
-    @apply text-white font-normal;
-    font-family: var(--font-pixel);
-    font-size: 70px;
-    text-shadow: var(--pixel-shadow);
-    letter-spacing: 3px;
-    line-height: 1.1;
-  }
-
-  .country-name {
-    @apply text-white font-normal mt-2;
-    font-family: var(--font-pixel);
-    font-size: 38px;
-    text-shadow: var(--pixel-shadow);
-    letter-spacing: 2px;
-    line-height: 1.1;
-  }
-
-  /* Weather Information - Bottom Center */
-  .weather-info-display {
-    @apply flex-1 flex justify-center items-end;
-  }
-
-  .weather-info-content {
-    @apply flex items-center gap-10 justify-start;
-  }
-
-  /* Sponsor Separator - Vertical line between weather and sponsor */
-  .sponsor-separator {
-    @apply w-2 h-32 bg-white;
-    opacity: 0.8;
-    margin-right: 24px;
-  }
-
-  .weather-section {
-    @apply flex flex-col items-start;
-  }
-
-  .weather-values {
-    @apply flex items-center gap-3 text-white font-normal;
-    font-family: var(--font-pixel);
-    font-size: 46px;
-    text-shadow: var(--pixel-shadow);
-    letter-spacing: 2px;
-    line-height: 1.2;
-  }
-
-  .weather-label {
-    @apply text-white font-normal mt-3 text-left;
-    font-family: var(--font-pixel);
-    font-size: 30px;
-    text-shadow: var(--pixel-shadow);
-    letter-spacing: 2px;
-    line-height: 1.2;
-  }
-
-
-  /* Temperature Styles */
-  .temp-fahrenheit {
-    @apply text-white;
-  }
-
-  .temp-separator {
-    @apply text-white opacity-70;
-  }
-
-  .temp-celsius {
-    @apply text-white opacity-90;
-  }
-
-  /* Wind Styles */
-  .wind-kmh {
-    @apply text-white;
-  }
-  
-  .wind-separator {
-    @apply text-white opacity-70;
-  }
-  
-  .wind-mph {
-    @apply text-white opacity-90;
-  }
-
-  /* Sponsor Display - Bottom Right */
-  .sponsor-display {
-    @apply flex items-end;
-  }
-
-  .sponsor-content {
-    @apply flex flex-col items-center;
-    background: rgba(128, 128, 128, 0.35);
-    padding: 16px 24px;
-    border-radius: 10px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .sponsor-text {
-    @apply text-white font-normal;
-    font-family: var(--font-pixel);
-    font-size: 28px;
-    text-shadow: var(--pixel-shadow);
-    letter-spacing: 2px;
-    line-height: 1.2;
-  }
-
-  .sponsor-logo {
-    @apply flex items-center justify-center mt-2;
-  }
-
-  .xapo-logo {
-    @apply w-auto h-auto;
-    max-width: 320px;
-    max-height: 100px;
-    filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
-  }
-
-  /* ===== YOUTUBE AND LOGO STYLES ===== */
-  .youtube-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 1;
-    background-color: #000;
-    overflow: hidden;
-    margin: 0;
-    padding: 0;
-  }
-
-  .market-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 1;
-    background-color: #000;
-    overflow: hidden;
-    margin: 0;
-    padding: 0;
-  }
-  
-  .youtube-iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transform: scale(1.3);
-    transform-origin: center center;
-    background-color: #000;
-    border: none;
-    margin: 0;
-    padding: 0;
-  }
-
-
-  .youtube-iframe.necochea-zoom {
-    transform: scale(1.6);
-    transform-origin: center center;
-  }
-
-  .youtube-iframe.hongkong-zoom {
-    transform: scale(1.5);
-    transform-origin: center center;
-  }
-  
-  .centered-logo {
-    @apply fixed inset-0 z-10 flex items-center justify-center;
-    background-color: #191919;
-  }
-  
-  .centered-brand {
-    @apply flex items-center gap-6 px-12 py-8;
-    background: rgba(0, 0, 0, 0.9);
-    border-radius: 20px;
-    backdrop-filter: blur(20px);
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-  }
-
-  .centered-brand-icon {
-    @apply text-white text-7xl font-bold;
-    font-family: var(--font-pixel);
-    text-shadow: 
-      -2px -2px 0 #000,
-       2px -2px 0 #000,
-      -2px  2px 0 #000,
-       2px  2px 0 #000,
-       0 0 20px rgba(255, 255, 255, 0.5);
-    line-height: 1;
-  }
-
-  .centered-brand-text {
-    @apply text-white text-6xl font-bold;
-    font-family: var(--font-pixel);
-    letter-spacing: 6px;
-    text-shadow:
-      -2px -2px 0 #000,
-       2px -2px 0 #000,
-      -2px  2px 0 #000,
-       2px  2px 0 #000,
-       0 0 20px rgba(255, 255, 255, 0.5);
-    line-height: 1.1;
-  }
-
-  /* ===== ADMIN PANEL COMPONENTS ===== */
-
-  /* Admin Card - Base card component */
-  .admin-card {
-    @apply p-4;
-    background: var(--admin-surface);
-    border: 2px solid var(--admin-accent);
-  }
-
-  .admin-card-muted {
-    @apply p-4;
-    background: var(--admin-surface);
-    border: 2px solid var(--admin-border);
-  }
-
-  /* Admin Button Variants */
-  .admin-btn {
-    @apply px-4 py-2 font-mono text-xs uppercase tracking-wider transition-colors;
-    border: 2px solid var(--admin-accent);
-  }
-
-  .admin-btn-primary {
-    @apply admin-btn;
-    background: var(--admin-accent);
-    color: #000;
-  }
-
-  .admin-btn-primary:hover {
-    background: var(--admin-accent-hover);
-    border-color: var(--admin-accent-hover);
-  }
-
-  .admin-btn-ghost {
-    @apply admin-btn;
-    background: var(--admin-surface);
-    color: var(--admin-accent);
-  }
-
-  .admin-btn-ghost:hover {
-    background: var(--admin-surface-hover);
-  }
-
-  .admin-btn-danger {
-    @apply admin-btn;
-    background: var(--admin-surface);
-    color: var(--admin-danger);
-    border-color: var(--admin-danger);
-  }
-
-  .admin-btn-danger:hover {
-    background: var(--admin-surface-hover);
-  }
-
-  /* Admin Section Header */
-  .admin-header {
-    @apply pb-3 mb-4;
-    border-bottom: 2px solid var(--admin-accent);
-  }
-
-  .admin-header h1 {
-    @apply text-2xl font-mono font-bold uppercase tracking-wider;
-    color: var(--admin-text);
-  }
-
-  .admin-header p {
-    @apply text-xs font-mono mt-1 uppercase tracking-wider;
-    color: var(--admin-text-muted);
-  }
-
-  /* Admin Input */
-  .admin-input {
-    @apply w-full px-4 py-2 font-mono;
-    background: var(--admin-surface-hover);
-    border: 2px solid var(--admin-accent);
-    color: var(--admin-text);
-  }
-
-  .admin-input:focus {
-    @apply outline-none;
-    border-color: var(--admin-accent-hover);
-  }
-
-  /* Admin Toggle Switch */
-  .admin-toggle {
-    @apply relative inline-flex h-7 w-14 flex-shrink-0 cursor-pointer transition-colors duration-200 ease-in-out;
-    border: 2px solid var(--admin-border);
-    background: var(--admin-surface-hover);
-  }
-
-  .admin-toggle.active {
-    background: var(--admin-accent);
-    border-color: var(--admin-accent);
-  }
-
-  .admin-toggle-knob {
-    @apply pointer-events-none inline-block h-5 w-5 bg-black transition duration-200 ease-in-out;
-  }
-
-  /* Admin Notification */
-  .admin-notification {
-    @apply p-3 text-xs font-mono;
-    background: var(--admin-surface);
-    border: 2px solid var(--admin-accent);
-    color: var(--admin-accent);
-  }
-
-  .admin-notification.error {
-    border-color: var(--admin-danger);
-    color: var(--admin-danger);
-  }
-
-  /* Admin Stat Card */
-  .admin-stat {
-    @apply p-4;
-    background: var(--admin-surface);
-    border: 2px solid var(--admin-accent);
-    border-left-width: 4px;
-  }
-
-  .admin-stat-label {
-    @apply text-xs font-mono uppercase tracking-wider mb-1;
-    color: var(--admin-text-muted);
-  }
-
-  .admin-stat-value {
-    @apply text-4xl font-mono font-bold;
-    color: var(--admin-text);
-  }
-
-  .admin-stat-subtitle {
-    @apply text-xs font-mono mt-1;
-    color: var(--admin-text-dim);
-  }
-
-  /* Admin List Item */
-  .admin-list-item {
-    @apply p-3 transition-all;
-    background: var(--admin-surface-hover);
-    border: 1px solid var(--admin-border);
-  }
-
-  .admin-list-item:hover {
-    border-color: var(--admin-text-dim);
-  }
-
-  .admin-list-item.active {
-    border-color: var(--admin-accent);
-    opacity: 1;
-  }
-
-  .admin-list-item.inactive {
-    opacity: 0.5;
-  }
-
-  /* Admin Modal */
-  .admin-modal-overlay {
-    @apply fixed inset-0 flex items-center justify-center p-4 z-50;
-    background: rgba(0, 0, 0, 0.9);
-  }
-
-  .admin-modal {
-    @apply w-full max-h-[90vh] overflow-y-auto;
-    background: var(--admin-surface);
-    border: 2px solid var(--admin-accent);
-  }
-
-  .admin-modal-header {
-    @apply p-4 flex items-center justify-between;
-    border-bottom: 2px solid var(--admin-accent);
-  }
-
-  .admin-modal-header h2 {
-    @apply text-lg font-mono font-semibold uppercase tracking-wider;
-    color: var(--admin-text);
-  }
-
-  .admin-modal-close {
-    @apply text-2xl font-mono;
-    color: var(--admin-accent);
-  }
-
-  .admin-modal-close:hover {
-    color: var(--admin-text);
-  }
-
-  /* Admin Filter Tabs */
-  .admin-filter {
-    @apply flex gap-0;
-  }
-
-  .admin-filter-btn {
-    @apply px-3 py-1 text-xs font-mono uppercase tracking-wider transition-colors;
-    background: var(--admin-surface);
-    color: var(--admin-accent);
-    border-right: 2px solid var(--admin-border);
-  }
-
-  .admin-filter-btn:last-child {
-    border-right: none;
-  }
-
-  .admin-filter-btn:hover {
-    background: var(--admin-surface-hover);
-  }
-
-  .admin-filter-btn.active {
-    background: var(--admin-accent);
-    color: #000;
-  }
-
-  /* Admin Info Box */
-  .admin-info {
-    @apply p-4;
-    background: var(--admin-surface);
-    border: 2px solid var(--admin-accent);
-    border-left-width: 4px;
-  }
-
-  .admin-info-title {
-    @apply font-mono font-medium text-xs uppercase tracking-wider mb-2;
-    color: var(--admin-text);
-  }
-
-  .admin-info-text {
-    @apply text-xs font-mono uppercase tracking-wider;
-    color: var(--admin-text-muted);
-  }
+    /* ===== TOP INFORMATION BAR ===== */
+    .top-info-bar {
+        @apply fixed top-0 left-0 right-0 z-[10001] flex items-center px-8 py-8;
+        pointer-events: none;
+    }
+
+    /* Date Display - Top Left */
+    .date-display {
+        @apply text-white font-normal;
+        font-family: var(--font-pixel);
+        font-size: 56px;
+        text-shadow: var(--pixel-shadow);
+        letter-spacing: 2px;
+        line-height: 1.2;
+    }
+
+    /* Live Indicator - Top Center */
+    .live-indicator {
+        @apply flex items-center gap-3 absolute left-1/2 transform -translate-x-1/2;
+    }
+
+    .live-dot {
+        @apply w-6 h-6 bg-red-500 rounded-full;
+        animation: live-pulse 2s ease-in-out infinite;
+    }
+
+    .live-text {
+        @apply text-white font-normal;
+        font-family: var(--font-pixel);
+        font-size: 56px;
+        text-shadow: var(--pixel-shadow);
+        letter-spacing: 3px;
+        line-height: 1.2;
+    }
+
+    @keyframes live-pulse {
+        0%,
+        100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+    /* Brand Display - Top Right */
+    .brand-display {
+        @apply flex items-center gap-2 px-4 py-2;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+    }
+
+    .brand-icon {
+        @apply text-white text-xl font-bold;
+        font-family: monospace;
+    }
+
+    .brand-text {
+        @apply text-white text-xl font-normal;
+        font-family: var(--font-pixel);
+        letter-spacing: 2px;
+        line-height: 1.2;
+    }
+
+    /* ===== BOTTOM INFORMATION BAR ===== */
+    .bottom-info-bar {
+        @apply fixed bottom-0 left-0 right-0 z-[10001] flex justify-between items-end px-8 py-10;
+        pointer-events: none;
+    }
+
+    /* Location Display - Bottom Left */
+    .location-display {
+        @apply flex flex-col items-start;
+    }
+
+    .location-content {
+        @apply flex flex-col items-start;
+    }
+
+    .city-name {
+        @apply text-white font-normal;
+        font-family: var(--font-pixel);
+        font-size: 70px;
+        text-shadow: var(--pixel-shadow);
+        letter-spacing: 3px;
+        line-height: 1.1;
+    }
+
+    .country-name {
+        @apply text-white font-normal mt-2;
+        font-family: var(--font-pixel);
+        font-size: 38px;
+        text-shadow: var(--pixel-shadow);
+        letter-spacing: 2px;
+        line-height: 1.1;
+    }
+
+    /* Weather Information - Bottom Center */
+    .weather-info-display {
+        @apply flex-1 flex justify-center items-end;
+    }
+
+    .weather-info-content {
+        @apply flex items-center gap-10 justify-start;
+    }
+
+    /* Sponsor Separator - Vertical line between weather and sponsor */
+    .sponsor-separator {
+        @apply w-2 h-32 bg-white;
+        opacity: 0.8;
+        margin-right: 24px;
+    }
+
+    .weather-section {
+        @apply flex flex-col items-start;
+    }
+
+    .weather-values {
+        @apply flex items-center gap-3 text-white font-normal;
+        font-family: var(--font-pixel);
+        font-size: 46px;
+        text-shadow: var(--pixel-shadow);
+        letter-spacing: 2px;
+        line-height: 1.2;
+    }
+
+    .weather-label {
+        @apply text-white font-normal mt-3 text-left;
+        font-family: var(--font-pixel);
+        font-size: 30px;
+        text-shadow: var(--pixel-shadow);
+        letter-spacing: 2px;
+        line-height: 1.2;
+    }
+
+    /* Temperature Styles */
+    .temp-fahrenheit {
+        @apply text-white;
+    }
+
+    .temp-separator {
+        @apply text-white opacity-70;
+    }
+
+    .temp-celsius {
+        @apply text-white opacity-90;
+    }
+
+    /* Wind Styles */
+    .wind-kmh {
+        @apply text-white;
+    }
+
+    .wind-separator {
+        @apply text-white opacity-70;
+    }
+
+    .wind-mph {
+        @apply text-white opacity-90;
+    }
+
+    /* Sponsor Display - Bottom Right */
+    .sponsor-display {
+        @apply flex items-end;
+    }
+
+    .sponsor-content {
+        @apply flex flex-col items-center;
+        background: rgba(128, 128, 128, 0.35);
+        padding: 16px 24px;
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .sponsor-text {
+        @apply text-white font-normal;
+        font-family: var(--font-pixel);
+        font-size: 28px;
+        text-shadow: var(--pixel-shadow);
+        letter-spacing: 2px;
+        line-height: 1.2;
+    }
+
+    .sponsor-logo {
+        @apply flex items-center justify-center mt-2;
+    }
+
+    .xapo-logo {
+        @apply w-auto h-auto;
+        max-width: 320px;
+        max-height: 100px;
+        filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
+    }
+
+    /* ===== YOUTUBE AND LOGO STYLES ===== */
+    .youtube-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 1;
+        background-color: #000;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+    }
+
+    .market-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 1;
+        background-color: #000;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+    }
+
+    .youtube-iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform: scale(1.3);
+        transform-origin: center center;
+        background-color: #000;
+        border: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .youtube-iframe.necochea-zoom {
+        transform: scale(1.6);
+        transform-origin: center center;
+    }
+
+    .youtube-iframe.hongkong-zoom {
+        transform: scale(1.5);
+        transform-origin: center center;
+    }
+
+    .centered-logo {
+        @apply fixed inset-0 z-10 flex items-center justify-center;
+        background-color: #191919;
+    }
+
+    .centered-brand {
+        @apply flex items-center gap-6 px-12 py-8;
+        background: rgba(0, 0, 0, 0.9);
+        border-radius: 20px;
+        backdrop-filter: blur(20px);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .centered-brand-icon {
+        @apply text-white text-7xl font-bold;
+        font-family: var(--font-pixel);
+        text-shadow:
+            -2px -2px 0 #000,
+            2px -2px 0 #000,
+            -2px 2px 0 #000,
+            2px 2px 0 #000,
+            0 0 20px rgba(255, 255, 255, 0.5);
+        line-height: 1;
+    }
+
+    .centered-brand-text {
+        @apply text-white text-6xl font-bold;
+        font-family: var(--font-pixel);
+        letter-spacing: 6px;
+        text-shadow:
+            -2px -2px 0 #000,
+            2px -2px 0 #000,
+            -2px 2px 0 #000,
+            2px 2px 0 #000,
+            0 0 20px rgba(255, 255, 255, 0.5);
+        line-height: 1.1;
+    }
+
+    /* ===== ADMIN PANEL COMPONENTS ===== */
+
+    /* Admin Card - Base card component */
+    .admin-card {
+        @apply p-4;
+        background: var(--admin-surface);
+        border: 2px solid var(--admin-accent);
+    }
+
+    .admin-card-muted {
+        @apply p-4;
+        background: var(--admin-surface);
+        border: 2px solid var(--admin-border);
+    }
+
+    /* Admin Button Variants */
+    .admin-btn {
+        @apply px-4 py-2 font-mono text-xs uppercase tracking-wider transition-colors;
+        border: 2px solid var(--admin-accent);
+    }
+
+    .admin-btn-primary {
+        @apply admin-btn;
+        background: var(--admin-accent);
+        color: #000;
+    }
+
+    .admin-btn-primary:hover {
+        background: var(--admin-accent-hover);
+        border-color: var(--admin-accent-hover);
+    }
+
+    .admin-btn-ghost {
+        @apply admin-btn;
+        background: var(--admin-surface);
+        color: var(--admin-accent);
+    }
+
+    .admin-btn-ghost:hover {
+        background: var(--admin-surface-hover);
+    }
+
+    .admin-btn-danger {
+        @apply admin-btn;
+        background: var(--admin-surface);
+        color: var(--admin-danger);
+        border-color: var(--admin-danger);
+    }
+
+    .admin-btn-danger:hover {
+        background: var(--admin-surface-hover);
+    }
+
+    /* Admin Section Header */
+    .admin-header {
+        @apply pb-3 mb-4;
+        border-bottom: 2px solid var(--admin-accent);
+    }
+
+    .admin-header h1 {
+        @apply text-2xl font-mono font-bold uppercase tracking-wider;
+        color: var(--admin-text);
+    }
+
+    .admin-header p {
+        @apply text-xs font-mono mt-1 uppercase tracking-wider;
+        color: var(--admin-text-muted);
+    }
+
+    /* Admin Input */
+    .admin-input {
+        @apply w-full px-4 py-2 font-mono;
+        background: var(--admin-surface-hover);
+        border: 2px solid var(--admin-accent);
+        color: var(--admin-text);
+    }
+
+    .admin-input:focus {
+        @apply outline-none;
+        border-color: var(--admin-accent-hover);
+    }
+
+    /* Admin Toggle Switch */
+    .admin-toggle {
+        @apply relative inline-flex h-7 w-14 flex-shrink-0 cursor-pointer transition-colors duration-200 ease-in-out;
+        border: 2px solid var(--admin-border);
+        background: var(--admin-surface-hover);
+    }
+
+    .admin-toggle.active {
+        background: var(--admin-accent);
+        border-color: var(--admin-accent);
+    }
+
+    .admin-toggle-knob {
+        @apply pointer-events-none inline-block h-5 w-5 bg-black transition duration-200 ease-in-out;
+    }
+
+    /* Admin Notification */
+    .admin-notification {
+        @apply p-3 text-xs font-mono;
+        background: var(--admin-surface);
+        border: 2px solid var(--admin-accent);
+        color: var(--admin-accent);
+    }
+
+    .admin-notification.error {
+        border-color: var(--admin-danger);
+        color: var(--admin-danger);
+    }
+
+    /* Admin Stat Card */
+    .admin-stat {
+        @apply p-4;
+        background: var(--admin-surface);
+        border: 2px solid var(--admin-accent);
+        border-left-width: 4px;
+    }
+
+    .admin-stat-label {
+        @apply text-xs font-mono uppercase tracking-wider mb-1;
+        color: var(--admin-text-muted);
+    }
+
+    .admin-stat-value {
+        @apply text-4xl font-mono font-bold;
+        color: var(--admin-text);
+    }
+
+    .admin-stat-subtitle {
+        @apply text-xs font-mono mt-1;
+        color: var(--admin-text-dim);
+    }
+
+    /* Admin List Item */
+    .admin-list-item {
+        @apply p-3 transition-all;
+        background: var(--admin-surface-hover);
+        border: 1px solid var(--admin-border);
+    }
+
+    .admin-list-item:hover {
+        border-color: var(--admin-text-dim);
+    }
+
+    .admin-list-item.active {
+        border-color: var(--admin-accent);
+        opacity: 1;
+    }
+
+    .admin-list-item.inactive {
+        opacity: 0.5;
+    }
+
+    /* Admin Modal */
+    .admin-modal-overlay {
+        @apply fixed inset-0 flex items-center justify-center p-4 z-50;
+        background: rgba(0, 0, 0, 0.9);
+    }
+
+    .admin-modal {
+        @apply w-full max-h-[90vh] overflow-y-auto;
+        background: var(--admin-surface);
+        border: 2px solid var(--admin-accent);
+    }
+
+    .admin-modal-header {
+        @apply p-4 flex items-center justify-between;
+        border-bottom: 2px solid var(--admin-accent);
+    }
+
+    .admin-modal-header h2 {
+        @apply text-lg font-mono font-semibold uppercase tracking-wider;
+        color: var(--admin-text);
+    }
+
+    .admin-modal-close {
+        @apply text-2xl font-mono;
+        color: var(--admin-accent);
+    }
+
+    .admin-modal-close:hover {
+        color: var(--admin-text);
+    }
+
+    /* Admin Filter Tabs */
+    .admin-filter {
+        @apply flex gap-0;
+    }
+
+    .admin-filter-btn {
+        @apply px-3 py-1 text-xs font-mono uppercase tracking-wider transition-colors;
+        background: var(--admin-surface);
+        color: var(--admin-accent);
+        border-right: 2px solid var(--admin-border);
+    }
+
+    .admin-filter-btn:last-child {
+        border-right: none;
+    }
+
+    .admin-filter-btn:hover {
+        background: var(--admin-surface-hover);
+    }
+
+    .admin-filter-btn.active {
+        background: var(--admin-accent);
+        color: #000;
+    }
+
+    /* Admin Info Box */
+    .admin-info {
+        @apply p-4;
+        background: var(--admin-surface);
+        border: 2px solid var(--admin-accent);
+        border-left-width: 4px;
+    }
+
+    .admin-info-title {
+        @apply font-mono font-medium text-xs uppercase tracking-wider mb-2;
+        color: var(--admin-text);
+    }
+
+    .admin-info-text {
+        @apply text-xs font-mono uppercase tracking-wider;
+        color: var(--admin-text-muted);
+    }
 }
 
 /* ===== TV STATIC EFFECT ===== */
 
 /* Efecto de cambio de canal - Overlay principal */
 .channel-change-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 10001;
-  background: #000;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  opacity: 1;
-  transition: opacity 0.3s ease-out;
-  margin: 0;
-  padding: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10001;
+    background: #000;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    opacity: 1;
+    transition: opacity 0.3s ease-out;
+    margin: 0;
+    padding: 0;
 }
 
 /* Ruido blanco de TV */
 .tv-static {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: 
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 1px, transparent 1px),
-    radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 1px, transparent 1px),
-    radial-gradient(circle at 40% 60%, rgba(255,255,255,0.05) 1px, transparent 1px),
-    radial-gradient(circle at 60% 40%, rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size: 2px 2px, 3px 3px, 4px 4px, 5px 5px;
-  opacity: 0.8;
-  animation: tv-static 0.1s linear infinite;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+        radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+        radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        radial-gradient(circle at 60% 40%, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size:
+        2px 2px,
+        3px 3px,
+        4px 4px,
+        5px 5px;
+    opacity: 0.8;
+    animation: tv-static 0.1s linear infinite;
 }
 
 /* Líneas de interferencia */
 .interference-lines {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(255,255,255,0.03) 2px,
-    rgba(255,255,255,0.03) 4px
-  );
-  animation: interference-scan 0.05s linear infinite;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255, 255, 255, 0.03) 2px,
+        rgba(255, 255, 255, 0.03) 4px
+    );
+    animation: interference-scan 0.05s linear infinite;
 }
 
 /* Texto de cambio de canal */
 .channel-change-text {
-  position: relative;
-  z-index: 2;
-  color: #fff;
-  font-family: var(--font-pixel);
-  font-size: 24px;
-  letter-spacing: 3px;
-  text-shadow: var(--pixel-shadow);
-  animation: channel-text-flicker 0.2s ease-in-out infinite alternate;
+    position: relative;
+    z-index: 2;
+    color: #fff;
+    font-family: var(--font-pixel);
+    font-size: 24px;
+    letter-spacing: 3px;
+    text-shadow: var(--pixel-shadow);
+    animation: channel-text-flicker 0.2s ease-in-out infinite alternate;
 }
 
 /* Animación del ruido blanco */
 @keyframes tv-static {
-  0% { 
-    background-position: 0px 0px, 0px 0px, 0px 0px, 0px 0px;
-    opacity: 0.8;
-  }
-  25% { 
-    background-position: 1px 1px, 2px 2px, 3px 3px, 4px 4px;
-    opacity: 0.6;
-  }
-  50% { 
-    background-position: 2px 2px, 4px 4px, 6px 6px, 8px 8px;
-    opacity: 0.9;
-  }
-  75% { 
-    background-position: 3px 3px, 6px 6px, 9px 9px, 12px 12px;
-    opacity: 0.7;
-  }
-  100% { 
-    background-position: 4px 4px, 8px 8px, 12px 12px, 16px 16px;
-    opacity: 0.8;
-  }
+    0% {
+        background-position:
+            0px 0px,
+            0px 0px,
+            0px 0px,
+            0px 0px;
+        opacity: 0.8;
+    }
+    25% {
+        background-position:
+            1px 1px,
+            2px 2px,
+            3px 3px,
+            4px 4px;
+        opacity: 0.6;
+    }
+    50% {
+        background-position:
+            2px 2px,
+            4px 4px,
+            6px 6px,
+            8px 8px;
+        opacity: 0.9;
+    }
+    75% {
+        background-position:
+            3px 3px,
+            6px 6px,
+            9px 9px,
+            12px 12px;
+        opacity: 0.7;
+    }
+    100% {
+        background-position:
+            4px 4px,
+            8px 8px,
+            12px 12px,
+            16px 16px;
+        opacity: 0.8;
+    }
 }
 
 /* Animación de líneas de interferencia */
 @keyframes interference-scan {
-  0% { 
-    transform: translateY(0);
-    opacity: 0.3;
-  }
-  50% { 
-    transform: translateY(-2px);
-    opacity: 0.6;
-  }
-  100% { 
-    transform: translateY(0);
-    opacity: 0.3;
-  }
+    0% {
+        transform: translateY(0);
+        opacity: 0.3;
+    }
+    50% {
+        transform: translateY(-2px);
+        opacity: 0.6;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 0.3;
+    }
 }
 
 /* Animación del texto */
 @keyframes channel-text-flicker {
-  0% { 
-    opacity: 1;
-    text-shadow: 
-      -1px -1px 0 #000,
-       1px -1px 0 #000,
-      -1px  1px 0 #000,
-       1px  1px 0 #000;
-  }
-  100% { 
-    opacity: 0.7;
-    text-shadow: 
-      -1px -1px 0 #000,
-       1px -1px 0 #000,
-      -1px  1px 0 #000,
-       1px  1px 0 #000,
-       0 0 10px rgba(255,255,255,0.5);
-  }
+    0% {
+        opacity: 1;
+        text-shadow:
+            -1px -1px 0 #000,
+            1px -1px 0 #000,
+            -1px 1px 0 #000,
+            1px 1px 0 #000;
+    }
+    100% {
+        opacity: 0.7;
+        text-shadow:
+            -1px -1px 0 #000,
+            1px -1px 0 #000,
+            -1px 1px 0 #000,
+            1px 1px 0 #000,
+            0 0 10px rgba(255, 255, 255, 0.5);
+    }
 }
 
 /* Overlay de transición - Capa transparente que se activa */
 .transition-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 9999;
-  background: transparent;
-  pointer-events: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background: transparent;
+    pointer-events: none;
 }
 
 .transition-overlay.active {
-  background: transparent;
+    background: transparent;
 }
 
 .transition-overlay .glitch-effect {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 1;
 }
 
 /* Capa de morphing - Imágenes que se transforman */
 .morphing-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 9999;
-  pointer-events: none;
-  overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    pointer-events: none;
+    overflow: hidden;
 }
 
 .morph-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
 .current-image {
-  z-index: 1;
+    z-index: 1;
 }
 
 .next-image {
-  z-index: 2;
+    z-index: 2;
 }
-
 
 /* Efecto de transición suave sin grilla */
 .glitch-effect {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  opacity: 0;
-  -webkit-transition: opacity 0.1s ease-in-out;
-  -moz-transition: opacity 0.1s ease-in-out;
-  -o-transition: opacity 0.1s ease-in-out;
-  transition: opacity 0.1s ease-in-out;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    opacity: 0;
+    -webkit-transition: opacity 0.1s ease-in-out;
+    -moz-transition: opacity 0.1s ease-in-out;
+    -o-transition: opacity 0.1s ease-in-out;
+    transition: opacity 0.1s ease-in-out;
 }
 
 /* Cuando hay transición activa */
 .transition-overlay .glitch-effect {
-  opacity: 1 !important;
-  background: transparent !important;
-  -webkit-animation: smooth-transition 1s ease-in-out;
-  -moz-animation: smooth-transition 1s ease-in-out;
-  -o-animation: smooth-transition 1s ease-in-out;
-  animation: smooth-transition 1s ease-in-out;
+    opacity: 1 !important;
+    background: transparent !important;
+    -webkit-animation: smooth-transition 1s ease-in-out;
+    -moz-animation: smooth-transition 1s ease-in-out;
+    -o-animation: smooth-transition 1s ease-in-out;
+    animation: smooth-transition 1s ease-in-out;
 }
 
 /* Fallback simple para navegadores muy antiguos */
 .transition-overlay .glitch-effect.simple-fallback {
-  background: transparent;
-  -webkit-animation: smooth-transition 1s ease-in-out;
-  -moz-animation: smooth-transition 1s ease-in-out;
-  -o-animation: smooth-transition 1s ease-in-out;
-  animation: smooth-transition 1s ease-in-out;
+    background: transparent;
+    -webkit-animation: smooth-transition 1s ease-in-out;
+    -moz-animation: smooth-transition 1s ease-in-out;
+    -o-animation: smooth-transition 1s ease-in-out;
+    animation: smooth-transition 1s ease-in-out;
 }
 
 /* Animación de transición suave y rápida */
 @-webkit-keyframes smooth-transition {
-  0% { 
-    opacity: 0;
-    -webkit-filter: brightness(1) contrast(1);
-  }
-  50% { 
-    opacity: 0.3;
-    -webkit-filter: brightness(0.8) contrast(1.2);
-  }
-  100% { 
-    opacity: 0;
-    -webkit-filter: brightness(1) contrast(1);
-  }
+    0% {
+        opacity: 0;
+        -webkit-filter: brightness(1) contrast(1);
+    }
+    50% {
+        opacity: 0.3;
+        -webkit-filter: brightness(0.8) contrast(1.2);
+    }
+    100% {
+        opacity: 0;
+        -webkit-filter: brightness(1) contrast(1);
+    }
 }
 
 @-moz-keyframes smooth-transition {
-  0% { 
-    opacity: 0;
-    -moz-filter: brightness(1) contrast(1);
-  }
-  50% { 
-    opacity: 0.3;
-    -moz-filter: brightness(0.8) contrast(1.2);
-  }
-  100% { 
-    opacity: 0;
-    -moz-filter: brightness(1) contrast(1);
-  }
+    0% {
+        opacity: 0;
+        -moz-filter: brightness(1) contrast(1);
+    }
+    50% {
+        opacity: 0.3;
+        -moz-filter: brightness(0.8) contrast(1.2);
+    }
+    100% {
+        opacity: 0;
+        -moz-filter: brightness(1) contrast(1);
+    }
 }
 
 @keyframes smooth-transition {
-  0% { 
-    opacity: 0;
-    filter: brightness(1) contrast(1);
-  }
-  50% { 
-    opacity: 0.3;
-    filter: brightness(0.8) contrast(1.2);
-  }
-  100% { 
-    opacity: 0;
-    filter: brightness(1) contrast(1);
-  }
+    0% {
+        opacity: 0;
+        filter: brightness(1) contrast(1);
+    }
+    50% {
+        opacity: 0.3;
+        filter: brightness(0.8) contrast(1.2);
+    }
+    100% {
+        opacity: 0;
+        filter: brightness(1) contrast(1);
+    }
 }
-
-
-
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  /* Top bar adjustments */
-  .top-info-bar {
-    @apply px-4 py-4;
-  }
+    /* Top bar adjustments */
+    .top-info-bar {
+        @apply px-4 py-4;
+    }
 
-  .live-indicator {
-    @apply absolute left-1/2 transform -translate-x-1/2;
-  }
+    .live-indicator {
+        @apply absolute left-1/2 transform -translate-x-1/2;
+    }
 
-  .date-display {
-    @apply text-xl;
-  }
+    .date-display {
+        @apply text-xl;
+    }
 
-  .live-text {
-    @apply text-xl;
-  }
+    .live-text {
+        @apply text-xl;
+    }
 
-  .brand-display {
-    @apply px-2 py-1;
-  }
+    .brand-display {
+        @apply px-2 py-1;
+    }
 
-  .brand-text {
-    @apply text-base;
-  }
+    .brand-text {
+        @apply text-base;
+    }
 
-  /* Bottom bar adjustments */
-  .bottom-info-bar {
-    @apply px-4 py-6;
-  }
-  
-  .city-name {
-    @apply text-3xl;
-  }
-  
-  .country-name {
-    @apply text-xl;
-  }
+    /* Bottom bar adjustments */
+    .bottom-info-bar {
+        @apply px-4 py-6;
+    }
 
-  .weather-info-content {
-    @apply gap-4;
-  }
+    .city-name {
+        @apply text-3xl;
+    }
 
-  .weather-values {
-    font-size: 32px;
-  }
+    .country-name {
+        @apply text-xl;
+    }
 
-  .weather-label {
-    @apply text-left;
-    font-size: 24px;
-  }
+    .weather-info-content {
+        @apply gap-4;
+    }
 
-  .sponsor-text {
-    @apply text-base text-white;
-    font-family: var(--font-pixel);
-    text-shadow: var(--pixel-shadow);
-    letter-spacing: 1px;
-  }
+    .weather-values {
+        font-size: 32px;
+    }
 
-  .xapo-logo {
-    max-width: 180px;
-    max-height: 60px;
-  }
+    .weather-label {
+        @apply text-left;
+        font-size: 24px;
+    }
 
-  /* Centered logo adjustments */
-  .centered-brand {
-    @apply gap-4 px-8 py-6;
-  }
+    .sponsor-text {
+        @apply text-base text-white;
+        font-family: var(--font-pixel);
+        text-shadow: var(--pixel-shadow);
+        letter-spacing: 1px;
+    }
 
-  .centered-brand-icon {
-    @apply text-5xl;
-  }
+    .xapo-logo {
+        max-width: 180px;
+        max-height: 60px;
+    }
 
-  .centered-brand-text {
-    @apply text-4xl;
-    letter-spacing: 3px;
-  }
+    /* Centered logo adjustments */
+    .centered-brand {
+        @apply gap-4 px-8 py-6;
+    }
 
-  /* Overlay adjustments */
-  .overlay-brand {
-    @apply gap-2 px-4 py-3;
-  }
+    .centered-brand-icon {
+        @apply text-5xl;
+    }
 
-  .overlay-brand-icon {
-    @apply text-3xl;
-  }
+    .centered-brand-text {
+        @apply text-4xl;
+        letter-spacing: 3px;
+    }
 
-  .overlay-brand-text {
-    @apply text-2xl;
-    letter-spacing: 2px;
-  }
-  
-  .loading-dots span {
-    width: 10px;
-    height: 10px;
-  }
+    /* Overlay adjustments */
+    .overlay-brand {
+        @apply gap-2 px-4 py-3;
+    }
 
-  /* Efecto de cambio de canal responsivo */
-  .channel-change-text {
-    font-size: 18px;
-    letter-spacing: 2px;
-  }
+    .overlay-brand-icon {
+        @apply text-3xl;
+    }
 
-  .tv-static {
-    background-size: 1px 1px, 2px 2px, 3px 3px, 4px 4px;
-  }
+    .overlay-brand-text {
+        @apply text-2xl;
+        letter-spacing: 2px;
+    }
+
+    .loading-dots span {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* Efecto de cambio de canal responsivo */
+    .channel-change-text {
+        font-size: 18px;
+        letter-spacing: 2px;
+    }
+
+    .tv-static {
+        background-size:
+            1px 1px,
+            2px 2px,
+            3px 3px,
+            4px 4px;
+    }
 }
