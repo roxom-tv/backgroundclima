@@ -19,6 +19,7 @@ import NewsSlide from '@/components/NewsSlide';
 import VideoSlide from '@/components/VideoSlide';
 import StrcSlide, { prefetchStrcData } from '@/components/StrcSlide';
 import SataSlide, { prefetchSataData } from '@/components/SataSlide';
+import MarketSlide, { prefetchMarketData } from '@/MarketSlide';
 import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
 import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
 import { prefetchMarketsData } from '@/hooks/useMarketsSats';
@@ -46,7 +47,7 @@ export default function Home() {
   const hasYouTubeSlides = useMemo(() =>
     slides.some(s => s.type === 'youtube'), [slides]);
   const hasMarketSlides = useMemo(() =>
-    slides.some(s => s.type === 'metals' || s.type === 'fx'), [slides]);
+    slides.some(s => s.type === 'metals' || s.type === 'fx' || s.type === 'market'), [slides]);
   const hasDebtSlides = useMemo(() =>
     slides.some(s => s.type === 'debt'), [slides]);
 
@@ -115,12 +116,14 @@ export default function Home() {
   // Warm up markets data as early as possible to avoid delay on early market slides.
   useEffect(() => {
     prefetchMarketsData().catch(err => console.warn('Markets warmup prefetch failed:', err));
+    prefetchMarketData().catch(err => console.warn('Market slide warmup prefetch failed:', err));
   }, []);
 
   // Pre-fetch markets data if there are metals or fx slides
   useEffect(() => {
     if (hasMarketSlides) {
       prefetchMarketsData().catch(err => console.warn('Markets prefetch failed:', err));
+      prefetchMarketData().catch(err => console.warn('Market slide prefetch failed:', err));
     }
   }, [hasMarketSlides]);
 
@@ -181,6 +184,7 @@ export default function Home() {
           case 'debt': text = 'LOADING US DEBT...'; break;
           case 'metals': text = 'LOADING METALS...'; break;
           case 'fx': text = 'LOADING FX...'; break;
+          case 'market': text = 'LOADING MARKET...'; break;
           case 'show': text = 'LOADING SHOW...'; break;
           case 'event': text = 'LOADING EVENT...'; break;
           case 'calendar': text = 'LOADING CALENDAR...'; break;
@@ -382,6 +386,26 @@ export default function Home() {
             style={{ position: 'absolute', inset: 0 }}
           >
             <FxSlide />
+            {renderPositionedSponsors(currentSlide)}
+          </motion.div>
+        );
+
+      case 'market':
+        return (
+          <motion.div
+            key={`market-${currentSlide.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.5,
+              ease: [0.4, 0, 0.2, 1],
+              opacity: { duration: 0.4 }
+            }}
+            className="h-full w-full bg-black relative"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <MarketSlide />
             {renderPositionedSponsors(currentSlide)}
           </motion.div>
         );

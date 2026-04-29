@@ -10,6 +10,7 @@ const slideTypeSchema = z.enum([
   'debt',
   'metals',
   'fx',
+  'market',
   'show',
   'event',
   'calendar',

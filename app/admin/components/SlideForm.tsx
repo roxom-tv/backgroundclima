@@ -15,6 +15,7 @@ interface SlideFormProps {
 
 const SLIDE_TYPES: { value: SlideType; label: string; icon: string; description: string }[] = [
   { value: 'youtube', label: 'YouTube', icon: '📺', description: 'Live stream from YouTube' },
+  { value: 'market', label: 'Market', icon: '📈', description: 'Live market board (indices + movers)' },
   { value: 'show', label: 'Show', icon: '🎬', description: 'TV show with image & schedule' },
   { value: 'event', label: 'Event', icon: '📅', description: 'Event with date & details' },
   { value: 'news', label: 'News', icon: '📰', description: 'News with image, headline & source' },
@@ -230,7 +231,7 @@ export default function SlideForm({
     };
 
     // System data slides: no YouTube/weather/video/event fields.
-    if (formData.type === 'strc' || formData.type === 'sata') {
+    if (formData.type === 'market' || formData.type === 'strc' || formData.type === 'sata') {
       Object.assign(cleanedData, {
         country: null,
         youtube_url: null,
@@ -314,6 +315,7 @@ export default function SlideForm({
   const isShow = formData.type === 'show';
   const isNews = formData.type === 'news';
   const isVideo = formData.type === 'video';
+  const isMarket = formData.type === 'market';
   const isStrc = formData.type === 'strc';
   const isSata = formData.type === 'sata';
 
@@ -346,7 +348,7 @@ export default function SlideForm({
       {/* Name / Title */}
       <div>
         <label htmlFor="name" className="block text-xs font-mono font-medium text-white uppercase tracking-wider mb-1">
-          {isShow ? 'SHOW TITLE' : isEvent ? 'EVENT TITLE' : isNews ? 'NEWS TITLE' : isVideo ? 'VIDEO TITLE' : isStrc ? 'STRC SLIDE NAME' : isSata ? 'SATA SLIDE NAME' : 'NAME'} {!isShow && '*'}
+          {isShow ? 'SHOW TITLE' : isEvent ? 'EVENT TITLE' : isNews ? 'NEWS TITLE' : isVideo ? 'VIDEO TITLE' : isMarket ? 'MARKET SLIDE NAME' : isStrc ? 'STRC SLIDE NAME' : isSata ? 'SATA SLIDE NAME' : 'NAME'} {!isShow && '*'}
         </label>
         <input
           id="name"
@@ -355,7 +357,7 @@ export default function SlideForm({
           value={formData.name}
           onChange={handleChange}
           required={!isShow}
-          placeholder={isShow ? 'Show name (optional - image only if empty)...' : isEvent ? 'Event title...' : isNews ? 'News title...' : isVideo ? 'Video title...' : isStrc ? 'e.g., STRC Dashboard' : isSata ? 'e.g., SATA Dashboard' : 'e.g., Hong Kong'}
+          placeholder={isShow ? 'Show name (optional - image only if empty)...' : isEvent ? 'Event title...' : isNews ? 'News title...' : isVideo ? 'Video title...' : isMarket ? 'e.g., Market Dashboard' : isStrc ? 'e.g., STRC Dashboard' : isSata ? 'e.g., SATA Dashboard' : 'e.g., Hong Kong'}
           className="w-full px-4 py-2 bg-[#1a1a1a] border-2 border-[#00ff00] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00cc00]"
         />
         {isShow && (

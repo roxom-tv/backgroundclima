@@ -202,6 +202,7 @@ export default function SlidesPage() {
       case 'debt': return { icon: '💵', label: 'US Debt', color: 'text-yellow-400' };
       case 'metals': return { icon: '🥇', label: 'Metals', color: 'text-amber-400' };
       case 'fx': return { icon: '💱', label: 'FX', color: 'text-cyan-400' };
+      case 'market': return { icon: '📈', label: 'Market', color: 'text-emerald-400' };
       case 'show': return { icon: '🎬', label: 'Show', color: 'text-green-400' };
       case 'event': return { icon: '📅', label: 'Event', color: 'text-purple-400' };
       case 'calendar': return { icon: '📅', label: 'Calendar', color: 'text-blue-400' };
@@ -214,7 +215,7 @@ export default function SlidesPage() {
   };
 
   // Check if slide is a system slide (hardcoded content, limited editing)
-  const isSystemSlide = (type: string) => ['debt', 'metals', 'fx', 'strc', 'sata'].includes(type);
+  const isSystemSlide = (type: string) => ['debt', 'metals', 'fx', 'market', 'strc', 'sata'].includes(type);
 
   // Handle edit debt slide (open mini-form)
   const handleEditDebt = useCallback((slide: Slide) => {
@@ -634,6 +635,7 @@ export default function SlidesPage() {
                     {editingDebtSlide.type === 'debt' && 'CONTENT IS FETCHED FROM THE US TREASURY API.'}
                     {editingDebtSlide.type === 'metals' && 'CONTENT IS FETCHED FROM THE METALS API (GOLD & SILVER PRICES).'}
                     {editingDebtSlide.type === 'fx' && 'CONTENT IS FETCHED FROM THE FX API (EUR, JPY, GBP, USD RATES).'}
+                    {editingDebtSlide.type === 'market' && 'CONTENT IS FETCHED FROM THE LIVE MARKETS API (/API/MARKETS/LIVE).'}
                     {editingDebtSlide.type === 'strc' && 'CONTENT IS FETCHED FROM THE STRC DATA API.'}
                     {editingDebtSlide.type === 'sata' && 'CONTENT IS FETCHED FROM THE SATA/STRIVE DATA API.'}
                   </span>
