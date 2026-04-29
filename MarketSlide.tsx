@@ -168,7 +168,7 @@ function StockCard({ t }: { t: TickerData }) {
           <div style={{ flex:1, height:5, background:T.border, borderRadius:9999, overflow:'hidden' }}>
             <div style={{ width:`${volW}%`, height:'100%', borderRadius:9999, background: up ? T.accent : T.red }} />
           </div>
-          <span style={{ fontSize:24, fontWeight:700, fontFamily:T.mono, flexShrink:0, width:80, textAlign:'right', marginRight:5, color: (t.volPct !== null && t.volPct > 150) ? T.accent : T.text3 }}>
+          <span style={{ fontSize:24, fontWeight:700, fontFamily:T.mono, flexShrink:0, width:80, textAlign:'right', marginRight:5, color: up ? T.accent : T.red }}>
             {hasVolPct ? `${t.volPct}%` : 'N/A'}
           </span>
         </div>
