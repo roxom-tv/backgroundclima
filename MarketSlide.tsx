@@ -198,7 +198,8 @@ export default function MarketSlide() {
   const idxTimer   = useRef<ReturnType<typeof setInterval> | null>(null);
   const dataTimer  = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Scale a fixed 1920×1080 canvas to fill any viewport uniformly
+  // Scale 1920×1080 canvas to fit inside the viewport (contain), centered.
+  // The outer div (position:absolute; inset:0; background:T.bg) covers any remaining gaps.
   useEffect(() => {
     const update = () =>
       setScale(Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H));
@@ -260,15 +261,15 @@ export default function MarketSlide() {
 
   return (
     <div style={{
-      width: '100vw', height: '100vh', overflow: 'hidden',
-      background: T.bg,
-      display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start',
+      position: 'absolute', inset: 0,
+      background: T.bg, overflow: 'hidden',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      {/* Fixed 1920×1080 canvas — scales uniformly to any viewport */}
+      {/* Fixed 1920×1080 canvas — scales uniformly, centered, dark bg fills any gap */}
       <div style={{
         width: DESIGN_W, height: DESIGN_H,
         transform: `scale(${scale})`,
-        transformOrigin: 'top left',
+        transformOrigin: 'center center',
         flexShrink: 0,
         color: T.text,
         fontFamily: T.sans,
