@@ -146,7 +146,7 @@ function StockCard({ t }: { t: TickerData }) {
         <div style={{ display:'flex', flexDirection:'row', alignItems:'flex-start', gap:48 }}>
           <div>
             <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8 }}>Volume</div>
-            <div style={{ fontSize:33, fontWeight:700, fontFamily:T.mono, color: (t.volPct !== null && t.volPct > 150) ? T.accent : T.text }}>{t.vol}</div>
+            <div style={{ fontSize:33, fontWeight:700, fontFamily:T.mono, color: T.text }}>{t.vol}</div>
           </div>
           <div style={{ marginLeft:40 }}>
             <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8, whiteSpace:'nowrap' }}>52W Position</div>
