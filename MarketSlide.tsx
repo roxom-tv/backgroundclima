@@ -119,11 +119,6 @@ function StockCard({ t }: { t: TickerData }) {
           </span>
         </div>
         <div style={{ display:'flex', gap:8, flexWrap:'wrap', justifyContent:'flex-end' }}>
-          {t.badges.includes('vol') && (
-            <span style={{ fontSize:11, fontWeight:800, letterSpacing:'0.07em', textTransform:'uppercase', padding:'4px 12px', borderRadius:9999, background:T.redDim, color:T.red, border:`1px solid ${T.redBdr}` }}>
-              VOL ×{hasVolPct ? ((t.volPct as number) / 100).toFixed(1) : 'N/A'}
-            </span>
-          )}
           {t.badges.includes('52h') && (
             <span style={{ fontSize:11, fontWeight:800, letterSpacing:'0.07em', textTransform:'uppercase', padding:'4px 12px', borderRadius:9999, background:T.accentDim, color:T.accent, border:`1px solid ${T.accentBdr}` }}>
               52W HIGH
