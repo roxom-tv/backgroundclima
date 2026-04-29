@@ -63,14 +63,14 @@ function IndexItem({ idx }: { idx: IndexData }) {
   const up = idx.chgPct >= 0;
   return (
     <div style={{ display:'flex', alignItems:'baseline', gap:12, flexShrink:0 }}>
-      <span style={{ fontSize:26, fontWeight:700, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans }}>
+      <span style={{ fontSize:16, fontWeight:700, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans }}>
         {idx.label}
       </span>
-      <span style={{ fontSize:30, fontWeight:800, letterSpacing:'-0.02em', fontFamily:T.mono }}>
+      <span style={{ fontSize:19, fontWeight:800, letterSpacing:'-0.02em', fontFamily:T.mono }}>
         {idx.price}
       </span>
       <span style={{
-        fontSize:23, fontWeight:700, padding:'3px 10px', borderRadius:9999,
+        fontSize:12, fontWeight:700, padding:'3px 10px', borderRadius:9999,
         background: up ? T.accentDim : T.redDim,
         color: up ? T.accent : T.red,
       }}>
@@ -90,7 +90,7 @@ function StockCard({ t }: { t: TickerData }) {
       background: T.surface,
       border: `1px solid ${t.badges.includes('52h') ? T.accentBdr : T.border}`,
       borderRadius: 12,
-      padding: '14px 16px',
+      padding: '32px 36px',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
@@ -107,17 +107,17 @@ function StockCard({ t }: { t: TickerData }) {
       )}
 
       {/* Header: logo + symbol + badge */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:22 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:28 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:16 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={t.logoUrl}
             alt={t.sym}
-            width={52} height={52}
-            style={{ borderRadius:9, objectFit:'contain', background:'rgba(255,255,255,0.06)', padding:5, flexShrink:0 }}
+            width={57} height={57}
+            style={{ borderRadius:10, objectFit:'contain', background:'rgba(255,255,255,0.06)', padding:6, flexShrink:0 }}
             onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
-          <span style={{ fontSize:34, fontWeight:900, letterSpacing:'-0.01em', lineHeight:1 }}>
+          <span style={{ fontSize:36, fontWeight:900, letterSpacing:'-0.01em', lineHeight:1 }}>
             {t.sym}
           </span>
         </div>
@@ -129,12 +129,12 @@ function StockCard({ t }: { t: TickerData }) {
       </div>
 
       {/* Price + change */}
-      <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', marginBottom:22 }}>
-        <span style={{ fontSize:68, fontWeight:900, letterSpacing:'-0.03em', fontFamily:T.mono, lineHeight:1 }}>
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', marginBottom:28 }}>
+        <span style={{ fontSize:72, fontWeight:900, letterSpacing:'-0.03em', fontFamily:T.mono, lineHeight:1 }}>
           ${t.price.toFixed(2)}
         </span>
         <span style={{
-          fontSize:26, fontWeight:700, padding:'5px 14px', borderRadius:9999, marginTop:16,
+          fontSize:28, fontWeight:700, padding:'6px 14px', borderRadius:9999, marginTop:20,
           background: up ? T.accentDim : T.redDim,
           color: up ? T.accent : T.red,
         }}>
@@ -143,41 +143,41 @@ function StockCard({ t }: { t: TickerData }) {
       </div>
 
       {/* Tier 1: Volume + 52W Position */}
-      <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:16, display:'flex', flexDirection:'column', gap:10 }}>
-        <div style={{ display:'flex', flexDirection:'row', alignItems:'flex-start', gap:40 }}>
+      <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:20, display:'flex', flexDirection:'column', gap:14 }}>
+        <div style={{ display:'flex', flexDirection:'row', alignItems:'flex-start', gap:48 }}>
           <div>
-            <div style={{ fontSize:13, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:6 }}>Volume</div>
-            <div style={{ fontSize:30, fontWeight:700, fontFamily:T.mono, color:T.text }}>{t.vol}</div>
+            <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8 }}>Volume</div>
+            <div style={{ fontSize:33, fontWeight:700, fontFamily:T.mono, color:T.text }}>{t.vol}</div>
           </div>
           <div>
-            <div style={{ fontSize:13, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:6, whiteSpace:'nowrap' }}>52W Position</div>
-            <div style={{ fontSize:30, fontWeight:700, fontFamily:T.mono, color: t.w52Pos >= 99 ? T.accent : t.w52Pos < 20 ? T.red : T.text }}>
+            <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8, whiteSpace:'nowrap' }}>52W Position</div>
+            <div style={{ fontSize:33, fontWeight:700, fontFamily:T.mono, color: t.w52Pos >= 99 ? T.accent : t.w52Pos < 20 ? T.red : T.text }}>
               {t.w52Pos >= 99 ? 'NEW HIGH' : `${t.w52Pos}%`}
             </div>
           </div>
         </div>
 
         {/* Day Range */}
-        <div style={{ display:'flex', alignItems:'baseline', gap:10, marginTop:8, whiteSpace:'nowrap' }}>
-          <span style={{ fontSize:13, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans }}>Day Range</span>
-          <span style={{ fontSize:20, fontWeight:700, fontFamily:T.mono }}>{t.dayRange}</span>
+        <div style={{ display:'flex', alignItems:'baseline', gap:10, marginTop:15, whiteSpace:'nowrap' }}>
+          <span style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans }}>Day Range</span>
+          <span style={{ fontSize:22, fontWeight:700, fontFamily:T.mono }}>{t.dayRange}</span>
         </div>
 
         {/* Vol vs Avg bar */}
-        <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:6 }}>
-          <span style={{ fontSize:13, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0, width:80 }}>Vol vs Avg</span>
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:10 }}>
+          <span style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0, width:120 }}>Vol vs Avg</span>
           <div style={{ flex:1, height:5, background:T.border, borderRadius:9999, overflow:'hidden' }}>
             <div style={{ width:`${volW}%`, height:'100%', borderRadius:9999, background: up ? T.accent : T.red }} />
           </div>
-          <span style={{ fontSize:22, fontWeight:700, fontFamily:T.mono, flexShrink:0, width:72, textAlign:'right', color: up ? T.accent : T.red }}>
+          <span style={{ fontSize:24, fontWeight:700, fontFamily:T.mono, flexShrink:0, width:80, textAlign:'right', color: up ? T.accent : T.red }}>
             {hasVolPct ? `${t.volPct}%` : 'N/A'}
           </span>
         </div>
       </div>
 
       {/* Tier 2: Mkt Cap / P/E / EPS / Beta */}
-      <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:16 }}>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
+      <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:20 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
           {[
             ['Mkt Cap', t.mktCap],
             ['P/E',     t.pe],
@@ -185,8 +185,8 @@ function StockCard({ t }: { t: TickerData }) {
             ['Beta',    t.beta],
           ].map(([label, val]) => (
             <div key={label}>
-              <div style={{ fontSize:13, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:6 }}>{label}</div>
-              <div style={{ fontSize:24, fontWeight:700, fontFamily:T.mono }}>{val}</div>
+              <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8 }}>{label}</div>
+              <div style={{ fontSize:26, fontWeight:700, fontFamily:T.mono }}>{val}</div>
             </div>
           ))}
         </div>
@@ -194,10 +194,10 @@ function StockCard({ t }: { t: TickerData }) {
 
       {/* 52W Range */}
       {t.w52Low !== null && (
-        <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:16 }}>
+        <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:20 }}>
           <div style={{ display:'flex', alignItems:'baseline', gap:10 }}>
-            <span style={{ fontSize:13, fontWeight:800, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0 }}>52-WEEK RANGE</span>
-            <span style={{ fontSize:20, fontFamily:T.mono, color:T.text }}>${t.w52Low!.toFixed(2)} – ${t.w52High!.toFixed(2)}</span>
+            <span style={{ fontSize:15, fontWeight:800, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0 }}>52-WEEK RANGE</span>
+            <span style={{ fontSize:22, fontFamily:T.mono, color:T.text }}>${t.w52Low!.toFixed(2)} – ${t.w52High!.toFixed(2)}</span>
           </div>
         </div>
       )}
@@ -207,8 +207,8 @@ function StockCard({ t }: { t: TickerData }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-const DESIGN_W = 960;
-const DESIGN_H = 540;
+const DESIGN_W = 1920;
+const DESIGN_H = 1080;
 
 export default function MarketSlide() {
   const [data, setData]         = useState<MarketResponse | null>(sharedData);
@@ -309,16 +309,16 @@ export default function MarketSlide() {
 
         {/* HEADER */}
         <header style={{
-          position:'relative', zIndex:10, flexShrink:0, height:52,
+          position:'relative', zIndex:10, flexShrink:0, height:68,
           borderBottom:`1px solid ${T.border}`,
-          display:'flex', alignItems:'center', padding:'0 24px',
+          display:'flex', alignItems:'center', padding:'0 40px',
           background:'rgba(6,7,7,0.96)',
           backdropFilter:'blur(20px)',
         }}>
           {/* Logo */}
-          <div style={{ flexShrink:0, marginRight:28, display:'flex', alignItems:'center' }}>
+          <div style={{ flexShrink:0, marginRight:48, display:'flex', alignItems:'center' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/rtvwhite.png" alt="Roxom TV" style={{ height:26, width:'auto', display:'block' }} />
+            <img src="/rtvwhite.png" alt="Roxom TV" style={{ height:38, width:'auto', display:'block' }} />
           </div>
 
           {/* Indices — animated slide */}
@@ -330,7 +330,7 @@ export default function MarketSlide() {
                 animate={{ x: 0,      opacity: 1 }}
                 exit={{    x: '-100%', opacity: 0 }}
                 transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
-                style={{ display:'flex', alignItems:'center', gap:24, width:'100%' }}
+                style={{ display:'flex', alignItems:'center', gap:36, width:'100%' }}
               >
                 {currentIdx.map(idx => <IndexItem key={idx.sym} idx={idx} />)}
               </motion.div>
@@ -374,7 +374,7 @@ export default function MarketSlide() {
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3,1fr)',
                   gridTemplateRows: '1fr',
-                  gap: 8, padding: '8px 20px',
+                  gap: 16, padding: '16px 40px',
                 }}
               >
                 {(stockPage === 0 ? page1 : page2).map(t => (
@@ -387,7 +387,7 @@ export default function MarketSlide() {
 
         {/* Minimal footer */}
         <footer style={{
-          position:'relative', zIndex:10, flexShrink:0, height:20,
+          position:'relative', zIndex:10, flexShrink:0, height:40,
           borderTop:`1px solid ${T.border}`,
           background:'rgba(6,7,7,0.96)',
         }} />
