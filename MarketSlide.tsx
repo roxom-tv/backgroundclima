@@ -63,14 +63,14 @@ function IndexItem({ idx }: { idx: IndexData }) {
   const up = idx.chgPct >= 0;
   return (
     <div style={{ display:'flex', alignItems:'baseline', gap:12, flexShrink:0 }}>
-      <span style={{ fontSize:16, fontWeight:700, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans }}>
+      <span style={{ fontSize:26, fontWeight:700, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans }}>
         {idx.label}
       </span>
-      <span style={{ fontSize:20, fontWeight:800, letterSpacing:'-0.02em', fontFamily:T.mono }}>
+      <span style={{ fontSize:30, fontWeight:800, letterSpacing:'-0.02em', fontFamily:T.mono }}>
         {idx.price}
       </span>
       <span style={{
-        fontSize:13, fontWeight:700, padding:'3px 10px', borderRadius:9999,
+        fontSize:23, fontWeight:700, padding:'3px 10px', borderRadius:9999,
         background: up ? T.accentDim : T.redDim,
         color: up ? T.accent : T.red,
       }}>
@@ -90,7 +90,7 @@ function StockCard({ t }: { t: TickerData }) {
       background: T.surface,
       border: `1px solid ${t.badges.includes('52h') ? T.accentBdr : T.border}`,
       borderRadius: 12,
-      padding: '28px 32px',
+      padding: '14px 16px',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
@@ -165,7 +165,7 @@ function StockCard({ t }: { t: TickerData }) {
 
         {/* Vol vs Avg bar */}
         <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:6 }}>
-          <span style={{ fontSize:13, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0, width:110 }}>Vol vs Avg</span>
+          <span style={{ fontSize:13, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0, width:80 }}>Vol vs Avg</span>
           <div style={{ flex:1, height:5, background:T.border, borderRadius:9999, overflow:'hidden' }}>
             <div style={{ width:`${volW}%`, height:'100%', borderRadius:9999, background: up ? T.accent : T.red }} />
           </div>
@@ -207,8 +207,8 @@ function StockCard({ t }: { t: TickerData }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-const DESIGN_W = 1920;
-const DESIGN_H = 1080;
+const DESIGN_W = 960;
+const DESIGN_H = 540;
 
 export default function MarketSlide() {
   const [data, setData]         = useState<MarketResponse | null>(sharedData);
@@ -309,16 +309,16 @@ export default function MarketSlide() {
 
         {/* HEADER */}
         <header style={{
-          position:'relative', zIndex:10, flexShrink:0, height:68,
+          position:'relative', zIndex:10, flexShrink:0, height:52,
           borderBottom:`1px solid ${T.border}`,
-          display:'flex', alignItems:'center', padding:'0 40px',
+          display:'flex', alignItems:'center', padding:'0 24px',
           background:'rgba(6,7,7,0.96)',
           backdropFilter:'blur(20px)',
         }}>
           {/* Logo */}
-          <div style={{ flexShrink:0, marginRight:48, display:'flex', alignItems:'center' }}>
+          <div style={{ flexShrink:0, marginRight:28, display:'flex', alignItems:'center' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/rtvwhite.png" alt="Roxom TV" style={{ height:36, width:'auto', display:'block' }} />
+            <img src="/rtvwhite.png" alt="Roxom TV" style={{ height:26, width:'auto', display:'block' }} />
           </div>
 
           {/* Indices — animated slide */}
@@ -330,7 +330,7 @@ export default function MarketSlide() {
                 animate={{ x: 0,      opacity: 1 }}
                 exit={{    x: '-100%', opacity: 0 }}
                 transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
-                style={{ display:'flex', alignItems:'center', gap:36, width:'100%' }}
+                style={{ display:'flex', alignItems:'center', gap:24, width:'100%' }}
               >
                 {currentIdx.map(idx => <IndexItem key={idx.sym} idx={idx} />)}
               </motion.div>
@@ -374,7 +374,7 @@ export default function MarketSlide() {
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3,1fr)',
                   gridTemplateRows: '1fr',
-                  gap: 16, padding: '16px 40px',
+                  gap: 8, padding: '8px 20px',
                 }}
               >
                 {(stockPage === 0 ? page1 : page2).map(t => (
@@ -387,7 +387,7 @@ export default function MarketSlide() {
 
         {/* Minimal footer */}
         <footer style={{
-          position:'relative', zIndex:10, flexShrink:0, height:40,
+          position:'relative', zIndex:10, flexShrink:0, height:20,
           borderTop:`1px solid ${T.border}`,
           background:'rgba(6,7,7,0.96)',
         }} />
