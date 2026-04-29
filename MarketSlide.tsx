@@ -174,12 +174,10 @@ function StockCard({ t }: { t: TickerData }) {
         </div>
       </div>
 
-      {/* Tier 2: Mkt Cap only */}
+      {/* Mkt Cap */}
       <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:20 }}>
-        <div>
-          <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8 }}>Mkt Cap</div>
-          <div style={{ fontSize:26, fontWeight:700, fontFamily:T.mono }}>{t.mktCap}</div>
-        </div>
+        <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8 }}>Mkt Cap</div>
+        <div style={{ fontSize:26, fontWeight:700, fontFamily:T.mono }}>{t.mktCap}</div>
       </div>
     </div>
   );
