@@ -174,11 +174,32 @@ function StockCard({ t }: { t: TickerData }) {
         </div>
       </div>
 
-      {/* Mkt Cap */}
+      {/* Tier 2: Mkt Cap / P/E / EPS / Beta */}
       <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:20 }}>
-        <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8 }}>Mkt Cap</div>
-        <div style={{ fontSize:26, fontWeight:700, fontFamily:T.mono }}>{t.mktCap}</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
+          {[
+            ['Mkt Cap', t.mktCap],
+            ['P/E',     t.pe],
+            ['EPS TTM', t.eps],
+            ['Beta',    t.beta],
+          ].map(([label, val]) => (
+            <div key={label}>
+              <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8 }}>{label}</div>
+              <div style={{ fontSize:26, fontWeight:700, fontFamily:T.mono }}>{val}</div>
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* 52W Range */}
+      {t.w52Low !== null && (
+        <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:20 }}>
+          <div style={{ display:'flex', alignItems:'baseline', gap:10 }}>
+            <span style={{ fontSize:15, fontWeight:800, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0 }}>52-WEEK RANGE</span>
+            <span style={{ fontSize:22, fontFamily:T.mono, color:T.text }}>${t.w52Low!.toFixed(2)} – ${t.w52High!.toFixed(2)}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -198,8 +219,7 @@ export default function MarketSlide() {
   const idxTimer   = useRef<ReturnType<typeof setInterval> | null>(null);
   const dataTimer  = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Scale 1920×1080 canvas to fit inside the viewport (contain), centered.
-  // The outer div (position:absolute; inset:0; background:T.bg) covers any remaining gaps.
+  // Scale a fixed 1920×1080 canvas to fill any viewport uniformly
   useEffect(() => {
     const update = () =>
       setScale(Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H));
@@ -261,15 +281,15 @@ export default function MarketSlide() {
 
   return (
     <div style={{
-      position: 'absolute', inset: 0,
-      background: T.bg, overflow: 'hidden',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      width: '100vw', height: '100vh', overflow: 'hidden',
+      background: T.bg,
+      display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start',
     }}>
-      {/* Fixed 1920×1080 canvas — scales uniformly, centered, dark bg fills any gap */}
+      {/* Fixed 1920×1080 canvas — scales uniformly to any viewport */}
       <div style={{
         width: DESIGN_W, height: DESIGN_H,
         transform: `scale(${scale})`,
-        transformOrigin: 'center center',
+        transformOrigin: 'top left',
         flexShrink: 0,
         color: T.text,
         fontFamily: T.sans,
