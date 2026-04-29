@@ -174,32 +174,13 @@ function StockCard({ t }: { t: TickerData }) {
         </div>
       </div>
 
-      {/* Tier 2: Mkt Cap / P/E / EPS / Beta */}
+      {/* Tier 2: Mkt Cap only */}
       <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:20 }}>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
-          {[
-            ['Mkt Cap', t.mktCap],
-            ['P/E',     t.pe],
-            ['EPS TTM', t.eps],
-            ['Beta',    t.beta],
-          ].map(([label, val]) => (
-            <div key={label}>
-              <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8 }}>{label}</div>
-              <div style={{ fontSize:26, fontWeight:700, fontFamily:T.mono }}>{val}</div>
-            </div>
-          ))}
+        <div>
+          <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8 }}>Mkt Cap</div>
+          <div style={{ fontSize:26, fontWeight:700, fontFamily:T.mono }}>{t.mktCap}</div>
         </div>
       </div>
-
-      {/* 52W Range */}
-      {t.w52Low !== null && (
-        <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:20 }}>
-          <div style={{ display:'flex', alignItems:'baseline', gap:10 }}>
-            <span style={{ fontSize:15, fontWeight:800, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0 }}>52-WEEK RANGE</span>
-            <span style={{ fontSize:22, fontFamily:T.mono, color:T.text }}>${t.w52Low!.toFixed(2)} – ${t.w52High!.toFixed(2)}</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
