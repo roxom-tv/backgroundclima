@@ -15,6 +15,8 @@ import FxSlide from '@/components/FxSlide';
 import NewsSlide from '@/components/NewsSlide';
 import VideoSlide from '@/components/VideoSlide';
 import MarketSlide from '@/MarketSlide';
+import StrcSlide from '@/components/StrcSlide';
+import SataSlide from '@/components/SataSlide';
 import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
 import type { Slide, Sponsor } from '@/lib/supabase/types';
 
@@ -199,6 +201,32 @@ export default function SlidePreviewPage() {
         return (
           <div className="h-full w-full bg-black relative" style={{ position: 'absolute', inset: 0 }}>
             <MarketSlide />
+            <div className="absolute bottom-4 right-4 z-20">
+              <SponsorDisplay
+                sponsors={slideSponsor ? [slideSponsor] : sponsors}
+                visible={settings.show_sponsors && (slide.show_sponsor ?? false)}
+              />
+            </div>
+          </div>
+        );
+
+      case 'strc':
+        return (
+          <div className="h-full w-full bg-black relative" style={{ position: 'absolute', inset: 0 }}>
+            <StrcSlide />
+            <div className="absolute bottom-4 right-4 z-20">
+              <SponsorDisplay
+                sponsors={slideSponsor ? [slideSponsor] : sponsors}
+                visible={settings.show_sponsors && (slide.show_sponsor ?? false)}
+              />
+            </div>
+          </div>
+        );
+
+      case 'sata':
+        return (
+          <div className="h-full w-full bg-black relative" style={{ position: 'absolute', inset: 0 }}>
+            <SataSlide />
             <div className="absolute bottom-4 right-4 z-20">
               <SponsorDisplay
                 sponsors={slideSponsor ? [slideSponsor] : sponsors}
