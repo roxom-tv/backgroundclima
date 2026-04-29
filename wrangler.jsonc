@@ -32,7 +32,9 @@
     "FX_API_URL": "https://api.exchangerate.host/latest",
     "OPENWEATHER_LANG": "en",
     "OPENWEATHER_UNITS": "metric",
-    "SLACK_ALERTS_ENABLED": "false"
+    "SLACK_ALERTS_ENABLED": "false",
+    "RTV_API_URL": "https://api.roxom.tv",
+    "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV"
   },
   "env": {
     "preview": {
@@ -41,7 +43,9 @@
         "FX_API_URL": "https://api.exchangerate.host/latest",
         "OPENWEATHER_LANG": "en",
         "OPENWEATHER_UNITS": "metric",
-        "SLACK_ALERTS_ENABLED": "false"
+        "SLACK_ALERTS_ENABLED": "false",
+        "RTV_API_URL": "https://api.roxom.tv",
+        "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV"
       },
       "services": [
         { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-preview" }
@@ -57,7 +61,9 @@
         "FX_API_URL": "https://api.exchangerate.host/latest",
         "OPENWEATHER_LANG": "en",
         "OPENWEATHER_UNITS": "metric",
-        "SLACK_ALERTS_ENABLED": "true"
+        "SLACK_ALERTS_ENABLED": "true",
+        "RTV_API_URL": "https://api.roxom.tv",
+        "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV"
       },
       "services": [
         { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-production" }

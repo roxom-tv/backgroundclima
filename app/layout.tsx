@@ -1,10 +1,16 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, IBM_Plex_Mono } from 'next/font/google'
 import localFont from 'next/font/local'
 import Script from 'next/script'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-ibm-plex-mono',
+  display: 'swap',
+})
 const pixelFont = localFont({
   src: './VCR_OSD_MONO_1.001.ttf',
   variable: '--font-pixel',
@@ -30,7 +36,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} ${pixelFont.variable}`}>
+      <body className={`${inter.className} ${pixelFont.variable} ${ibmPlexMono.variable}`}>
         <Script
           src="https://kit.fontawesome.com/090ca49637.js"
           crossOrigin="anonymous"

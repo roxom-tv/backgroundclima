@@ -17,6 +17,8 @@ import MetalsSlide from '@/components/MetalsSlide';
 import FxSlide from '@/components/FxSlide';
 import NewsSlide from '@/components/NewsSlide';
 import VideoSlide from '@/components/VideoSlide';
+import StrcSlide, { prefetchStrcData } from '@/components/StrcSlide';
+import SataSlide, { prefetchSataData } from '@/components/SataSlide';
 import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
 import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
 import { prefetchMarketsData } from '@/hooks/useMarketsSats';
@@ -129,6 +131,12 @@ export default function Home() {
       .catch((err) => console.warn('Debt warmup prefetch failed:', err));
   }, [hasDebtSlides]);
 
+  // Prefetch STRC + SATA data on mount
+  useEffect(() => {
+    prefetchStrcData().catch((err) => console.warn('STRC prefetch failed:', err));
+    prefetchSataData().catch((err) => console.warn('SATA prefetch failed:', err));
+  }, []);
+
   // Reset index when slides change (e.g., reorder, add, remove)
   useEffect(() => {
     if (slides.length > 0 && currentSlideIndex >= slides.length) {
@@ -178,6 +186,8 @@ export default function Home() {
           case 'calendar': text = 'LOADING CALENDAR...'; break;
           case 'news': text = 'LOADING NEWS...'; break;
           case 'video': text = 'LOADING VIDEO...'; break;
+          case 'strc': text = 'LOADING STRC...'; break;
+          case 'sata': text = 'LOADING SATA...'; break;
           default: text = 'SWITCHING...';
         }
       }
@@ -481,6 +491,46 @@ export default function Home() {
                 }
               }}
             />
+            {renderPositionedSponsors(currentSlide)}
+          </motion.div>
+        );
+
+      case 'strc':
+        return (
+          <motion.div
+            key={`strc-${currentSlide.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.5,
+              ease: [0.4, 0, 0.2, 1],
+              opacity: { duration: 0.4 }
+            }}
+            className="h-full w-full bg-black relative"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <StrcSlide />
+            {renderPositionedSponsors(currentSlide)}
+          </motion.div>
+        );
+
+      case 'sata':
+        return (
+          <motion.div
+            key={`sata-${currentSlide.id}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.5,
+              ease: [0.4, 0, 0.2, 1],
+              opacity: { duration: 0.4 }
+            }}
+            className="h-full w-full bg-black relative"
+            style={{ position: 'absolute', inset: 0 }}
+          >
+            <SataSlide />
             {renderPositionedSponsors(currentSlide)}
           </motion.div>
         );
