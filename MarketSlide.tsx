@@ -59,15 +59,15 @@ const FALLBACK_INDICES: IndexData[] = [
 function IndexItem({ idx }: { idx: IndexData }) {
   const up = idx.chgPct >= 0;
   return (
-    <div style={{ display:'flex', alignItems:'baseline', gap:12, flexShrink:0 }}>
-      <span style={{ fontSize:16, fontWeight:700, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans }}>
+    <div style={{ display:'flex', alignItems:'baseline', gap:'clamp(6px,0.8vw,12px)', flexShrink:0 }}>
+      <span style={{ fontSize:'clamp(10px,1.3vh,16px)', fontWeight:700, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans }}>
         {idx.label}
       </span>
-      <span style={{ fontSize:19, fontWeight:800, letterSpacing:'-0.02em', fontFamily:T.mono }}>
+      <span style={{ fontSize:'clamp(12px,1.6vh,19px)', fontWeight:800, letterSpacing:'-0.02em', fontFamily:T.mono }}>
         {idx.price}
       </span>
       <span style={{
-        fontSize:12, fontWeight:700, padding:'3px 10px', borderRadius:9999,
+        fontSize:'clamp(9px,1.1vh,12px)', fontWeight:700, padding:'2px 8px', borderRadius:9999,
         background: up ? T.accentDim : T.redDim,
         color: up ? T.accent : T.red,
       }}>
@@ -76,6 +76,26 @@ function IndexItem({ idx }: { idx: IndexData }) {
     </div>
   );
 }
+
+// vh-based scale helpers — sizes scale with viewport height so cards never overflow
+const S = {
+  pad:      'clamp(12px, 2.4vh, 32px)',
+  padH:     'clamp(14px, 2.8vh, 36px)',
+  logo:     'clamp(28px, 4.2vh, 52px)' as string,
+  sym:      'clamp(18px, 2.8vh, 34px)',
+  price:    'clamp(32px, 5.8vh, 68px)',
+  chg:      'clamp(14px, 2vh, 24px)',
+  volVal:   'clamp(16px, 2.4vh, 30px)',
+  metVal:   'clamp(13px, 1.9vh, 24px)',
+  label:    'clamp(9px, 1.1vh, 13px)',
+  range:    'clamp(11px, 1.6vh, 20px)',
+  volPct:   'clamp(13px, 1.9vh, 22px)',
+  gap:      'clamp(8px, 1.2vh, 16px)'  as string,
+  gapSm:   'clamp(4px, 0.7vh, 8px)'   as string,
+  mb:       'clamp(10px, 1.8vh, 24px)' as string,
+  pt:       'clamp(8px, 1.4vh, 16px)'  as string,
+  mt:       'clamp(6px, 1vh, 12px)'    as string,
+};
 
 function StockCard({ t }: { t: TickerData }) {
   const up = t.chgPct >= 0;
@@ -86,14 +106,15 @@ function StockCard({ t }: { t: TickerData }) {
     <div style={{
       background: T.surface,
       border: `1px solid ${t.badges.includes('52h') ? T.accentBdr : T.border}`,
-      borderRadius: 12,
-      padding: '32px 36px',
+      borderRadius: 10,
+      padding: `${S.pad} ${S.padH}`,
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
       position: 'relative',
       overflow: 'hidden',
       height: '100%',
+      boxSizing: 'border-box',
     }}>
       {/* Green top bar for high priority */}
       {t.badges.length >= 2 && (
@@ -103,37 +124,34 @@ function StockCard({ t }: { t: TickerData }) {
         }} />
       )}
 
-      {/* Header: logo + symbol + badges */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:28 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+      {/* Header: logo + symbol + badge */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:S.mb }}>
+        <div style={{ display:'flex', alignItems:'center', gap:S.gap }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={t.logoUrl}
             alt={t.sym}
-            width={57} height={57}
-            style={{ borderRadius:10, objectFit:'contain', background:'rgba(255,255,255,0.06)', padding:6, flexShrink:0 }}
+            style={{ width:S.logo, height:S.logo, borderRadius:8, objectFit:'contain', background:'rgba(255,255,255,0.06)', padding:5, flexShrink:0 }}
             onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
-          <span style={{ fontSize:36, fontWeight:900, letterSpacing:'-0.01em', lineHeight:1 }}>
+          <span style={{ fontSize:S.sym, fontWeight:900, letterSpacing:'-0.01em', lineHeight:1 }}>
             {t.sym}
           </span>
         </div>
-        <div style={{ display:'flex', gap:8, flexWrap:'wrap', justifyContent:'flex-end' }}>
-          {t.badges.includes('52h') && (
-            <span style={{ fontSize:11, fontWeight:800, letterSpacing:'0.07em', textTransform:'uppercase', padding:'4px 12px', borderRadius:9999, background:T.accentDim, color:T.accent, border:`1px solid ${T.accentBdr}` }}>
-              52W HIGH
-            </span>
-          )}
-        </div>
+        {t.badges.includes('52h') && (
+          <span style={{ fontSize:'clamp(9px,1vh,11px)', fontWeight:800, letterSpacing:'0.07em', textTransform:'uppercase', padding:'3px 10px', borderRadius:9999, background:T.accentDim, color:T.accent, border:`1px solid ${T.accentBdr}`, flexShrink:0 }}>
+            52W HIGH
+          </span>
+        )}
       </div>
 
       {/* Price + change */}
-      <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', gap:0, marginBottom:28 }}>
-        <span style={{ fontSize:72, fontWeight:900, letterSpacing:'-0.03em', fontFamily:T.mono, lineHeight:1 }}>
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', marginBottom:S.mb }}>
+        <span style={{ fontSize:S.price, fontWeight:900, letterSpacing:'-0.03em', fontFamily:T.mono, lineHeight:1 }}>
           ${t.price.toFixed(2)}
         </span>
         <span style={{
-          fontSize:28, fontWeight:700, padding:'6px 14px', borderRadius:9999, marginTop:20,
+          fontSize:S.chg, fontWeight:700, padding:'4px 12px', borderRadius:9999, marginTop:S.mt,
           background: up ? T.accentDim : T.redDim,
           color: up ? T.accent : T.red,
         }}>
@@ -142,41 +160,41 @@ function StockCard({ t }: { t: TickerData }) {
       </div>
 
       {/* Tier 1: Volume + 52W Position */}
-      <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:20, display:'flex', flexDirection:'column', gap:14 }}>
-        <div style={{ display:'flex', flexDirection:'row', alignItems:'flex-start', gap:48 }}>
+      <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:S.pt, display:'flex', flexDirection:'column', gap:S.gapSm }}>
+        <div style={{ display:'flex', flexDirection:'row', alignItems:'flex-start', gap:S.gap }}>
           <div>
-            <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8 }}>Volume</div>
-            <div style={{ fontSize:33, fontWeight:700, fontFamily:T.mono, color: T.text }}>{t.vol}</div>
+            <div style={{ fontSize:S.label, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:S.gapSm }}>Volume</div>
+            <div style={{ fontSize:S.volVal, fontWeight:700, fontFamily:T.mono, color:T.text }}>{t.vol}</div>
           </div>
-          <div style={{ marginLeft:40 }}>
-            <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8, whiteSpace:'nowrap' }}>52W Position</div>
-            <div style={{ fontSize:33, fontWeight:700, fontFamily:T.mono, color: t.w52Pos >= 99 ? T.accent : t.w52Pos < 20 ? T.red : T.text }}>
+          <div>
+            <div style={{ fontSize:S.label, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:S.gapSm, whiteSpace:'nowrap' }}>52W Position</div>
+            <div style={{ fontSize:S.volVal, fontWeight:700, fontFamily:T.mono, color: t.w52Pos >= 99 ? T.accent : t.w52Pos < 20 ? T.red : T.text }}>
               {t.w52Pos >= 99 ? 'NEW HIGH' : `${t.w52Pos}%`}
             </div>
           </div>
         </div>
 
-        {/* Day Range inline */}
-        <div style={{ display:'flex', alignItems:'baseline', gap:10, marginTop:15, whiteSpace:'nowrap' }}>
-          <span style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans }}>Day Range</span>
-          <span style={{ fontSize:22, fontWeight:700, fontFamily:T.mono }}>{t.dayRange}</span>
+        {/* Day Range */}
+        <div style={{ display:'flex', alignItems:'baseline', gap:8, marginTop:S.mt, whiteSpace:'nowrap' }}>
+          <span style={{ fontSize:S.label, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans }}>Day Range</span>
+          <span style={{ fontSize:S.range, fontWeight:700, fontFamily:T.mono }}>{t.dayRange}</span>
         </div>
 
         {/* Vol vs Avg bar */}
-        <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:10 }}>
-          <span style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0, width:120 }}>Vol vs Avg</span>
-          <div style={{ flex:1, height:5, background:T.border, borderRadius:9999, overflow:'hidden' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:S.mt }}>
+          <span style={{ fontSize:S.label, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0, minWidth:'clamp(70px,9vw,110px)' }}>Vol vs Avg</span>
+          <div style={{ flex:1, height:4, background:T.border, borderRadius:9999, overflow:'hidden' }}>
             <div style={{ width:`${volW}%`, height:'100%', borderRadius:9999, background: up ? T.accent : T.red }} />
           </div>
-          <span style={{ fontSize:24, fontWeight:700, fontFamily:T.mono, flexShrink:0, width:80, textAlign:'right', marginRight:5, color: up ? T.accent : T.red }}>
+          <span style={{ fontSize:S.volPct, fontWeight:700, fontFamily:T.mono, flexShrink:0, minWidth:'clamp(40px,5vw,72px)', textAlign:'right', color: up ? T.accent : T.red }}>
             {hasVolPct ? `${t.volPct}%` : 'N/A'}
           </span>
         </div>
       </div>
 
       {/* Tier 2: Mkt Cap / P/E / EPS / Beta */}
-      <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:20 }}>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
+      <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:S.pt }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:S.gapSm }}>
           {[
             ['Mkt Cap', t.mktCap],
             ['P/E',     t.pe],
@@ -184,8 +202,8 @@ function StockCard({ t }: { t: TickerData }) {
             ['Beta',    t.beta],
           ].map(([label, val]) => (
             <div key={label}>
-              <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8 }}>{label}</div>
-              <div style={{ fontSize:26, fontWeight:700, fontFamily:T.mono }}>{val}</div>
+              <div style={{ fontSize:S.label, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:S.gapSm }}>{label}</div>
+              <div style={{ fontSize:S.metVal, fontWeight:700, fontFamily:T.mono }}>{val}</div>
             </div>
           ))}
         </div>
@@ -193,10 +211,10 @@ function StockCard({ t }: { t: TickerData }) {
 
       {/* 52W Range */}
       {t.w52Low !== null && (
-        <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:20 }}>
-          <div style={{ display:'flex', alignItems:'baseline', gap:10 }}>
-            <span style={{ fontSize:15, fontWeight:800, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0 }}>52-WEEK RANGE</span>
-            <span style={{ fontSize:22, fontFamily:T.mono, color:T.text }}>${t.w52Low!.toFixed(2)} – ${t.w52High!.toFixed(2)}</span>
+        <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:S.pt }}>
+          <div style={{ display:'flex', alignItems:'baseline', gap:8, flexWrap:'wrap' }}>
+            <span style={{ fontSize:S.label, fontWeight:800, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0 }}>52-WEEK RANGE</span>
+            <span style={{ fontSize:S.range, fontFamily:T.mono, color:T.text }}>${t.w52Low!.toFixed(2)} – ${t.w52High!.toFixed(2)}</span>
           </div>
         </div>
       )}
@@ -283,16 +301,16 @@ export default function MarketSlide() {
 
       {/* HEADER */}
       <header style={{
-        position:'relative', zIndex:10, flexShrink:0, height:68,
+        position:'relative', zIndex:10, flexShrink:0, height:'clamp(48px,6.5vh,72px)',
         borderBottom:`1px solid ${T.border}`,
-        display:'flex', alignItems:'center', padding:'0 40px',
+        display:'flex', alignItems:'center', padding:'0 clamp(16px,3vw,40px)',
         background:'rgba(6,7,7,0.96)',
         backdropFilter:'blur(20px)',
       }}>
         {/* Logo */}
-        <div style={{ flexShrink:0, marginRight:48, display:'flex', alignItems:'center' }}>
+        <div style={{ flexShrink:0, marginRight:'clamp(16px,3.5vw,48px)', display:'flex', alignItems:'center' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/rtvwhite.png" alt="Roxom TV" style={{ height:38, width:'auto', display:'block' }} />
+          <img src="/rtvwhite.png" alt="Roxom TV" style={{ height:'clamp(24px,3.2vh,38px)', width:'auto', display:'block' }} />
         </div>
 
         {/* Indices — animated slide */}
@@ -304,7 +322,7 @@ export default function MarketSlide() {
               animate={{ x: 0,      opacity: 1 }}
               exit={{    x: '-100%', opacity: 0 }}
               transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
-              style={{ display:'flex', alignItems:'center', gap:36, width:'100%' }}
+              style={{ display:'flex', alignItems:'center', gap:'clamp(16px,2.8vw,36px)', width:'100%' }}
             >
               {currentIdx.map(idx => <IndexItem key={idx.sym} idx={idx} />)}
             </motion.div>
@@ -370,7 +388,7 @@ export default function MarketSlide() {
                 display: 'grid',
                 gridTemplateColumns: 'repeat(3,1fr)',
                 gridTemplateRows: '1fr',
-                gap: 16, padding: '16px 40px',
+                gap: 'clamp(8px,1.2vh,16px)', padding: 'clamp(8px,1.2vh,16px) clamp(16px,2.8vw,40px)',
               }}
             >
               {(stockPage === 0 ? page1 : page2).map(t => (
