@@ -60,14 +60,14 @@ function IndexItem({ idx }: { idx: IndexData }) {
   const up = idx.chgPct >= 0;
   return (
     <div style={{ display:'flex', alignItems:'baseline', gap:12, flexShrink:0 }}>
-      <span style={{ fontSize:16, fontWeight:700, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans }}>
+      <span style={{ fontSize:22, fontWeight:700, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans }}>
         {idx.label}
       </span>
-      <span style={{ fontSize:19, fontWeight:800, letterSpacing:'-0.02em', fontFamily:T.mono }}>
+      <span style={{ fontSize:25, fontWeight:800, letterSpacing:'-0.02em', fontFamily:T.mono }}>
         {idx.price}
       </span>
       <span style={{
-        fontSize:12, fontWeight:700, padding:'3px 10px', borderRadius:9999,
+        fontSize:18, fontWeight:700, padding:'3px 10px', borderRadius:9999,
         background: up ? T.accentDim : T.redDim,
         color: up ? T.accent : T.red,
       }}>
@@ -87,13 +87,13 @@ function StockCard({ t }: { t: TickerData }) {
       background: T.surface,
       border: `1px solid ${t.badges.includes('52h') ? T.accentBdr : T.border}`,
       borderRadius: 12,
-      padding: '32px 36px',
+      padding: '18px 22px 30px 22px',
       display: 'flex',
       flexDirection: 'column',
-      justifyContent: 'space-between',
+      justifyContent: 'flex-start',
+      gap: 0,
       position: 'relative',
       overflow: 'hidden',
-      height: '100%',
     }}>
       {/* Green top bar for high priority */}
       {t.badges.length >= 2 && (
@@ -104,17 +104,17 @@ function StockCard({ t }: { t: TickerData }) {
       )}
 
       {/* Header: logo + symbol + badges */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:28 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:100 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:16, marginTop:5 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={t.logoUrl}
             alt={t.sym}
-            width={57} height={57}
+            width={62} height={62}
             style={{ borderRadius:10, objectFit:'contain', background:'rgba(255,255,255,0.06)', padding:6, flexShrink:0 }}
             onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
-          <span style={{ fontSize:36, fontWeight:900, letterSpacing:'-0.01em', lineHeight:1 }}>
+          <span style={{ fontSize:46, fontWeight:900, letterSpacing:'-0.01em', lineHeight:1 }}>
             {t.sym}
           </span>
         </div>
@@ -128,12 +128,12 @@ function StockCard({ t }: { t: TickerData }) {
       </div>
 
       {/* Price + change */}
-      <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', gap:0, marginBottom:28 }}>
-        <span style={{ fontSize:72, fontWeight:900, letterSpacing:'-0.03em', fontFamily:T.mono, lineHeight:1 }}>
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', gap:0, marginBottom:80 }}>
+        <span style={{ fontSize:82, fontWeight:900, letterSpacing:'-0.03em', fontFamily:T.mono, lineHeight:1 }}>
           ${t.price.toFixed(2)}
         </span>
         <span style={{
-          fontSize:28, fontWeight:700, padding:'6px 14px', borderRadius:9999, marginTop:20,
+          fontSize:38, fontWeight:700, padding:'6px 14px', borderRadius:9999, marginTop:20,
           background: up ? T.accentDim : T.redDim,
           color: up ? T.accent : T.red,
         }}>
@@ -142,72 +142,46 @@ function StockCard({ t }: { t: TickerData }) {
       </div>
 
       {/* Tier 1: Volume + 52W Position */}
-      <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:20, display:'flex', flexDirection:'column', gap:14 }}>
+      <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:44, display:'flex', flexDirection:'column', gap:36 }}>
         <div style={{ display:'flex', flexDirection:'row', alignItems:'flex-start', gap:48 }}>
           <div>
-            <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8 }}>Volume</div>
-            <div style={{ fontSize:33, fontWeight:700, fontFamily:T.mono, color: T.text }}>{t.vol}</div>
+            <div style={{ fontSize:23, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8 }}>Volume</div>
+            <div style={{ fontSize:38, fontWeight:700, fontFamily:T.mono, color: T.text }}>{t.vol}</div>
           </div>
           <div style={{ marginLeft:40 }}>
-            <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8, whiteSpace:'nowrap' }}>52W Position</div>
-            <div style={{ fontSize:33, fontWeight:700, fontFamily:T.mono, color: t.w52Pos >= 99 ? T.accent : t.w52Pos < 20 ? T.red : T.text }}>
+            <div style={{ fontSize:23, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8, whiteSpace:'nowrap' }}>52W Position</div>
+            <div style={{ fontSize:38, fontWeight:700, fontFamily:T.mono, color: t.w52Pos >= 99 ? T.accent : t.w52Pos < 20 ? T.red : T.text }}>
               {t.w52Pos >= 99 ? 'NEW HIGH' : `${t.w52Pos}%`}
             </div>
           </div>
         </div>
 
         {/* Day Range inline */}
-        <div style={{ display:'flex', alignItems:'baseline', gap:10, marginTop:15, whiteSpace:'nowrap' }}>
-          <span style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans }}>Day Range</span>
-          <span style={{ fontSize:22, fontWeight:700, fontFamily:T.mono }}>{t.dayRange}</span>
+        <div style={{ display:'flex', alignItems:'baseline', gap:10, marginTop:0, whiteSpace:'nowrap' }}>
+          <span style={{ fontSize:23, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans }}>Day Range</span>
+          <span style={{ fontSize:27, fontWeight:700, fontFamily:T.mono, marginLeft:5 }}>{t.dayRange}</span>
         </div>
 
         {/* Vol vs Avg bar */}
-        <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:10 }}>
-          <span style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0, width:120 }}>Vol vs Avg</span>
+        <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:0 }}>
+          <span style={{ fontSize:18, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0, width:130 }}>Vol vs Avg</span>
           <div style={{ flex:1, height:5, background:T.border, borderRadius:9999, overflow:'hidden' }}>
             <div style={{ width:`${volW}%`, height:'100%', borderRadius:9999, background: up ? T.accent : T.red }} />
           </div>
-          <span style={{ fontSize:24, fontWeight:700, fontFamily:T.mono, flexShrink:0, width:80, textAlign:'right', marginRight:5, color: up ? T.accent : T.red }}>
+          <span style={{ fontSize:29, fontWeight:700, fontFamily:T.mono, flexShrink:0, width:90, textAlign:'right', marginRight:5, color: up ? T.accent : T.red }}>
             {hasVolPct ? `${t.volPct}%` : 'N/A'}
           </span>
         </div>
       </div>
 
-      {/* Tier 2: Mkt Cap / P/E / EPS / Beta */}
-      <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:20 }}>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
-          {[
-            ['Mkt Cap', t.mktCap],
-            ['P/E',     t.pe],
-            ['EPS TTM', t.eps],
-            ['Beta',    t.beta],
-          ].map(([label, val]) => (
-            <div key={label}>
-              <div style={{ fontSize:16, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8 }}>{label}</div>
-              <div style={{ fontSize:26, fontWeight:700, fontFamily:T.mono }}>{val}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 52W Range */}
-      {t.w52Low !== null && (
-        <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:20 }}>
-          <div style={{ display:'flex', alignItems:'baseline', gap:10 }}>
-            <span style={{ fontSize:15, fontWeight:800, letterSpacing:'0.12em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, flexShrink:0 }}>52-WEEK RANGE</span>
-            <span style={{ fontSize:22, fontFamily:T.mono, color:T.text }}>${t.w52Low!.toFixed(2)} – ${t.w52High!.toFixed(2)}</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-const DESIGN_W = 1920;
-const DESIGN_H = 1080;
+const DESIGN_W = 1745;
+const DESIGN_H = 982;
 
 export default function MarketSlide() {
   const [data, setData]         = useState<MarketResponse | null>(sharedData);
@@ -219,10 +193,9 @@ export default function MarketSlide() {
   const idxTimer   = useRef<ReturnType<typeof setInterval> | null>(null);
   const dataTimer  = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Scale a fixed 1920×1080 canvas to fill any viewport uniformly
+  // Scale the canvas to always fill the full width (TV/landscape display)
   useEffect(() => {
-    const update = () =>
-      setScale(Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H));
+    const update = () => setScale(window.innerWidth / DESIGN_W);
     update();
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
@@ -282,19 +255,17 @@ export default function MarketSlide() {
   return (
     <div style={{
       width: '100vw', height: '100vh', overflow: 'hidden',
-      background: T.bg,
-      display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start',
+      background: T.bg, position: 'relative',
     }}>
-      {/* Fixed 1920×1080 canvas — scales uniformly to any viewport */}
+      {/* Scaled canvas — fills full width, anchored top-left */}
       <div style={{
         width: DESIGN_W, height: DESIGN_H,
         transform: `scale(${scale})`,
         transformOrigin: 'top left',
-        flexShrink: 0,
+        position: 'absolute', top: 0, left: 0,
         color: T.text,
         fontFamily: T.sans,
         display: 'flex', flexDirection: 'column',
-        position: 'relative',
         overflow: 'hidden',
       }}>
       {/* Ambient glow */}
@@ -334,18 +305,6 @@ export default function MarketSlide() {
           </AnimatePresence>
         </div>
 
-        {/* Live badge */}
-        <div style={{ flexShrink:0, display:'flex', alignItems:'center', gap:20, marginLeft:'auto' }}>
-          <div style={{
-            display:'flex', alignItems:'center', gap:7,
-            background:'rgba(231,0,11,0.12)', border:'1px solid rgba(231,0,11,0.35)',
-            padding:'5px 14px', borderRadius:9999,
-            fontSize:11, fontWeight:800, letterSpacing:'0.12em', color:'#ff4444',
-          }}>
-            <LiveDot />
-            LIVE
-          </div>
-        </div>
       </header>
 
       {/* MAIN — stock pages */}
@@ -392,8 +351,9 @@ export default function MarketSlide() {
                 position: 'absolute', inset: 0,
                 display: 'grid',
                 gridTemplateColumns: 'repeat(3,1fr)',
-                gridTemplateRows: '1fr',
-                gap: 16, padding: '16px 40px',
+                gridTemplateRows: 'auto',
+                alignItems: 'start',
+                gap: 12, padding: '12px 32px',
               }}
             >
               {(stockPage === 0 ? page1 : page2).map(t => (

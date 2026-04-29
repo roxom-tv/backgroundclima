@@ -48,7 +48,7 @@ const INDEX_POOL = [
   { sym: '^GSPC',    label: 'S&P 500'    },
   { sym: '^IXIC',    label: 'Nasdaq'     },
   { sym: '^DJI',     label: 'Dow Jones'  },
-  { sym: '^RUT',     label: 'Russell 2K' },
+  { sym: '^RUT',     label: 'Russell'    },
   { sym: '^VIX',     label: 'VIX'        },
   { sym: '^TNX',     label: '10Y Yield'  },
   { sym: 'GC=F',     label: 'Gold'       },
