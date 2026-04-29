@@ -206,14 +206,27 @@ function StockCard({ t }: { t: TickerData }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
+const DESIGN_W = 1920;
+const DESIGN_H = 1080;
+
 export default function MarketSlide() {
   const [data, setData]         = useState<MarketResponse | null>(sharedData);
   const [isLoading, setIsLoading] = useState<boolean>(!sharedData);
   const [stockPage, setStockPage] = useState(0);
   const [idxPage,   setIdxPage]   = useState(0);
+  const [scale,     setScale]     = useState(1);
   const stockTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const idxTimer   = useRef<ReturnType<typeof setInterval> | null>(null);
   const dataTimer  = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Scale a fixed 1920×1080 canvas to fill any viewport uniformly
+  useEffect(() => {
+    const update = () =>
+      setScale(Math.min(window.innerWidth / DESIGN_W, window.innerHeight / DESIGN_H));
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   // Initial load + 60s refresh
   useEffect(() => {
@@ -269,14 +282,24 @@ export default function MarketSlide() {
   return (
     <div style={{
       width: '100vw', height: '100vh', overflow: 'hidden',
-      background: T.bg, color: T.text,
-      fontFamily: T.sans,
-      display: 'flex', flexDirection: 'column',
-      position: 'relative',
+      background: T.bg,
+      display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start',
     }}>
+      {/* Fixed 1920×1080 canvas — scales uniformly to any viewport */}
+      <div style={{
+        width: DESIGN_W, height: DESIGN_H,
+        transform: `scale(${scale})`,
+        transformOrigin: 'top left',
+        flexShrink: 0,
+        color: T.text,
+        fontFamily: T.sans,
+        display: 'flex', flexDirection: 'column',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
       {/* Ambient glow */}
       <div style={{
-        position:'fixed', inset:0, pointerEvents:'none', zIndex:0,
+        position:'absolute', inset:0, pointerEvents:'none', zIndex:0,
         background:`radial-gradient(ellipse at 15% 0%, rgba(26,231,132,.08) 0%, transparent 50%),
                     radial-gradient(ellipse at 85% 100%, rgba(26,231,132,.05) 0%, transparent 50%)`,
       }} />
@@ -387,6 +410,7 @@ export default function MarketSlide() {
         borderTop:`1px solid ${T.border}`,
         background:'rgba(6,7,7,0.96)',
       }} />
+      </div>{/* end scaled canvas */}
     </div>
   );
 }
