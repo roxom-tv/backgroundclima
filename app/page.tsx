@@ -279,8 +279,9 @@ export default function Home() {
   // Render the appropriate slide based on type
   const renderSlide = () => {
     if (!currentSlide) return null;
+    const normalizedType = String(currentSlide.type ?? '').trim().toLowerCase();
 
-    switch (currentSlide.type) {
+    switch (normalizedType) {
       case 'youtube':
         return (
           <>
@@ -488,7 +489,7 @@ export default function Home() {
       default:
         return (
           <div className="h-full w-full bg-black flex items-center justify-center">
-            <div className="text-white text-xl">Unknown slide type: {currentSlide.type}</div>
+            <div className="text-white text-xl">Unknown slide type: {currentSlide.type} ({normalizedType})</div>
           </div>
         );
     }
