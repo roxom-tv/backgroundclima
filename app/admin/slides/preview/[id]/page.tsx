@@ -14,9 +14,9 @@ import MetalsSlide from '@/components/MetalsSlide';
 import FxSlide from '@/components/FxSlide';
 import NewsSlide from '@/components/NewsSlide';
 import VideoSlide from '@/components/VideoSlide';
-import MarketSlide from '@/MarketSlide';
 import StrcSlide from '@/components/StrcSlide';
 import SataSlide from '@/components/SataSlide';
+import MarketSlide from '@/MarketSlide';
 import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
 import type { Slide, Sponsor } from '@/lib/supabase/types';
 
@@ -71,9 +71,8 @@ export default function SlidePreviewPage() {
   // Render slide based on type
   const renderSlide = () => {
     if (!slide) return null;
-    const normalizedType = String(slide.type ?? '').trim().toLowerCase();
 
-    switch (normalizedType) {
+    switch (slide.type) {
       case 'youtube':
         return (
           <>
@@ -239,7 +238,7 @@ export default function SlidePreviewPage() {
       default:
         return (
           <div className="h-full w-full bg-black flex items-center justify-center">
-            <p className="text-white font-mono text-xl">Unknown slide type: {slide.type} ({normalizedType})</p>
+            <p className="text-white font-mono text-xl">Unknown slide type: {slide.type}</p>
           </div>
         );
     }
