@@ -69,8 +69,9 @@ export default function SlidePreviewPage() {
   // Render slide based on type
   const renderSlide = () => {
     if (!slide) return null;
+    const normalizedType = String(slide.type ?? '').trim().toLowerCase();
 
-    switch (slide.type) {
+    switch (normalizedType) {
       case 'youtube':
         return (
           <>
@@ -210,7 +211,7 @@ export default function SlidePreviewPage() {
       default:
         return (
           <div className="h-full w-full bg-black flex items-center justify-center">
-            <p className="text-white font-mono text-xl">Unknown slide type: {slide.type}</p>
+            <p className="text-white font-mono text-xl">Unknown slide type: {slide.type} ({normalizedType})</p>
           </div>
         );
     }
