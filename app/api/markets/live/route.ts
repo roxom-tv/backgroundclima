@@ -71,8 +71,6 @@ let _crumb: string | null = null;
 let _cookie: string | null = null;
 let summaryCache: { ts: number; data: Record<string, SummaryRaw> } | null = null;
 const metricCache: Record<string, { pe: number | null; eps: number | null; beta: number | null; avgVol: number | null; mktCap: number | null; ts: number }> = {};
-const avgVolCache: Record<string, { val: number | null; ts: number }> = {};
-const AVGVOL_TTL = 30 * 60 * 1000;
 
 // ── Yahoo Finance helpers ────────────────────────────────────────────────────
 
@@ -186,27 +184,6 @@ async function fetchSummary(symbol: string): Promise<SummaryRaw> {
     avgVol: sd.averageVolume?.raw ?? null,
     mktCap: sd.marketCap?.raw   ?? null,
   };
-}
-
-// ── Avg volume from 3-month chart (fallback when quote/meta fields are empty) ─
-
-async function fetchAvgVol3Mo(symbol: string): Promise<number | null> {
-  const cached = avgVolCache[symbol];
-  if (cached && Date.now() - cached.ts < AVGVOL_TTL) return cached.val;
-  try {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=3mo`;
-    const res = await fetch(url, { headers: YF_HEADERS, cache: 'no-store' });
-    if (!res.ok) throw new Error(`avgvol HTTP ${res.status}`);
-    const json = await res.json();
-    const vols: number[] = json?.chart?.result?.[0]?.indicators?.quote?.[0]?.volume ?? [];
-    const valid = vols.filter((v): v is number => typeof v === 'number' && v > 0);
-    const avg = valid.length > 0 ? Math.round(valid.reduce((a, b) => a + b, 0) / valid.length) : null;
-    avgVolCache[symbol] = { val: avg, ts: Date.now() };
-    return avg;
-  } catch {
-    avgVolCache[symbol] = { val: null, ts: Date.now() };
-    return null;
-  }
 }
 
 // ── Retry wrapper ─────────────────────────────────────────────────────────────
@@ -411,27 +388,6 @@ export async function GET() {
       badges: ticker.badges,
       logoUrl: ticker.logoUrl,
     }));
-
-    // 5.5. For the displayed symbols missing avgVol, fetch from 3-month chart.
-    // Only runs for symbols actually shown (max 6), and only when cache misses.
-    const needAvgVol = top6.filter(t => t.volPct === null);
-    if (needAvgVol.length > 0) {
-      try {
-        const avgVolResults = await Promise.allSettled(
-          needAvgVol.map(t => fetchAvgVol3Mo(t.sym))
-        );
-        needAvgVol.forEach((t, i) => {
-          const r = avgVolResults[i];
-          if (r.status === 'fulfilled' && r.value !== null) {
-            const c = charts[t.sym];
-            if (c) {
-              t.volPct = Math.round((c.vol / r.value) * 100);
-              if (metricCache[t.sym]) metricCache[t.sym].avgVol = r.value;
-            }
-          }
-        });
-      } catch { /* non-critical — volPct stays null if this fails */ }
-    }
 
     // 6. Top 8 indices by abs % change
     const indices: IndexData[] = INDEX_POOL
