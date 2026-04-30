@@ -281,30 +281,6 @@ export async function GET() {
       quoteStats = {};
     }
 
-    // 3.5. Fetch avgVol from 3-month chart for symbols where all other sources are null.
-    // This is the most reliable source on edge environments (no auth required).
-    {
-      const symbolsNeedingAvgVol = WATCHLIST.filter(sym => {
-        if (!charts[sym]) return false;
-        const q = quoteStats[sym] ?? {};
-        const c = charts[sym];
-        const cached = metricCache[sym];
-        return !q.avgVol && !c.avgVol && !cached?.avgVol;
-      });
-      if (symbolsNeedingAvgVol.length > 0) {
-        const results = await Promise.allSettled(
-          symbolsNeedingAvgVol.map(sym => fetchAvgVol3Mo(sym))
-        );
-        symbolsNeedingAvgVol.forEach((sym, i) => {
-          const r = results[i];
-          const val = r.status === 'fulfilled' ? r.value : null;
-          // Persist into metricCache so subsequent calls within TTL are instant
-          if (!metricCache[sym]) metricCache[sym] = { pe: null, eps: null, beta: null, avgVol: val, mktCap: null, ts: now };
-          else metricCache[sym].avgVol = val;
-        });
-      }
-    }
-
     // 4. Summaries — enrich only symbols likely to be shown (top movers),
     // with 30-min cache for fast subsequent responses.
     const now = Date.now();
@@ -435,6 +411,27 @@ export async function GET() {
       badges: ticker.badges,
       logoUrl: ticker.logoUrl,
     }));
+
+    // 5.5. For the displayed symbols missing avgVol, fetch from 3-month chart.
+    // Only runs for symbols actually shown (max 6), and only when cache misses.
+    const needAvgVol = top6.filter(t => t.volPct === null);
+    if (needAvgVol.length > 0) {
+      try {
+        const avgVolResults = await Promise.allSettled(
+          needAvgVol.map(t => fetchAvgVol3Mo(t.sym))
+        );
+        needAvgVol.forEach((t, i) => {
+          const r = avgVolResults[i];
+          if (r.status === 'fulfilled' && r.value !== null) {
+            const c = charts[t.sym];
+            if (c) {
+              t.volPct = Math.round((c.vol / r.value) * 100);
+              if (metricCache[t.sym]) metricCache[t.sym].avgVol = r.value;
+            }
+          }
+        });
+      } catch { /* non-critical — volPct stays null if this fails */ }
+    }
 
     // 6. Top 8 indices by abs % change
     const indices: IndexData[] = INDEX_POOL
