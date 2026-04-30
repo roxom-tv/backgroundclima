@@ -15,16 +15,19 @@ const formatDateShort = (dateStr: string) => {
     const date = new Date(dateStr + 'T00:00:00');
     const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
     const day = date.getDate();
+
     return `${month} ${day}`;
 };
 
 // Format date range
 const formatDateRange = (startDate: string, endDate: string | null) => {
     const start = formatDateShort(startDate);
+
     if (!endDate || endDate === startDate) {
         return start;
     }
     const end = formatDateShort(endDate);
+
     return `${start} - ${end}`;
 };
 
@@ -33,6 +36,7 @@ const getCurrentMonthYear = () => {
     const now = new Date();
     const month = now.toLocaleDateString('en-US', { month: 'long' });
     const year = now.getFullYear();
+
     return `${month} ${year}`;
 };
 
@@ -61,7 +65,7 @@ const ModernEventCard = ({ event, index }: { event: CalendarEvent; index: number
                 <div
                     className="absolute inset-0"
                     style={{
-                        background: `linear-gradient(135deg, ${event.color}30 0%, #111 100%)`
+                        background: `linear-gradient(135deg, ${event.color}30 0%, #111 100%)`,
                     }}
                 />
             )}
@@ -130,22 +134,29 @@ function EventSlideModernComponent({ slide, events }: EventSlideModernProps) {
     // Get selected events in order
     const selectedEvents = useMemo(() => {
         const ids = slide.selected_event_ids || [];
-        if (ids.length === 0) return [];
 
-        const eventsMap = new Map(events.map(e => [e.id, e]));
+        if (ids.length === 0) {
+            return [];
+        }
+
+        const eventsMap = new Map(events.map((e) => [e.id, e]));
+
         return ids
-            .map(id => eventsMap.get(id))
+            .map((id) => eventsMap.get(id))
             .filter((e): e is CalendarEvent => e !== undefined);
     }, [slide.selected_event_ids, events]);
 
     const eventCount = selectedEvents.length;
     // Get month/year from first selected event, not current date
     const monthYear = useMemo(() => {
-        if (selectedEvents.length === 0) return getCurrentMonthYear();
+        if (selectedEvents.length === 0) {
+            return getCurrentMonthYear();
+        }
         const firstEvent = selectedEvents[0];
         const date = new Date(firstEvent.start_date + 'T00:00:00');
         const month = date.toLocaleDateString('en-US', { month: 'long' });
         const year = date.getFullYear();
+
         return `${month} ${year}`;
     }, [selectedEvents]);
     const customTitle = slide.event_slide_title || '';
@@ -242,7 +253,9 @@ function EventSlideModernComponent({ slide, events }: EventSlideModernProps) {
             </motion.div>
 
             {/* Events Grid - Centered horizontally */}
-            <div className={`flex-1 grid ${getGridLayout()} gap-5 px-10 pb-10 place-content-center`}>
+            <div
+                className={`flex-1 grid ${getGridLayout()} gap-5 px-10 pb-10 place-content-center`}
+            >
                 {selectedEvents.map((event, index) => (
                     <ModernEventCard key={event.id} event={event} index={index} />
                 ))}
@@ -253,16 +266,31 @@ function EventSlideModernComponent({ slide, events }: EventSlideModernProps) {
 
 // Memoize component
 export default memo(EventSlideModernComponent, (prevProps, nextProps) => {
-    if (prevProps.slide.id !== nextProps.slide.id) return false;
-    if (prevProps.slide.selected_event_ids?.join(',') !== nextProps.slide.selected_event_ids?.join(',')) return false;
-    if (prevProps.slide.event_slide_title !== nextProps.slide.event_slide_title) return false;
+    if (prevProps.slide.id !== nextProps.slide.id) {
+        return false;
+    }
+    if (
+        prevProps.slide.selected_event_ids?.join(',') !==
+        nextProps.slide.selected_event_ids?.join(',')
+    ) {
+        return false;
+    }
+    if (prevProps.slide.event_slide_title !== nextProps.slide.event_slide_title) {
+        return false;
+    }
 
     const prevIds = prevProps.slide.selected_event_ids || [];
+
     for (const id of prevIds) {
-        const prevEvent = prevProps.events.find(e => e.id === id);
-        const nextEvent = nextProps.events.find(e => e.id === id);
-        if (!prevEvent || !nextEvent) return false;
-        if (prevEvent.updated_at !== nextEvent.updated_at) return false;
+        const prevEvent = prevProps.events.find((e) => e.id === id);
+        const nextEvent = nextProps.events.find((e) => e.id === id);
+
+        if (!prevEvent || !nextEvent) {
+            return false;
+        }
+        if (prevEvent.updated_at !== nextEvent.updated_at) {
+            return false;
+        }
     }
 
     return true;
