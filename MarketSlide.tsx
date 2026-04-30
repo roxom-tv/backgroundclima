@@ -141,7 +141,7 @@ function StockCard({ t }: { t: TickerData }) {
         </span>
       </div>
 
-      {/* Tier 1: Volume + 52W Position */}
+      {/* Tier 1: Volume + 1Y Position */}
       <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:44, display:'flex', flexDirection:'column', gap:36 }}>
         <div style={{ display:'flex', flexDirection:'row', alignItems:'flex-start', gap:48 }}>
           <div>
@@ -149,7 +149,7 @@ function StockCard({ t }: { t: TickerData }) {
             <div style={{ fontSize:38, fontWeight:700, fontFamily:T.mono, color: T.text }}>{t.vol}</div>
           </div>
           <div style={{ marginLeft:40 }}>
-            <div style={{ fontSize:23, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8, whiteSpace:'nowrap' }}>52W Position</div>
+            <div style={{ fontSize:23, fontWeight:800, letterSpacing:'0.1em', color:T.text3, textTransform:'uppercase', fontFamily:T.sans, marginBottom:8, whiteSpace:'nowrap' }}>1Y Position</div>
             <div style={{ fontSize:38, fontWeight:700, fontFamily:T.mono, color: t.w52Pos >= 99 ? T.accent : t.w52Pos < 20 ? T.red : T.text }}>
               {t.w52Pos >= 99 ? 'NEW HIGH' : `${t.w52Pos}%`}
             </div>
