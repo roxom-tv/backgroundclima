@@ -71,6 +71,8 @@ let _crumb: string | null = null;
 let _cookie: string | null = null;
 let summaryCache: { ts: number; data: Record<string, SummaryRaw> } | null = null;
 const metricCache: Record<string, { pe: number | null; eps: number | null; beta: number | null; avgVol: number | null; mktCap: number | null; ts: number }> = {};
+const avgVolCache: Record<string, { val: number | null; ts: number }> = {};
+const AVGVOL_TTL = 30 * 60 * 1000;
 
 // ── Yahoo Finance helpers ────────────────────────────────────────────────────
 
@@ -186,6 +188,27 @@ async function fetchSummary(symbol: string): Promise<SummaryRaw> {
   };
 }
 
+// ── Avg volume from 3-month chart (fallback when quote/meta fields are empty) ─
+
+async function fetchAvgVol3Mo(symbol: string): Promise<number | null> {
+  const cached = avgVolCache[symbol];
+  if (cached && Date.now() - cached.ts < AVGVOL_TTL) return cached.val;
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=3mo`;
+    const res = await fetch(url, { headers: YF_HEADERS, cache: 'no-store' });
+    if (!res.ok) throw new Error(`avgvol HTTP ${res.status}`);
+    const json = await res.json();
+    const vols: number[] = json?.chart?.result?.[0]?.indicators?.quote?.[0]?.volume ?? [];
+    const valid = vols.filter((v): v is number => typeof v === 'number' && v > 0);
+    const avg = valid.length > 0 ? Math.round(valid.reduce((a, b) => a + b, 0) / valid.length) : null;
+    avgVolCache[symbol] = { val: avg, ts: Date.now() };
+    return avg;
+  } catch {
+    avgVolCache[symbol] = { val: null, ts: Date.now() };
+    return null;
+  }
+}
+
 // ── Retry wrapper ─────────────────────────────────────────────────────────────
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3, baseMs = 2000): Promise<T> {
@@ -256,6 +279,30 @@ export async function GET() {
       quoteStats = await withRetry(() => fetchQuotesBatch(WATCHLIST), 2, 500);
     } catch {
       quoteStats = {};
+    }
+
+    // 3.5. Fetch avgVol from 3-month chart for symbols where all other sources are null.
+    // This is the most reliable source on edge environments (no auth required).
+    {
+      const symbolsNeedingAvgVol = WATCHLIST.filter(sym => {
+        if (!charts[sym]) return false;
+        const q = quoteStats[sym] ?? {};
+        const c = charts[sym];
+        const cached = metricCache[sym];
+        return !q.avgVol && !c.avgVol && !cached?.avgVol;
+      });
+      if (symbolsNeedingAvgVol.length > 0) {
+        const results = await Promise.allSettled(
+          symbolsNeedingAvgVol.map(sym => fetchAvgVol3Mo(sym))
+        );
+        symbolsNeedingAvgVol.forEach((sym, i) => {
+          const r = results[i];
+          const val = r.status === 'fulfilled' ? r.value : null;
+          // Persist into metricCache so subsequent calls within TTL are instant
+          if (!metricCache[sym]) metricCache[sym] = { pe: null, eps: null, beta: null, avgVol: val, mktCap: null, ts: now };
+          else metricCache[sym].avgVol = val;
+        });
+      }
     }
 
     // 4. Summaries — enrich only symbols likely to be shown (top movers),
