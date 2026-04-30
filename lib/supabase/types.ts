@@ -8,6 +8,7 @@ export type SlideType =
     | 'debt'
     | 'metals'
     | 'fx'
+    | 'market'
     | 'show'
     | 'event'
     | 'calendar'

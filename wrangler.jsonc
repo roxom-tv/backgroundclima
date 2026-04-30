@@ -31,8 +31,8 @@
         "OPENWEATHER_LANG": "en",
         "OPENWEATHER_UNITS": "metric",
         "SLACK_ALERTS_ENABLED": "false",
+        "LOGO_TOKEN": "pk_Uy3CvqjnTC2x-VW70T1fVQ",
         "RTV_API_URL": "https://api.roxom.tv",
-        "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV",
     },
     "env": {
         "preview": {
@@ -42,9 +42,9 @@
                 "OPENWEATHER_LANG": "en",
                 "OPENWEATHER_UNITS": "metric",
                 "SLACK_ALERTS_ENABLED": "false",
+                "LOGO_TOKEN": "pk_Uy3CvqjnTC2x-VW70T1fVQ",
                 "RTV_API_URL": "https://api.roxom.tv",
-                "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV",
-            },
+                    },
             "services": [
                 { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-preview" },
             ],
@@ -63,9 +63,9 @@
                 "OPENWEATHER_LANG": "en",
                 "OPENWEATHER_UNITS": "metric",
                 "SLACK_ALERTS_ENABLED": "true",
+                "LOGO_TOKEN": "pk_Uy3CvqjnTC2x-VW70T1fVQ",
                 "RTV_API_URL": "https://api.roxom.tv",
-                "RTV_API_KEY": "SET_IN_CLOUDFLARE_ENV",
-            },
+                    },
             "services": [
                 { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-production" },
             ],

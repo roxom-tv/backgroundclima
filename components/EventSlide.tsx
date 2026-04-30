@@ -442,13 +442,15 @@ function EventSlideComponent({ slide, events }: EventSlideProps) {
         return <SingleEventCard event={selectedEvents[0]} />;
     }
 
-    // 2 events - split screen
+    // 2 events - centered with proportional padding on all 4 sides
     if (eventCount === 2) {
         return (
-            <div className="w-full h-full grid grid-cols-2 bg-black gap-0.5">
-                {selectedEvents.map((event) => (
-                    <EventCard key={event.id} event={event} size="half" />
-                ))}
+            <div className="w-full h-full bg-black flex items-center justify-center px-[16.67%] py-[8%]">
+                <div className="w-full h-full grid grid-cols-2 gap-0.5">
+                    {selectedEvents.map((event) => (
+                        <EventCard key={event.id} event={event} size="third" />
+                    ))}
+                </div>
             </div>
         );
     }
