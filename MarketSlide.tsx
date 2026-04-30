@@ -272,7 +272,7 @@ export default function MarketSlide() {
       <div style={{
         position:'absolute', inset:0, pointerEvents:'none', zIndex:0,
         background:`radial-gradient(ellipse at 15% 0%, rgba(26,231,132,.08) 0%, transparent 50%),
-                    radial-gradient(ellipse at 85% 100%, rgba(26,231,132,.05) 0%, transparent 50%)`,
+                    radial-gradient(ellipse 60% 60% at 85% 110%, rgba(26,231,132,.07) 0%, transparent 60%)`,
       }} />
 
       {/* HEADER */}
@@ -353,7 +353,7 @@ export default function MarketSlide() {
                 gridTemplateColumns: 'repeat(3,1fr)',
                 gridTemplateRows: 'auto',
                 alignItems: 'start',
-                gap: 12, padding: '12px 32px',
+                gap: 12, padding: '62px 32px 12px 32px',
               }}
             >
               {(stockPage === 0 ? page1 : page2).map(t => (
