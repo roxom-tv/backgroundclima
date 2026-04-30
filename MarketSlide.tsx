@@ -80,7 +80,7 @@ function IndexItem({ idx }: { idx: IndexData }) {
 function StockCard({ t }: { t: TickerData }) {
   const up = t.chgPct >= 0;
   const hasVolPct = t.volPct !== null;
-  const volW = hasVolPct ? Math.min(t.volPct!, 100) : 0;
+  const volW = hasVolPct ? (Math.min(t.volPct!, 250) / 250) * 100 : 0;
 
   return (
     <div style={{
