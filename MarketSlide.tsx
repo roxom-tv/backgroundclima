@@ -87,7 +87,7 @@ function StockCard({ t }: { t: TickerData }) {
       background: T.surface,
       border: `1px solid ${t.badges.includes('52h') ? T.accentBdr : T.border}`,
       borderRadius: 12,
-      padding: '18px 22px 30px 22px',
+      padding: '23px 22px 60px 22px',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'flex-start',
