@@ -39,6 +39,7 @@ const SLIDE_TYPES: { value: SlideType; label: string; icon: string; description:
         description: 'STRC dashboard (price, divs, sats via API)',
     },
     { value: 'sata', label: 'SATA', icon: '🛰️', description: 'SATA/Strive tracker dashboard' },
+    { value: 'market', label: 'Market', icon: '📈', description: 'Market indices dashboard' },
 ];
 
 const COMMON_TIMEZONES = [
@@ -262,7 +263,7 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
         };
 
         // System data slides: no YouTube/weather/video/event fields.
-        if (formData.type === 'strc' || formData.type === 'sata') {
+        if (formData.type === 'strc' || formData.type === 'sata' || formData.type === 'market') {
             Object.assign(cleanedData, {
                 country: null,
                 youtube_url: null,
@@ -354,6 +355,7 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
     const isVideo = formData.type === 'video';
     const isStrc = formData.type === 'strc';
     const isSata = formData.type === 'sata';
+    const isMarket = formData.type === 'market';
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -401,10 +403,12 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
                             : isVideo
                               ? 'VIDEO TITLE'
                               : isStrc
-                                ? 'STRC SLIDE NAME'
-                                : isSata
-                                  ? 'SATA SLIDE NAME'
-                                  : 'NAME'}{' '}
+                                  ? 'STRC SLIDE NAME'
+                                  : isSata
+                                    ? 'SATA SLIDE NAME'
+                                    : isMarket
+                                      ? 'MARKET SLIDE NAME'
+                                      : 'NAME'}{' '}
                     {!isShow && '*'}
                 </label>
                 <input
@@ -427,7 +431,9 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
                                     ? 'e.g., STRC Dashboard'
                                     : isSata
                                       ? 'e.g., SATA Dashboard'
-                                      : 'e.g., Hong Kong'
+                                      : isMarket
+                                        ? 'e.g., Market Dashboard'
+                                        : 'e.g., Hong Kong'
                     }
                     className="w-full px-4 py-2 bg-[#1a1a1a] border-2 border-[#00ff00] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00cc00]"
                 />
@@ -458,6 +464,16 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
                                 OR <code className="text-[#00ff00]">.env.local</code>.
                             </>
                         )}
+                    </p>
+                </div>
+            )}
+
+            {isMarket && (
+                <div className="bg-[#0a0a0a] border-2 border-[#00aaff] p-4 text-xs font-mono text-[#aaddff] uppercase tracking-wider space-y-2">
+                    <p className="text-white font-semibold">MARKET DATA SOURCE</p>
+                    <p>
+                        THIS SLIDE DISPLAYS THE MARKET INDICES DASHBOARD AUTOMATICALLY. NO
+                        ADDITIONAL CONFIGURATION IS REQUIRED.
                     </p>
                 </div>
             )}

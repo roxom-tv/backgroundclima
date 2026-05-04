@@ -17,6 +17,7 @@ const slideTypeSchema = z.enum([
     'video',
     'strc',
     'sata',
+    'market',
 ]);
 
 const layoutOrientationSchema = z.enum(['horizontal', 'vertical']);
