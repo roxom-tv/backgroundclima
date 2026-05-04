@@ -1,36 +1,36 @@
 export async function sendSlackAlert(message: string) {
-  const alertsEnabled = process.env.SLACK_ALERTS_ENABLED === "true";
-  if (!alertsEnabled) {
-    return;
-  }
+    const alertsEnabled = process.env.SLACK_ALERTS_ENABLED === 'true';
 
-  const webhookUrl = process.env.SLACK_WEBHOOK_URL;
-
-  if (!webhookUrl) {
-    console.warn("SLACK_WEBHOOK_URL is not defined. Skipping alert.");
-    return;
-  }
-
-  try {
-    const payload = {
-      text: `🚨 *Debt API Error*: ${message}`,
-      username: "Debt Monitor",
-      icon_emoji: ":warning:",
-    };
-
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(4000),
-    });
-
-    if (!response.ok) {
-      console.error(`Failed to send Slack alert: ${response.status} ${response.statusText}`);
+    if (!alertsEnabled) {
+        return;
     }
-  } catch (error) {
-    console.error("Error sending Slack alert:", error);
-  }
+
+    const webhookUrl = process.env.SLACK_WEBHOOK_URL;
+
+    if (!webhookUrl) {
+        console.warn('SLACK_WEBHOOK_URL is not defined. Skipping alert.');
+
+        return;
+    }
+
+    try {
+        const payload = {
+            text: `🚨 *Debt API Error*: ${message}`,
+            username: 'Debt Monitor',
+            icon_emoji: ':warning:',
+        };
+
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(4000),
+        });
+
+        if (!response.ok) {
+            console.error(`Failed to send Slack alert: ${response.status} ${response.statusText}`);
+        }
+    } catch (error) {
+        console.error('Error sending Slack alert:', error);
+    }
 }
-
-
