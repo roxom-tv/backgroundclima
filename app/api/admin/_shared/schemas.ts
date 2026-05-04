@@ -10,11 +10,14 @@ const slideTypeSchema = z.enum([
   'debt',
   'metals',
   'fx',
+  'market',
   'show',
   'event',
   'calendar',
   'news',
   'video',
+  'strc',
+  'sata',
 ]);
 
 const layoutOrientationSchema = z.enum(['horizontal', 'vertical']);

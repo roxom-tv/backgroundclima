@@ -19,6 +19,9 @@ const SLIDE_TYPES: { value: SlideType; label: string; icon: string; description:
   { value: 'event', label: 'Event', icon: '📅', description: 'Event with date & details' },
   { value: 'news', label: 'News', icon: '📰', description: 'News with image, headline & source' },
   { value: 'video', label: 'Video', icon: '🎥', description: 'Video playback (1920x1080, no sound)' },
+  { value: 'market', label: 'Market', icon: '📈', description: 'Live US stock market data' },
+  { value: 'strc', label: 'STRC', icon: '📊', description: 'STRC live price & dividend data' },
+  { value: 'sata', label: 'SATA', icon: '🛰️', description: 'SATA/Strive live data' },
 ];
 
 const COMMON_TIMEZONES = [
@@ -288,6 +291,7 @@ export default function SlideForm({
   const isShow = formData.type === 'show';
   const isNews = formData.type === 'news';
   const isVideo = formData.type === 'video';
+  const isMarket = formData.type === 'market';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -318,7 +322,7 @@ export default function SlideForm({
       {/* Name / Title */}
       <div>
         <label htmlFor="name" className="block text-xs font-mono font-medium text-white uppercase tracking-wider mb-1">
-          {isShow ? 'SHOW TITLE' : isEvent ? 'EVENT TITLE' : isNews ? 'NEWS TITLE' : isVideo ? 'VIDEO TITLE' : 'NAME'} {!isShow && '*'}
+          {isShow ? 'SHOW TITLE' : isEvent ? 'EVENT TITLE' : isNews ? 'NEWS TITLE' : isVideo ? 'VIDEO TITLE' : isMarket ? 'SLIDE NAME' : 'NAME'} {!isShow && '*'}
         </label>
         <input
           id="name"
@@ -327,7 +331,7 @@ export default function SlideForm({
           value={formData.name}
           onChange={handleChange}
           required={!isShow}
-          placeholder={isShow ? 'Show name (optional - image only if empty)...' : isEvent ? 'Event title...' : isNews ? 'News title...' : isVideo ? 'Video title...' : 'e.g., Hong Kong'}
+          placeholder={isShow ? 'Show name (optional - image only if empty)...' : isEvent ? 'Event title...' : isNews ? 'News title...' : isVideo ? 'Video title...' : isMarket ? 'e.g., Market Stocks' : 'e.g., Hong Kong'}
           className="w-full px-4 py-2 bg-[#1a1a1a] border-2 border-[#00ff00] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00cc00]"
         />
         {isShow && (
@@ -913,6 +917,17 @@ export default function SlideForm({
             <input id="weather_query" name="weather_query" type="text" value={formData.weather_query || ''} onChange={handleChange} placeholder="e.g., Hong Kong,HK" className="w-full px-4 py-2 bg-[#1a1a1a] border-2 border-[#00ff00] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00cc00]" />
           </div>
         </>
+      )}
+
+      {/* ========== MARKET FIELDS ========== */}
+      {isMarket && (
+        <div className="bg-[#0a0a0a] border-2 border-[#1ae784] p-4 text-xs font-mono text-[#888] space-y-1">
+          <p className="text-[#1ae784] font-bold uppercase tracking-wider mb-2">📈 Market Stocks Slide</p>
+          <p className="uppercase tracking-wider">Live US stock data fetched automatically from Yahoo Finance.</p>
+          <p className="uppercase tracking-wider">Displays top 6 movers across 2 pages (3 cards each), rotating every 8s.</p>
+          <p className="uppercase tracking-wider">Header shows up to 8 market indices rotating every 6s.</p>
+          <p className="uppercase tracking-wider text-[#666]">No extra configuration required — just set name, duration & sponsor.</p>
+        </div>
       )}
 
       {/* Timezone (for YouTube, Event, Show) */}
