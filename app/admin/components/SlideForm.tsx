@@ -403,12 +403,12 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
                             : isVideo
                               ? 'VIDEO TITLE'
                               : isStrc
-                                  ? 'STRC SLIDE NAME'
-                                  : isSata
-                                    ? 'SATA SLIDE NAME'
-                                    : isMarket
-                                      ? 'MARKET SLIDE NAME'
-                                      : 'NAME'}{' '}
+                                ? 'STRC SLIDE NAME'
+                                : isSata
+                                  ? 'SATA SLIDE NAME'
+                                  : isMarket
+                                    ? 'MARKET SLIDE NAME'
+                                    : 'NAME'}{' '}
                     {!isShow && '*'}
                 </label>
                 <input
