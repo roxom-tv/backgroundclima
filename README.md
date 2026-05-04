@@ -22,7 +22,7 @@ A Next.js 14 application that displays rotating YouTube Live streams from cities
 
 ## Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 - OpenWeatherMap API key
 
@@ -54,6 +54,7 @@ ROTATION_SECONDS=15
 ```
 
 **Getting an OpenWeatherMap API Key:**
+
 1. Go to [OpenWeatherMap](https://openweathermap.org/)
 2. Sign up for a free account
 3. Navigate to "My API Keys" in your profile
@@ -93,6 +94,7 @@ The `config/cities.ts` file controls:
 - **CITIES array**: Array of city configurations
 
 Each city needs:
+
 - `name`: Display name
 - `ytLiveUrl`: YouTube Live embed URL with autoplay parameters
 - `openWeatherQuery`: OpenWeatherMap query string
@@ -101,6 +103,7 @@ Each city needs:
 ### YouTube Live URLs
 
 For each city, you need a YouTube Live stream URL. The app automatically adds these parameters:
+
 - `autoplay=1`: Starts playing automatically
 - `mute=1`: Muted (required for autoplay)
 - `controls=0`: Hides player controls
@@ -111,6 +114,7 @@ For each city, you need a YouTube Live stream URL. The app automatically adds th
 ### Weather API
 
 The app fetches weather data from OpenWeatherMap with:
+
 - **Cache**: 60-second cache per city to avoid excessive API calls
 - **Units**: Metric (Celsius, km/h) - configurable via environment
 - **Language**: Spanish by default - configurable via environment
@@ -137,52 +141,60 @@ ROTATION_SECONDS=15
 ```
 
 **How to add environment variables in Vercel:**
+
 1. Go to your project in [Vercel Dashboard](https://vercel.com/dashboard)
 2. Click on **Settings** → **Environment Variables**
 3. Add each variable:
-   - `OPENWEATHER_API_KEY` = your OpenWeatherMap API key
-   - `TWELVE_DATA_API_KEY` = your Twelve Data API key (or use: `8084cf3a16a449caba286882cb101c28`)
-   - `OPENWEATHER_UNITS` = `metric`
-   - `OPENWEATHER_LANG` = `es`
-   - `ROTATION_SECONDS` = `15`
+    - `OPENWEATHER_API_KEY` = your OpenWeatherMap API key
+    - `TWELVE_DATA_API_KEY` = your Twelve Data API key (or use: `8084cf3a16a449caba286882cb101c28`)
+    - `OPENWEATHER_UNITS` = `metric`
+    - `OPENWEATHER_LANG` = `es`
+    - `ROTATION_SECONDS` = `15`
 4. Make sure to select **Production**, **Preview**, and **Development** environments
 5. **Redeploy** your application after adding variables
 
 ### Build Dependencies
 
 The app includes all necessary build dependencies. For Vercel deployment, ensure:
+
 - `autoprefixer` is in `devDependencies`
 - All environment variables are configured
 
 ## Usage
 
 ### Automatic Mode
+
 - Cities rotate automatically every 15 seconds
 - Weather updates automatically for each city
 - Smooth fade transitions between cities
 
 ### Automatic Operation
+
 - Cities rotate automatically every 15 seconds
 - No manual intervention required
 - Perfect for unattended displays
 
 ### Fullscreen Mode
+
 - Press F11 or use browser fullscreen
 - Perfect for TV displays and digital signage
 
 ## Troubleshooting
 
 ### YouTube Autoplay Issues
+
 - Ensure `mute=1` is in the URL
 - Some browsers require user interaction before autoplay
 - Check if the YouTube Live stream is actually live
 
 ### Weather Not Loading
+
 - Verify your OpenWeatherMap API key
 - Check browser console for errors
 - Ensure the city query format is correct
 
 ### Performance Issues
+
 - Reduce rotation frequency by increasing `ROTATION_SECONDS`
 - Check if YouTube streams are high-quality
 - Monitor memory usage in browser dev tools
@@ -190,16 +202,20 @@ The app includes all necessary build dependencies. For Vercel deployment, ensure
 ## Customization
 
 ### Adding More Cities
+
 1. Add city configuration to `config/cities.ts`
 2. Find a YouTube Live stream for the city
 3. Get the correct OpenWeatherMap query
 4. Set the proper timezone
 
 ### Changing Rotation Speed
+
 Edit `ROTATION_SECONDS` in `config/cities.ts` or set `ROTATION_SECONDS` environment variable.
 
 ### Styling
+
 Modify `app/globals.css` to customize:
+
 - Weather bar appearance
 - Control button styles
 - Animation timings
@@ -226,6 +242,7 @@ MIT License - feel free to use and modify for your projects.
 ## Support
 
 For issues and questions:
+
 - Check the troubleshooting section
 - Review browser console for errors
 - Ensure all environment variables are set
