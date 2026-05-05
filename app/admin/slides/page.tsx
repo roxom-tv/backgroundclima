@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useSlides } from '@/hooks/useSlides';
 import SlideForm from '../components/SlideForm';
 import type { Slide, SlideInsert } from '@/lib/supabase/types';
+import { isSlideScheduledNow, hasSchedule, formatScheduleSummary } from '@/lib/schedule-utils';
 
 export default function SlidesPage() {
     const {
@@ -37,6 +38,29 @@ export default function SlidesPage() {
     const [debtActiveDays, setDebtActiveDays] = useState<number[] | null>(null);
     const [debtTimeStart, setDebtTimeStart] = useState<string | null>(null);
     const [debtTimeEnd, setDebtTimeEnd] = useState<string | null>(null);
+
+    // UTC clock — refreshed every 60 s so schedule status updates automatically
+    const [nowUtc, setNowUtc] = useState(() => new Date());
+    useEffect(() => {
+        const id = setInterval(() => setNowUtc(new Date()), 60_000);
+        return () => clearInterval(id);
+    }, []);
+
+    // Pre-compute per-slide schedule status (memoised, updates every minute)
+    const slideScheduleStatus = useMemo(
+        () =>
+            new Map(
+                slides.map((s) => [
+                    s.id,
+                    {
+                        hasSchedule: hasSchedule(s),
+                        isActive: isSlideScheduledNow(s, nowUtc),
+                        summary: formatScheduleSummary(s),
+                    },
+                ]),
+            ),
+        [slides, nowUtc],
+    );
 
     // Fetch slides on mount
     useEffect(() => {
@@ -444,6 +468,9 @@ export default function SlidesPage() {
                                 >
                                     {filteredSlides.map((slide, index) => {
                                         const typeInfo = getTypeInfo(slide.type);
+                                        const sched = slideScheduleStatus.get(slide.id);
+                                        const schedOff =
+                                            sched?.hasSchedule && !sched?.isActive;
 
                                         return (
                                             <Draggable
@@ -458,9 +485,11 @@ export default function SlidesPage() {
                                                         className={`bg-gray-800 rounded-lg border transition-all ${
                                                             snapshot.isDragging
                                                                 ? 'border-blue-500 shadow-lg shadow-blue-500/20'
-                                                                : slide.is_active
-                                                                  ? 'border-gray-700 hover:border-gray-600'
-                                                                  : 'border-gray-700/50 opacity-50'
+                                                                : !slide.is_active
+                                                                  ? 'border-gray-700/50 opacity-50'
+                                                                  : schedOff
+                                                                    ? 'border-yellow-700/60 opacity-50'
+                                                                    : 'border-gray-700 hover:border-gray-600'
                                                         }`}
                                                     >
                                                         <div className="flex items-center p-3 gap-3">
@@ -542,6 +571,23 @@ export default function SlidesPage() {
                                                                                     ` - ${formatDate(slide.end_date)}`}
                                                                             </span>
                                                                         )}
+                                                                    {sched?.hasSchedule && (
+                                                                        <span
+                                                                            title={sched.summary}
+                                                                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-medium border ${
+                                                                                schedOff
+                                                                                    ? 'bg-yellow-900/40 border-yellow-700/60 text-yellow-400'
+                                                                                    : 'bg-blue-900/40 border-blue-700/60 text-blue-300'
+                                                                            }`}
+                                                                        >
+                                                                            🕐
+                                                                            <span className="hidden sm:inline">
+                                                                                {schedOff
+                                                                                    ? 'OFF SCHEDULE'
+                                                                                    : 'ON SCHEDULE'}
+                                                                            </span>
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                                 <div className="flex items-center gap-3 text-xs text-gray-500">
                                                                     <span
