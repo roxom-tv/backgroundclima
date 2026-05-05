@@ -25,6 +25,45 @@ import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
 import { prefetchMarketsData } from '@/hooks/useMarketsSats';
 import type { Slide, Sponsor, SponsorPosition } from '@/lib/supabase/types';
 
+/**
+ * Returns true if the slide should appear right now based on its UTC schedule.
+ * - active_days null/empty → any day is fine
+ * - active_time_start / active_time_end null/empty → any hour is fine
+ * - Supports midnight-crossing windows (e.g. 22:00 → 06:00)
+ */
+function isSlideScheduledNow(slide: Slide, now: Date): boolean {
+    const utcDay = now.getUTCDay(); // 0=Sun … 6=Sat
+    const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+
+    if (slide.active_days && slide.active_days.length > 0) {
+        if (!slide.active_days.includes(utcDay)) return false;
+    }
+
+    const parseHHMM = (hhmm: string): number => {
+        const [h, m] = hhmm.split(':').map(Number);
+        return h * 60 + (m || 0);
+    };
+
+    if (slide.active_time_start && slide.active_time_end) {
+        const start = parseHHMM(slide.active_time_start);
+        const end = parseHHMM(slide.active_time_end);
+        if (start <= end) {
+            if (utcMinutes < start || utcMinutes >= end) return false;
+        } else {
+            // Crosses midnight
+            if (utcMinutes < start && utcMinutes >= end) return false;
+        }
+    } else if (slide.active_time_start && !slide.active_time_end) {
+        const start = parseHHMM(slide.active_time_start);
+        if (utcMinutes < start) return false;
+    } else if (!slide.active_time_start && slide.active_time_end) {
+        const end = parseHHMM(slide.active_time_end);
+        if (utcMinutes >= end) return false;
+    }
+
+    return true;
+}
+
 export default function Home() {
     // Current slide index - follows order_index from database
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -38,22 +77,44 @@ export default function Home() {
     const { slides, settings, sponsors, events, isLoading, error, errorInfo, retry } =
         useRealtimeConfig();
 
+    // UTC clock — refreshed every 60 s so schedule windows are re-evaluated automatically
+    const [nowUtc, setNowUtc] = useState(() => new Date());
+    useEffect(() => {
+        const id = setInterval(() => setNowUtc(new Date()), 60_000);
+        return () => clearInterval(id);
+    }, []);
+
+    // Filter to slides that are within their UTC schedule window right now
+    const scheduledSlides = useMemo(
+        () => slides.filter((s) => isSlideScheduledNow(s, nowUtc)),
+        [slides, nowUtc],
+    );
+
     // Current slide
     const currentSlide = useMemo(() => {
-        if (slides.length === 0) {
+        if (scheduledSlides.length === 0) {
             return null;
         }
 
-        return slides[currentSlideIndex % slides.length];
-    }, [slides, currentSlideIndex]);
+        return scheduledSlides[currentSlideIndex % scheduledSlides.length];
+    }, [scheduledSlides, currentSlideIndex]);
 
     // Check if we have certain slide types for prefetching
-    const hasYouTubeSlides = useMemo(() => slides.some((s) => s.type === 'youtube'), [slides]);
-    const hasMarketSlides = useMemo(
-        () => slides.some((s) => s.type === 'metals' || s.type === 'fx' || s.type === 'market'),
-        [slides],
+    const hasYouTubeSlides = useMemo(
+        () => scheduledSlides.some((s) => s.type === 'youtube'),
+        [scheduledSlides],
     );
-    const hasDebtSlides = useMemo(() => slides.some((s) => s.type === 'debt'), [slides]);
+    const hasMarketSlides = useMemo(
+        () =>
+            scheduledSlides.some(
+                (s) => s.type === 'metals' || s.type === 'fx' || s.type === 'market',
+            ),
+        [scheduledSlides],
+    );
+    const hasDebtSlides = useMemo(
+        () => scheduledSlides.some((s) => s.type === 'debt'),
+        [scheduledSlides],
+    );
 
     // Get sponsor for a specific position on the current slide
     const getSponsorForPosition = (
@@ -162,16 +223,16 @@ export default function Home() {
         prefetchSataData().catch((err) => console.warn('SATA prefetch failed:', err));
     }, []);
 
-    // Reset index when slides change (e.g., reorder, add, remove)
+    // Reset index when scheduled slides change (e.g., reorder, add, remove, or schedule window)
     useEffect(() => {
-        if (slides.length > 0 && currentSlideIndex >= slides.length) {
+        if (scheduledSlides.length > 0 && currentSlideIndex >= scheduledSlides.length) {
             setCurrentSlideIndex(0);
         }
-    }, [slides.length, currentSlideIndex]);
+    }, [scheduledSlides.length, currentSlideIndex]);
 
     // Main rotation logic - simple sequential rotation
     useEffect(() => {
-        if (isLoading || slides.length === 0 || !currentSlide) {
+        if (isLoading || scheduledSlides.length === 0 || !currentSlide) {
             return;
         }
 
@@ -183,8 +244,8 @@ export default function Home() {
         const transitionEffect = settings.transition_effect || 'tv_static';
 
         // Get next slide info early to determine transition behavior
-        const nextIndex = (currentSlideIndex + 1) % slides.length;
-        const nextSlide = slides[nextIndex];
+        const nextIndex = (currentSlideIndex + 1) % scheduledSlides.length;
+        const nextSlide = scheduledSlides[nextIndex];
         const isNextYouTube = nextSlide?.type === 'youtube';
 
         // Different transition delays based on effect and slide type
@@ -272,7 +333,7 @@ export default function Home() {
     }, [
         currentSlideIndex,
         currentSlide,
-        slides,
+        scheduledSlides,
         isLoading,
         settings.default_duration_seconds,
         settings.transition_effect,
@@ -349,8 +410,8 @@ export default function Home() {
         );
     }
 
-    // No slides configured
-    if (slides.length === 0) {
+    // No slides configured or none active in the current schedule window
+    if (scheduledSlides.length === 0) {
         return (
             <main className="h-screen w-screen overflow-hidden relative bg-black flex flex-col items-center justify-center gap-4">
                 <div className="text-yellow-500 text-2xl font-bold tracking-wider">
@@ -373,7 +434,7 @@ export default function Home() {
                     <>
                         <RotatingBackground
                             activeIndex={currentSlideIndex}
-                            slides={slides.filter((s) => s.type === 'youtube')}
+                            slides={scheduledSlides.filter((s) => s.type === 'youtube')}
                             currentSlide={currentSlide}
                             disableInternalOverlay={showTransition}
                         />
@@ -576,7 +637,8 @@ export default function Home() {
                             onVideoEnd={() => {
                                 // When video ends (if loop_count is set and all loops completed), advance to next slide
                                 if (currentSlide.loop_count !== null) {
-                                    const nextIndex = (currentSlideIndex + 1) % slides.length;
+                                    const nextIndex =
+                                        (currentSlideIndex + 1) % scheduledSlides.length;
                                     setCurrentSlideIndex(nextIndex);
                                 }
                             }}
@@ -637,8 +699,8 @@ export default function Home() {
 
     // Calculate effective effect based on next slide type
     // Force fade for non-YouTube slides, use configured effect for YouTube
-    const nextIndex = (currentSlideIndex + 1) % slides.length;
-    const nextSlide = slides[nextIndex];
+    const nextIndex = (currentSlideIndex + 1) % scheduledSlides.length;
+    const nextSlide = scheduledSlides[nextIndex];
     const effectiveEffect = nextSlide?.type === 'youtube' ? transitionEffect : 'fade'; // Force fade for non-YouTube slides
 
     return (

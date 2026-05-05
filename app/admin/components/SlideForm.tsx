@@ -95,6 +95,10 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
         // Video slide fields
         video_url: '',
         loop_count: null,
+        // UTC schedule
+        active_days: null,
+        active_time_start: null,
+        active_time_end: null,
     });
 
     const [sponsors, setSponsors] = useState<Sponsor[]>([]);
@@ -187,6 +191,10 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
                 // Video slide fields
                 video_url: slide.video_url || '',
                 loop_count: slide.loop_count ?? null,
+                // UTC schedule
+                active_days: slide.active_days ?? null,
+                active_time_start: slide.active_time_start ?? null,
+                active_time_end: slide.active_time_end ?? null,
             });
         }
     }, [slide]);
@@ -260,6 +268,13 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
             // Video slide fields
             video_url: formData.video_url?.trim() || null,
             loop_count: formData.loop_count ?? null,
+            // UTC schedule
+            active_days:
+                formData.active_days && formData.active_days.length > 0
+                    ? formData.active_days
+                    : null,
+            active_time_start: formData.active_time_start || null,
+            active_time_end: formData.active_time_end || null,
         };
 
         // System data slides: no YouTube/weather/video/event fields.
@@ -1302,6 +1317,155 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
                         </p>
                     </div>
                 </label>
+
+                {/* UTC Schedule */}
+                <div className="border-t border-[#1a1a1a] pt-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <span className="text-white font-mono text-xs uppercase tracking-wider">
+                                UTC SCHEDULE
+                            </span>
+                            <p className="text-xs text-[#888] font-mono uppercase tracking-wider">
+                                RESTRICT SLIDE TO SPECIFIC DAYS / HOURS (UTC)
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const hasSchedule =
+                                    formData.active_days !== null ||
+                                    formData.active_time_start !== null;
+                                if (hasSchedule) {
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        active_days: null,
+                                        active_time_start: null,
+                                        active_time_end: null,
+                                    }));
+                                } else {
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        active_days: [],
+                                        active_time_start: '',
+                                        active_time_end: '',
+                                    }));
+                                }
+                            }}
+                            className={`px-3 py-1 font-mono text-xs uppercase tracking-wider border-2 transition-all ${
+                                formData.active_days !== null || formData.active_time_start !== null
+                                    ? 'border-[#00aaff] bg-[#0a1a2a] text-[#00aaff]'
+                                    : 'border-[#333] bg-[#1a1a1a] text-[#666] hover:border-[#00aaff] hover:text-[#00aaff]'
+                            }`}
+                        >
+                            {formData.active_days !== null || formData.active_time_start !== null
+                                ? 'ENABLED ✓'
+                                : 'ENABLE'}
+                        </button>
+                    </div>
+
+                    {(formData.active_days !== null || formData.active_time_start !== null) && (
+                        <div className="space-y-4 p-3 bg-[#0a1a2a] border border-[#00aaff]/30">
+                            {/* Day selector */}
+                            <div>
+                                <p className="text-[10px] font-mono text-[#00aaff] uppercase tracking-wider mb-2">
+                                    ACTIVE DAYS (LEAVE ALL UNCHECKED = EVERY DAY)
+                                </p>
+                                <div className="flex gap-1 flex-wrap">
+                                    {[
+                                        { label: 'SUN', value: 0 },
+                                        { label: 'MON', value: 1 },
+                                        { label: 'TUE', value: 2 },
+                                        { label: 'WED', value: 3 },
+                                        { label: 'THU', value: 4 },
+                                        { label: 'FRI', value: 5 },
+                                        { label: 'SAT', value: 6 },
+                                    ].map((day) => {
+                                        const active = (formData.active_days ?? []).includes(
+                                            day.value,
+                                        );
+                                        return (
+                                            <button
+                                                key={day.value}
+                                                type="button"
+                                                onClick={() => {
+                                                    const current = formData.active_days ?? [];
+                                                    const next = active
+                                                        ? current.filter((d) => d !== day.value)
+                                                        : [...current, day.value].sort(
+                                                              (a, b) => a - b,
+                                                          );
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        active_days: next,
+                                                    }));
+                                                }}
+                                                className={`px-2 py-1 font-mono text-[10px] uppercase tracking-wider border transition-all ${
+                                                    active
+                                                        ? 'border-[#00aaff] bg-[#00aaff] text-black font-bold'
+                                                        : 'border-[#333] bg-[#111] text-[#666] hover:border-[#00aaff] hover:text-[#00aaff]'
+                                                }`}
+                                            >
+                                                {day.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Time range */}
+                            <div>
+                                <p className="text-[10px] font-mono text-[#00aaff] uppercase tracking-wider mb-2">
+                                    ACTIVE HOURS UTC (LEAVE EMPTY = ALL DAY)
+                                </p>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[9px] font-mono text-[#555] uppercase tracking-wider">
+                                            FROM
+                                        </label>
+                                        <input
+                                            type="time"
+                                            value={formData.active_time_start ?? ''}
+                                            onChange={(e) =>
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    active_time_start: e.target.value || null,
+                                                }))
+                                            }
+                                            className="px-2 py-1 bg-[#111] border border-[#00aaff]/50 text-white font-mono text-xs focus:outline-none focus:border-[#00aaff]"
+                                        />
+                                    </div>
+                                    <span className="text-[#00aaff] font-mono text-xs mt-4">→</span>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-[9px] font-mono text-[#555] uppercase tracking-wider">
+                                            TO
+                                        </label>
+                                        <input
+                                            type="time"
+                                            value={formData.active_time_end ?? ''}
+                                            onChange={(e) =>
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    active_time_end: e.target.value || null,
+                                                }))
+                                            }
+                                            className="px-2 py-1 bg-[#111] border border-[#00aaff]/50 text-white font-mono text-xs focus:outline-none focus:border-[#00aaff]"
+                                        />
+                                    </div>
+                                    <span className="text-[#555] font-mono text-[9px] uppercase tracking-wider mt-4">
+                                        UTC
+                                    </span>
+                                </div>
+                                {formData.active_time_start &&
+                                    formData.active_time_end &&
+                                    formData.active_time_start >= formData.active_time_end && (
+                                        <p className="text-[10px] font-mono text-[#ffaa00] mt-1 uppercase tracking-wider">
+                                            ⚠ CROSSES MIDNIGHT (E.G. 22:00 → 06:00)
+                                        </p>
+                                    )}
+                            </div>
+                        </div>
+                    )}
+                </div>
 
                 {isYouTube && (
                     <label className="flex items-center gap-3 cursor-pointer">

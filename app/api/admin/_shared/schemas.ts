@@ -58,6 +58,10 @@ export const slideInsertSchema = z.object({
     source: z.string().nullable().optional(),
     video_url: z.string().nullable().optional(),
     loop_count: z.number().nullable().optional(),
+    // UTC schedule
+    active_days: z.array(z.number().int().min(0).max(6)).nullable().optional(),
+    active_time_start: z.string().nullable().optional(),
+    active_time_end: z.string().nullable().optional(),
 });
 
 export const slideUpdateSchema = slideInsertSchema.partial();
