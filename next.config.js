@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // App Router is now stable in Next.js 13+
+    eslint: {
+        // eslint-config-next is incompatible with ESLint 9 flat config.
+        // Linting is still available via `npm run lint`.
+        ignoreDuringBuilds: true,
+    },
     images: {
         remotePatterns: [
             {
