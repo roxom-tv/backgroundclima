@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useSlides } from '@/hooks/useSlides';
 import SlideForm from '../components/SlideForm';
 import type { Slide, SlideInsert } from '@/lib/supabase/types';
+import { isSlideScheduledNow, hasSchedule, formatScheduleSummary } from '@/lib/schedule-utils';
 
 export default function SlidesPage() {
     const {
@@ -34,6 +35,32 @@ export default function SlidesPage() {
     const [isDebtFormOpen, setIsDebtFormOpen] = useState(false);
     const [editingDebtSlide, setEditingDebtSlide] = useState<Slide | null>(null);
     const [debtDuration, setDebtDuration] = useState(35);
+    const [debtActiveDays, setDebtActiveDays] = useState<number[] | null>(null);
+    const [debtTimeStart, setDebtTimeStart] = useState<string | null>(null);
+    const [debtTimeEnd, setDebtTimeEnd] = useState<string | null>(null);
+
+    // UTC clock — refreshed every 60 s so schedule status updates automatically
+    const [nowUtc, setNowUtc] = useState(() => new Date());
+    useEffect(() => {
+        const id = setInterval(() => setNowUtc(new Date()), 60_000);
+        return () => clearInterval(id);
+    }, []);
+
+    // Pre-compute per-slide schedule status (memoised, updates every minute)
+    const slideScheduleStatus = useMemo(
+        () =>
+            new Map(
+                slides.map((s) => [
+                    s.id,
+                    {
+                        hasSchedule: hasSchedule(s),
+                        isActive: isSlideScheduledNow(s, nowUtc),
+                        summary: formatScheduleSummary(s),
+                    },
+                ]),
+            ),
+        [slides, nowUtc],
+    );
 
     // Fetch slides on mount
     useEffect(() => {
@@ -264,6 +291,9 @@ export default function SlidesPage() {
     const handleEditDebt = useCallback((slide: Slide) => {
         setEditingDebtSlide(slide);
         setDebtDuration(slide.duration_seconds);
+        setDebtActiveDays(slide.active_days ?? null);
+        setDebtTimeStart(slide.active_time_start ?? null);
+        setDebtTimeEnd(slide.active_time_end ?? null);
         setIsDebtFormOpen(true);
     }, []);
 
@@ -278,17 +308,29 @@ export default function SlidesPage() {
             duration_seconds: debtDuration,
             is_active: editingDebtSlide.is_active,
             show_sponsor: editingDebtSlide.show_sponsor,
+            active_days: debtActiveDays && debtActiveDays.length > 0 ? debtActiveDays : null,
+            active_time_start: debtTimeStart || null,
+            active_time_end: debtTimeEnd || null,
         });
 
         if (error) {
             showNotification('error', error);
         } else {
-            showNotification('success', 'Debt slide updated');
+            showNotification('success', 'Slide updated');
             setIsDebtFormOpen(false);
             fetchSlides();
         }
         setIsSubmitting(false);
-    }, [editingDebtSlide, debtDuration, updateSlide, showNotification, fetchSlides]);
+    }, [
+        editingDebtSlide,
+        debtDuration,
+        debtActiveDays,
+        debtTimeStart,
+        debtTimeEnd,
+        updateSlide,
+        showNotification,
+        fetchSlides,
+    ]);
 
     // Format date for display
     const formatDate = (dateStr: string | null) => {
@@ -426,6 +468,9 @@ export default function SlidesPage() {
                                 >
                                     {filteredSlides.map((slide, index) => {
                                         const typeInfo = getTypeInfo(slide.type);
+                                        const sched = slideScheduleStatus.get(slide.id);
+                                        const schedOff =
+                                            sched?.hasSchedule && !sched?.isActive;
 
                                         return (
                                             <Draggable
@@ -440,9 +485,11 @@ export default function SlidesPage() {
                                                         className={`bg-gray-800 rounded-lg border transition-all ${
                                                             snapshot.isDragging
                                                                 ? 'border-blue-500 shadow-lg shadow-blue-500/20'
-                                                                : slide.is_active
-                                                                  ? 'border-gray-700 hover:border-gray-600'
-                                                                  : 'border-gray-700/50 opacity-50'
+                                                                : !slide.is_active
+                                                                  ? 'border-gray-700/50 opacity-50'
+                                                                  : schedOff
+                                                                    ? 'border-yellow-700/60 opacity-50'
+                                                                    : 'border-gray-700 hover:border-gray-600'
                                                         }`}
                                                     >
                                                         <div className="flex items-center p-3 gap-3">
@@ -524,6 +571,23 @@ export default function SlidesPage() {
                                                                                     ` - ${formatDate(slide.end_date)}`}
                                                                             </span>
                                                                         )}
+                                                                    {sched?.hasSchedule && (
+                                                                        <span
+                                                                            title={sched.summary}
+                                                                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-medium border ${
+                                                                                schedOff
+                                                                                    ? 'bg-yellow-900/40 border-yellow-700/60 text-yellow-400'
+                                                                                    : 'bg-blue-900/40 border-blue-700/60 text-blue-300'
+                                                                            }`}
+                                                                        >
+                                                                            🕐
+                                                                            <span className="hidden sm:inline">
+                                                                                {schedOff
+                                                                                    ? 'OFF SCHEDULE'
+                                                                                    : 'ON SCHEDULE'}
+                                                                            </span>
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                                 <div className="flex items-center gap-3 text-xs text-gray-500">
                                                                     <span
@@ -830,6 +894,148 @@ export default function SlidesPage() {
                                 <p className="text-[#888] text-xs font-mono mt-1 uppercase tracking-wider">
                                     HOW LONG TO DISPLAY (5-300 SECONDS)
                                 </p>
+                            </div>
+
+                            {/* UTC Schedule */}
+                            <div className="border-b border-[#1a1a1a] pb-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-white font-mono text-xs uppercase tracking-wider">
+                                            UTC SCHEDULE
+                                        </p>
+                                        <p className="text-[#888] font-mono text-[10px] uppercase tracking-wider">
+                                            RESTRICT TO SPECIFIC DAYS / HOURS (UTC)
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const hasSchedule =
+                                                debtActiveDays !== null ||
+                                                debtTimeStart !== null;
+                                            if (hasSchedule) {
+                                                setDebtActiveDays(null);
+                                                setDebtTimeStart(null);
+                                                setDebtTimeEnd(null);
+                                            } else {
+                                                setDebtActiveDays([]);
+                                                setDebtTimeStart('');
+                                                setDebtTimeEnd('');
+                                            }
+                                        }}
+                                        className={`px-3 py-1 font-mono text-xs uppercase tracking-wider border-2 transition-all ${
+                                            debtActiveDays !== null || debtTimeStart !== null
+                                                ? 'border-[#00aaff] bg-[#0a1a2a] text-[#00aaff]'
+                                                : 'border-[#333] bg-[#1a1a1a] text-[#666] hover:border-[#00aaff] hover:text-[#00aaff]'
+                                        }`}
+                                    >
+                                        {debtActiveDays !== null || debtTimeStart !== null
+                                            ? 'ENABLED ✓'
+                                            : 'ENABLE'}
+                                    </button>
+                                </div>
+
+                                {(debtActiveDays !== null || debtTimeStart !== null) && (
+                                    <div className="space-y-3 p-3 bg-[#0a1a2a] border border-[#00aaff]/30">
+                                        {/* Day selector */}
+                                        <div>
+                                            <p className="text-[10px] font-mono text-[#00aaff] uppercase tracking-wider mb-2">
+                                                ACTIVE DAYS (ALL UNCHECKED = EVERY DAY)
+                                            </p>
+                                            <div className="flex gap-1 flex-wrap">
+                                                {[
+                                                    { label: 'SUN', value: 0 },
+                                                    { label: 'MON', value: 1 },
+                                                    { label: 'TUE', value: 2 },
+                                                    { label: 'WED', value: 3 },
+                                                    { label: 'THU', value: 4 },
+                                                    { label: 'FRI', value: 5 },
+                                                    { label: 'SAT', value: 6 },
+                                                ].map((day) => {
+                                                    const active = (
+                                                        debtActiveDays ?? []
+                                                    ).includes(day.value);
+                                                    return (
+                                                        <button
+                                                            key={day.value}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const current =
+                                                                    debtActiveDays ?? [];
+                                                                const next = active
+                                                                    ? current.filter(
+                                                                          (d) => d !== day.value,
+                                                                      )
+                                                                    : [
+                                                                          ...current,
+                                                                          day.value,
+                                                                      ].sort((a, b) => a - b);
+                                                                setDebtActiveDays(next);
+                                                            }}
+                                                            className={`px-2 py-1 font-mono text-[10px] uppercase tracking-wider border transition-all ${
+                                                                active
+                                                                    ? 'border-[#00aaff] bg-[#00aaff] text-black font-bold'
+                                                                    : 'border-[#333] bg-[#111] text-[#666] hover:border-[#00aaff] hover:text-[#00aaff]'
+                                                            }`}
+                                                        >
+                                                            {day.label}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* Time range */}
+                                        <div>
+                                            <p className="text-[10px] font-mono text-[#00aaff] uppercase tracking-wider mb-2">
+                                                ACTIVE HOURS UTC (EMPTY = ALL DAY)
+                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="text-[9px] font-mono text-[#555] uppercase">
+                                                        FROM
+                                                    </label>
+                                                    <input
+                                                        type="time"
+                                                        value={debtTimeStart ?? ''}
+                                                        onChange={(e) =>
+                                                            setDebtTimeStart(
+                                                                e.target.value || null,
+                                                            )
+                                                        }
+                                                        className="px-2 py-1 bg-[#111] border border-[#00aaff]/50 text-white font-mono text-xs focus:outline-none focus:border-[#00aaff]"
+                                                    />
+                                                </div>
+                                                <span className="text-[#00aaff] font-mono text-xs mt-4">
+                                                    →
+                                                </span>
+                                                <div className="flex flex-col gap-1">
+                                                    <label className="text-[9px] font-mono text-[#555] uppercase">
+                                                        TO
+                                                    </label>
+                                                    <input
+                                                        type="time"
+                                                        value={debtTimeEnd ?? ''}
+                                                        onChange={(e) =>
+                                                            setDebtTimeEnd(e.target.value || null)
+                                                        }
+                                                        className="px-2 py-1 bg-[#111] border border-[#00aaff]/50 text-white font-mono text-xs focus:outline-none focus:border-[#00aaff]"
+                                                    />
+                                                </div>
+                                                <span className="text-[#555] font-mono text-[9px] uppercase mt-4">
+                                                    UTC
+                                                </span>
+                                            </div>
+                                            {debtTimeStart &&
+                                                debtTimeEnd &&
+                                                debtTimeStart >= debtTimeEnd && (
+                                                    <p className="text-[10px] font-mono text-[#ffaa00] mt-1 uppercase">
+                                                        ⚠ CROSSES MIDNIGHT
+                                                    </p>
+                                                )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Info */}
