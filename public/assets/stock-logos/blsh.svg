@@ -1,0 +1,21 @@
+<svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g clip-path="url(#clip0_blsh_final)">
+    <rect width="56" height="56" fill="url(#bg_blsh_final)" />
+    <circle cx="28" cy="28" r="18.75" fill="#F4F6FA" />
+    <path d="M16.5 24.8C19.5 24.8 21.9 25.8 23.4 27.4C22.5 25.0 20.6 23.2 18.1 22.4L16.5 22.0V24.8Z" fill="#111316"/>
+    <path d="M39.5 24.8C36.5 24.8 34.1 25.8 32.6 27.4C33.5 25.0 35.4 23.2 37.9 22.4L39.5 22.0V24.8Z" fill="#111316"/>
+    <path d="M21.2 31.8C21.2 29.2 23.4 27.1 26.0 27.1H30.0C32.6 27.1 34.8 29.2 34.8 31.8V33.3H32.6V31.9C32.6 30.6 31.4 29.4 30.0 29.4H26.0C24.6 29.4 23.4 30.6 23.4 31.9V33.3H21.2V31.8Z" fill="#111316"/>
+    <path d="M24.7 32.8C24.1 32.8 23.7 32.4 23.7 31.8V31.2C23.7 30.6 24.1 30.2 24.7 30.2C25.3 30.2 25.7 30.6 25.7 31.2V31.8C25.7 32.4 25.3 32.8 24.7 32.8Z" fill="#111316"/>
+    <path d="M31.3 32.8C30.7 32.8 30.3 32.4 30.3 31.8V31.2C30.3 30.6 30.7 30.2 31.3 30.2C31.9 30.2 32.3 30.6 32.3 31.2V31.8C32.3 32.4 31.9 32.8 31.3 32.8Z" fill="#111316"/>
+    <rect x="20.5" y="34.8" width="15" height="1.5" rx="0.75" fill="#111316" opacity="0.45"/>
+  </g>
+  <defs>
+    <linearGradient id="bg_blsh_final" x1="8" y1="8" x2="64" y2="72" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1A1E21" />
+      <stop offset="1" stop-color="#06060A" />
+    </linearGradient>
+    <clipPath id="clip0_blsh_final">
+      <rect width="56" height="56" rx="12" fill="white" />
+    </clipPath>
+  </defs>
+</svg>

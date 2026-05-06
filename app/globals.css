@@ -4,6 +4,8 @@
 
 /* ===== DESIGN TOKENS ===== */
 :root {
+    /* Earth hero (roxoland parity) — products strip background */
+    --roxom-dark-15: #151515;
     /* Admin Panel Colors */
     --admin-bg: #000;
     --admin-surface: #0a0a0a;
@@ -32,6 +34,15 @@
 @layer base {
     * {
         box-sizing: border-box;
+    }
+
+    /* Lets /earth-hero scroll while keeping the broadcast app fullscreen elsewhere */
+    html.earth-hero-route,
+    html.earth-hero-route body {
+        height: auto;
+        min-height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
     }
 
     html,

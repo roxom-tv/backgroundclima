@@ -9,6 +9,7 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
+                'roxom-dark-15': 'var(--roxom-dark-15)',
                 'debt-bg': '#1a1a1a',
                 'debt-red': '#DC2626',
                 'debt-yellow': '#FCD34D',
