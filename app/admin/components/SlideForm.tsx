@@ -40,6 +40,13 @@ const SLIDE_TYPES: { value: SlideType; label: string; icon: string; description:
     },
     { value: 'sata', label: 'SATA', icon: '🛰️', description: 'SATA/Strive tracker dashboard' },
     { value: 'market', label: 'Market', icon: '📈', description: 'Market indices dashboard' },
+    { value: 'earth', label: 'Earth', icon: '🌍', description: 'Global markets globe animation' },
+    {
+        value: 'earthcam',
+        label: 'Earth Cam',
+        icon: '🌍',
+        description: 'Globe → map zoom → live YouTube PiP',
+    },
 ];
 
 const COMMON_TIMEZONES = [
@@ -277,6 +284,28 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
             active_time_end: formData.active_time_end || null,
         };
 
+        // Earth: clear unrelated fields
+        if (formData.type === 'earth') {
+            Object.assign(cleanedData, {
+                youtube_url: null,
+                weather_query: null,
+                timezone: null,
+                show_weather: false,
+                description: null,
+            });
+        }
+
+        // EarthCam: cameras stored in description JSON; clear other fields
+        if (formData.type === 'earthcam') {
+            Object.assign(cleanedData, {
+                youtube_url: null,
+                weather_query: null,
+                timezone: null,
+                show_weather: false,
+                // description is already set from the cameras editor
+            });
+        }
+
         // System data slides: no YouTube/weather/video/event fields.
         if (formData.type === 'strc' || formData.type === 'sata' || formData.type === 'market') {
             Object.assign(cleanedData, {
@@ -371,6 +400,7 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
     const isStrc = formData.type === 'strc';
     const isSata = formData.type === 'sata';
     const isMarket = formData.type === 'market';
+    const isEarthCam = formData.type === 'earthcam';
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -1245,6 +1275,14 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
                 </>
             )}
 
+            {/* ========== EARTH CAM FIELDS ========== */}
+            {isEarthCam && (
+                <EarthCamCamerasEditor
+                    value={formData.description || ''}
+                    onChange={(json) => setFormData((prev) => ({ ...prev, description: json }))}
+                />
+            )}
+
             {/* Timezone (for YouTube, Event, Show) */}
             {(isYouTube || isEvent || isShow) && (
                 <div>
@@ -1655,5 +1693,165 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
                 </button>
             </div>
         </form>
+    );
+}
+
+// ─── EarthCam multi-camera editor ────────────────────────────────────────────
+
+interface CameraRow {
+    location: string;
+    display_name: string;
+    youtube_url: string;
+    stream_url: string;
+}
+
+function parseCameraRows(json: string): CameraRow[] {
+    if (!json) return [{ location: '', display_name: '', youtube_url: '', stream_url: '' }];
+    try {
+        const parsed = JSON.parse(json);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+            return (parsed as CameraRow[]).map((r) => ({
+                location: r.location ?? '',
+                display_name: r.display_name ?? '',
+                youtube_url: r.youtube_url ?? '',
+                stream_url: r.stream_url ?? '',
+            }));
+        }
+    } catch {
+        // ignore
+    }
+    return [{ location: '', display_name: '', youtube_url: '', stream_url: '' }];
+}
+
+function EarthCamCamerasEditor({
+    value,
+    onChange,
+}: {
+    value: string;
+    onChange: (json: string) => void;
+}) {
+    const [rows, setRows] = useState<CameraRow[]>(() => parseCameraRows(value));
+
+    const emit = (next: CameraRow[]) => {
+        setRows(next);
+        onChange(JSON.stringify(next));
+    };
+
+    const updateRow = (i: number, field: keyof CameraRow, val: string) => {
+        const next = rows.map((r, idx) => (idx === i ? { ...r, [field]: val } : r));
+        emit(next);
+    };
+
+    const addRow = () => emit([...rows, { location: '', display_name: '', youtube_url: '', stream_url: '' }]);
+    const removeRow = (i: number) => emit(rows.filter((_, idx) => idx !== i));
+
+    // ~25.5 s per camera (3 face-wait + 3.5 zoom-in + 15 pip + 2 zoom-out + 2 wait)
+    const suggestedSecs = Math.round(rows.length * 25.5);
+
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <label className="block text-xs font-mono font-medium text-white uppercase tracking-wider">
+                    CAMERAS ({rows.length})
+                </label>
+                <span className="text-[#888] text-xs font-mono uppercase tracking-wider">
+                    SUGGESTED DURATION: ~{suggestedSecs}s
+                </span>
+            </div>
+
+            <div className="space-y-3">
+                {rows.map((row, i) => (
+                    <div
+                        key={i}
+                        className="bg-[#0a0a0a] border-2 border-[#00ff00] p-3 space-y-2"
+                    >
+                        <div className="flex items-center justify-between mb-1">
+                            <span className="text-[#00ff00] font-mono text-xs uppercase tracking-wider font-semibold">
+                                CAM {i + 1}
+                            </span>
+                            {rows.length > 1 && (
+                                <button
+                                    type="button"
+                                    onClick={() => removeRow(i)}
+                                    className="w-6 h-6 bg-[#ff0000] hover:bg-[#cc0000] text-white border-2 border-[#ff0000] flex items-center justify-center text-xs font-mono"
+                                >
+                                    ×
+                                </button>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-mono text-[#888] uppercase tracking-wider mb-1">
+                                LOCATION (COORDINATES)
+                            </label>
+                            <input
+                                type="text"
+                                value={row.location}
+                                onChange={(e) => updateRow(i, 'location', e.target.value)}
+                                placeholder="e.g., 51.5074,-0.1278  or  London, UK"
+                                className="w-full px-3 py-2 bg-[#1a1a1a] border-2 border-[#333] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00ff00]"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-mono text-[#888] uppercase tracking-wider mb-1">
+                                DISPLAY NAME (shown on screen)
+                            </label>
+                            <input
+                                type="text"
+                                value={row.display_name}
+                                onChange={(e) => updateRow(i, 'display_name', e.target.value)}
+                                placeholder="e.g., London"
+                                className="w-full px-3 py-2 bg-[#1a1a1a] border-2 border-[#333] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00ff00]"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-mono text-[#888] uppercase tracking-wider mb-1">
+                                YOUTUBE LIVE URL
+                            </label>
+                            <input
+                                type="text"
+                                value={row.youtube_url}
+                                onChange={(e) => updateRow(i, 'youtube_url', e.target.value)}
+                                placeholder="https://www.youtube.com/watch?v=VIDEO_ID"
+                                className="w-full px-3 py-2 bg-[#1a1a1a] border-2 border-[#333] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00ff00]"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-mono text-[#888] uppercase tracking-wider mb-1">
+                                STREAM URL — HLS / MP4 / RTMP-to-HLS
+                                <span className="ml-2 text-[#555] normal-case">
+                                    (alternative to YouTube)
+                                </span>
+                            </label>
+                            <input
+                                type="text"
+                                value={row.stream_url}
+                                onChange={(e) => updateRow(i, 'stream_url', e.target.value)}
+                                placeholder="https://example.com/stream.m3u8"
+                                className="w-full px-3 py-2 bg-[#1a1a1a] border-2 border-[#333] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00ff00]"
+                            />
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <button
+                type="button"
+                onClick={addRow}
+                className="w-full px-3 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white border-2 border-[#00ff00] font-mono text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+            >
+                <span>+</span> ADD CAMERA
+            </button>
+
+            <p className="text-[#888] text-xs font-mono uppercase tracking-wider">
+                COORDINATES (LAT,LON) = 100% EXACT. CITY NAMES USE GEOCODING (BEST EFFORT).
+            </p>
+            <p className="text-[#888] text-xs font-mono uppercase tracking-wider">
+                TIP: GOOGLE THE CITY → COPY COORDINATES FROM MAPS FOR PRECISION.
+            </p>
+        </div>
     );
 }

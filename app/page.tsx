@@ -20,6 +20,8 @@ import VideoSlide from '@/components/VideoSlide';
 import StrcSlide, { prefetchStrcData } from '@/components/StrcSlide';
 import SataSlide, { prefetchSataData } from '@/components/SataSlide';
 import MarketSlide, { prefetchMarketData } from '@/MarketSlide';
+import EarthSlide from '@/components/EarthSlide';
+import EarthCamSlide from '@/components/EarthCamSlide';
 import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
 import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
 import { prefetchMarketsData } from '@/hooks/useMarketsSats';
@@ -643,6 +645,44 @@ export default function Home() {
                         style={{ position: 'absolute', inset: 0 }}
                     >
                         <SataSlide />
+                        {renderPositionedSponsors(currentSlide)}
+                    </motion.div>
+                );
+            case 'earth':
+                return (
+                    <motion.div
+                        key={`earth-${currentSlide.id}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{
+                            duration: 0.5,
+                            ease: [0.4, 0, 0.2, 1],
+                            opacity: { duration: 0.4 },
+                        }}
+                        className="h-full w-full bg-black relative"
+                        style={{ position: 'absolute', inset: 0 }}
+                    >
+                        <EarthSlide />
+                        {renderPositionedSponsors(currentSlide)}
+                    </motion.div>
+                );
+            case 'earthcam':
+                return (
+                    <motion.div
+                        key={`earthcam-${currentSlide.id}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{
+                            duration: 0.5,
+                            ease: [0.4, 0, 0.2, 1],
+                            opacity: { duration: 0.4 },
+                        }}
+                        className="h-full w-full bg-black relative"
+                        style={{ position: 'absolute', inset: 0 }}
+                    >
+                        <EarthCamSlide slide={currentSlide} />
                         {renderPositionedSponsors(currentSlide)}
                     </motion.div>
                 );

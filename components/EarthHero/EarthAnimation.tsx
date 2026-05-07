@@ -37,9 +37,24 @@ function smoothstep01(edge0: number, edge1: number, x: number): number {
     return t * t * (3 - 2 * t);
 }
 
+interface CameraMarker {
+    lat: number;
+    lon: number;
+}
+
 interface EarthAnimationProps {
     /** Used on desktop to ease globe scale from slightly larger (top) toward base as user scrolls. */
     readonly scrollY?: number;
+    /** When set, globe rotates to face this latitude (decimal degrees). */
+    readonly targetLat?: number;
+    /** When set, globe rotates to face this longitude (decimal degrees). */
+    readonly targetLon?: number;
+    /** Fired once when the globe has centered on targetLat/targetLon. */
+    readonly onFacingTarget?: () => void;
+    /** Camera location markers rendered as large pulsing dots on the globe. */
+    readonly markerCoords?: CameraMarker[];
+    /** When true, halts all rotation (auto-spin and target tracking). */
+    readonly frozen?: boolean;
 }
 
 /**
@@ -53,15 +68,43 @@ interface EarthAnimationProps {
  * @param props - `{ scrollY }` forwarded from Earth hero for desktop scale easing
  * @returns Full-size canvas for the Earth hero
  */
-const EarthAnimation = ({ scrollY = 0 }: EarthAnimationProps) => {
+const EarthAnimation = ({
+    scrollY = 0,
+    targetLat,
+    targetLon,
+    onFacingTarget,
+    markerCoords,
+    frozen = false,
+}: EarthAnimationProps) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isCanvasVisible, setIsCanvasVisible] = useState(false);
     const { hotspots } = useEarthAnimationHotspotTemplates();
     const scrollYRef = useRef(0);
+    const targetLatRef = useRef(targetLat);
+    const targetLonRef = useRef(targetLon);
+    const onFacingTargetRef = useRef(onFacingTarget);
+    const facingFiredRef = useRef(false);
+    const markerCoordsRef = useRef<CameraMarker[]>(markerCoords ?? []);
+    const frozenRef = useRef(frozen);
 
     useEffect(() => {
         scrollYRef.current = scrollY;
     }, [scrollY]);
+
+    useEffect(() => {
+        frozenRef.current = frozen;
+    }, [frozen]);
+
+    useEffect(() => {
+        markerCoordsRef.current = markerCoords ?? [];
+    }, [markerCoords]);
+
+    useEffect(() => {
+        targetLatRef.current = targetLat;
+        targetLonRef.current = targetLon;
+        onFacingTargetRef.current = onFacingTarget;
+        facingFiredRef.current = false;
+    }, [targetLat, targetLon, onFacingTarget]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -470,7 +513,32 @@ const EarthAnimation = ({ scrollY = 0 }: EarthAnimationProps) => {
 
                 tilt.x += (targetTilt.x - tilt.x) * tiltLerp;
                 tilt.y += (targetTilt.y - tilt.y) * tiltLerp;
-                rotY += rotationSpeed;
+
+                // Target-city rotation: lerp rotY toward the city's longitude
+                const tLon = targetLonRef.current;
+                const tLat = targetLatRef.current;
+
+                if (!frozenRef.current) {
+                    if (tLon !== undefined && tLat !== undefined) {
+                        const desiredRotY = -(tLon * Math.PI) / 180;
+                        // Normalize difference to [-π, π] for shortest-path rotation
+                        let diff = desiredRotY - rotY;
+                        diff = ((diff + Math.PI) % (2 * Math.PI)) - Math.PI;
+                        rotY += diff * 0.025;
+
+                        // Also tilt the latitude slightly into view
+                        const desiredTiltX = (tLat * Math.PI) / 180 * 0.06;
+                        targetTilt.x = desiredTiltX;
+
+                        // Fire onFacingTarget once the error is small enough
+                        if (!facingFiredRef.current && Math.abs(diff) < 0.015) {
+                            facingFiredRef.current = true;
+                            onFacingTargetRef.current?.();
+                        }
+                    } else {
+                        rotY += rotationSpeed;
+                    }
+                }
 
                 const scrollProgress = Math.min(1, scrollYRef.current / DESKTOP_SCROLL_SHRINK_PX);
                 const scrollEase = scrollProgress * scrollProgress;
@@ -566,7 +634,7 @@ const EarthAnimation = ({ scrollY = 0 }: EarthAnimationProps) => {
                         continue;
                     }
                     const landAlpha = isMobileViewport ? [0.3, 0.5, 0.72, 0.96] : LAND_ALPHA;
-                    ctx.fillStyle = `rgba(238,238,244,${landAlpha[b]})`;
+                    ctx.fillStyle = `rgba(26,231,132,${landAlpha[b]})`;
                     ctx.beginPath();
                     const buf = landBuf[b];
 
@@ -694,23 +762,23 @@ const EarthAnimation = ({ scrollY = 0 }: EarthAnimationProps) => {
                         const innerR = 3.6;
 
                         const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, outerR * 2.5);
-                        glow.addColorStop(0, 'rgba(255,255,255,0.11)');
-                        glow.addColorStop(0.35, 'rgba(255,255,255,0.05)');
-                        glow.addColorStop(0.72, 'rgba(255,255,255,0.02)');
-                        glow.addColorStop(1, 'rgba(255,255,255,0)');
+                        glow.addColorStop(0, 'rgba(26,231,132,0.11)');
+                        glow.addColorStop(0.35, 'rgba(26,231,132,0.05)');
+                        glow.addColorStop(0.72, 'rgba(26,231,132,0.02)');
+                        glow.addColorStop(1, 'rgba(26,231,132,0)');
                         ctx.fillStyle = glow;
                         ctx.beginPath();
                         ctx.arc(p.x, p.y, outerR * 2.5, 0, Math.PI * 2);
                         ctx.fill();
 
                         ctx.beginPath();
-                        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+                        ctx.strokeStyle = 'rgba(26,231,132,0.22)';
                         ctx.lineWidth = 1.1;
                         ctx.arc(p.x, p.y, outerR, 0, Math.PI * 2);
                         ctx.stroke();
 
                         ctx.beginPath();
-                        ctx.fillStyle = 'rgba(255,255,255,0.98)';
+                        ctx.fillStyle = 'rgba(26,231,132,0.98)';
                         ctx.arc(p.x, p.y, innerR, 0, Math.PI * 2);
                         ctx.fill();
                         ctx.restore();
@@ -759,6 +827,53 @@ const EarthAnimation = ({ scrollY = 0 }: EarthAnimationProps) => {
 
                 if (hoveredProjected) {
                     drawCard(hoveredProjected.x, hoveredProjected.y, hoveredProjected.hotspot);
+                }
+
+                // Camera location markers — large pulsing dots
+                for (const m of markerCoordsRef.current) {
+                    const markerLatRad = (m.lat * Math.PI) / 180;
+                    const markerLonRad = (m.lon * Math.PI) / 180;
+                    const adjLon = markerLonRad + rotY + tilt.y;
+                    const adjLat = markerLatRad + tilt.x;
+                    const cosLat = Math.cos(adjLat);
+                    const z3 = cosLat * Math.cos(adjLon);
+
+                    if (z3 <= 0.012) continue; // back-face cull
+
+                    const limbAlpha = Math.min(1, (z3 - 0.012) / 0.07);
+                    const x3 = cosLat * Math.sin(adjLon);
+                    const y3 = Math.sin(adjLat);
+                    const sx = cx + x3 * radius;
+                    const sy = cy - y3 * radius;
+
+                    const pulse = 1 + Math.sin(time * 2.2 + sx * 0.01) * 0.22;
+                    const outerR = 18 * pulse;
+                    const innerR = 7;
+
+                    ctx.save();
+                    ctx.globalAlpha = limbAlpha;
+
+                    const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, outerR * 3);
+                    glow.addColorStop(0, 'rgba(26,231,132,0.35)');
+                    glow.addColorStop(0.45, 'rgba(26,231,132,0.12)');
+                    glow.addColorStop(1, 'rgba(26,231,132,0)');
+                    ctx.fillStyle = glow;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, outerR * 3, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.strokeStyle = 'rgba(26,231,132,0.75)';
+                    ctx.lineWidth = 2;
+                    ctx.arc(sx, sy, outerR, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.fillStyle = 'rgba(26,231,132,1.0)';
+                    ctx.arc(sx, sy, innerR, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
                 }
 
                 animId = requestAnimationFrame(draw);
