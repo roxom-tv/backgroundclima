@@ -17,7 +17,8 @@ export type SlideType =
     | 'strc'
     | 'sata'
     | 'earth'
-    | 'earthcam';
+    | 'earthcam'
+    | 'earthlive';
 export type TransitionEffect = 'tv_static' | 'fade' | 'slide' | 'none';
 export type LayoutOrientation = 'horizontal' | 'vertical';
 export type EventSlideStyle = 'classic' | 'modern';

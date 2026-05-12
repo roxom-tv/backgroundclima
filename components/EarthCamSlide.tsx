@@ -5,57 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Slide } from '@/lib/supabase/types';
 import { convertYouTubeUrlToEmbed } from '@/lib/youtube-utils';
-
-// ─── HLS Video Player ─────────────────────────────────────────────────────────
-// Supports native HLS (Safari), hls.js (Chrome/OBS), and plain video URLs.
-
-function HlsVideo({ src, style }: { src: string; style?: React.CSSProperties }) {
-    const videoRef = useRef<HTMLVideoElement>(null);
-
-    useEffect(() => {
-        const video = videoRef.current;
-        if (!video || !src) return;
-
-        const isHls = src.includes('.m3u8') || src.includes('m3u8');
-
-        if (isHls && !video.canPlayType('application/vnd.apple.mpegurl')) {
-            // Chrome / OBS browser: use hls.js
-            let hlsInstance: import('hls.js').default | null = null;
-            import('hls.js').then(({ default: Hls }) => {
-                if (!Hls.isSupported()) {
-                    video.src = src;
-                    video.play().catch(() => {});
-                    return;
-                }
-                hlsInstance = new Hls({
-                    enableWorker: true,
-                    lowLatencyMode: true,
-                    backBufferLength: 0,
-                });
-                hlsInstance.loadSource(src);
-                hlsInstance.attachMedia(video);
-                hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                    video.play().catch(() => {});
-                });
-            });
-            return () => { hlsInstance?.destroy(); };
-        } else {
-            // Safari native HLS or plain MP4
-            video.src = src;
-            video.play().catch(() => {});
-        }
-    }, [src]);
-
-    return (
-        <video
-            ref={videoRef}
-            muted
-            autoPlay
-            playsInline
-            style={style}
-        />
-    );
-}
+import { HlsVideo } from './HlsVideo';
 
 const EarthAnimation = dynamic(() => import('./EarthHero/EarthAnimation'), {
     ssr: false,

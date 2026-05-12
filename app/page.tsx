@@ -22,6 +22,7 @@ import SataSlide, { prefetchSataData } from '@/components/SataSlide';
 import MarketSlide, { prefetchMarketData } from '@/MarketSlide';
 import EarthSlide from '@/components/EarthSlide';
 import EarthCamSlide from '@/components/EarthCamSlide';
+import EarthCamLiveSlide from '@/components/EarthCamLiveSlide';
 import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
 import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
 import { prefetchMarketsData } from '@/hooks/useMarketsSats';
@@ -683,6 +684,21 @@ export default function Home() {
                         style={{ position: 'absolute', inset: 0 }}
                     >
                         <EarthCamSlide slide={currentSlide} />
+                        {renderPositionedSponsors(currentSlide)}
+                    </motion.div>
+                );
+            case 'earthlive':
+                return (
+                    <motion.div
+                        key={`earthlive-${currentSlide.id}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                        className="h-full w-full bg-black relative"
+                        style={{ position: 'absolute', inset: 0 }}
+                    >
+                        <EarthCamLiveSlide slide={currentSlide} />
                         {renderPositionedSponsors(currentSlide)}
                     </motion.div>
                 );

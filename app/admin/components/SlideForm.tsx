@@ -45,7 +45,13 @@ const SLIDE_TYPES: { value: SlideType; label: string; icon: string; description:
         value: 'earthcam',
         label: 'Earth Cam',
         icon: '🌍',
-        description: 'Globe → map zoom → live YouTube PiP',
+        description: 'Globe → zoom → live cameras cycling',
+    },
+    {
+        value: 'earthlive',
+        label: 'Earth Live',
+        icon: '📡',
+        description: 'Globe → zoom → single live camera (permanent)',
     },
 ];
 
@@ -400,7 +406,8 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
     const isStrc = formData.type === 'strc';
     const isSata = formData.type === 'sata';
     const isMarket = formData.type === 'market';
-    const isEarthCam = formData.type === 'earthcam';
+    const isEarthCam  = formData.type === 'earthcam';
+    const isEarthLive = formData.type === 'earthlive';
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -1283,6 +1290,14 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
                 />
             )}
 
+            {/* ========== EARTH LIVE FIELDS ========== */}
+            {isEarthLive && (
+                <EarthLiveCameraEditor
+                    value={formData.description || ''}
+                    onChange={(json) => setFormData((prev) => ({ ...prev, description: json }))}
+                />
+            )}
+
             {/* Timezone (for YouTube, Event, Show) */}
             {(isYouTube || isEvent || isShow) && (
                 <div>
@@ -1851,6 +1866,109 @@ function EarthCamCamerasEditor({
             </p>
             <p className="text-[#888] text-xs font-mono uppercase tracking-wider">
                 TIP: GOOGLE THE CITY → COPY COORDINATES FROM MAPS FOR PRECISION.
+            </p>
+        </div>
+    );
+}
+
+// ─── Earth Live single-camera editor ──────────────────────────────────────────
+
+interface LiveRow {
+    location: string;
+    display_name: string;
+    youtube_url: string;
+    stream_url: string;
+}
+
+function parseLiveRow(json: string): LiveRow {
+    if (!json) return { location: '', display_name: '', youtube_url: '', stream_url: '' };
+    try {
+        const parsed = JSON.parse(json);
+        const entry = Array.isArray(parsed) ? parsed[0] : parsed;
+        if (entry && typeof entry === 'object') {
+            return {
+                location:     entry.location     ?? '',
+                display_name: entry.display_name ?? '',
+                youtube_url:  entry.youtube_url  ?? '',
+                stream_url:   entry.stream_url   ?? '',
+            };
+        }
+    } catch { /* ignore */ }
+    return { location: '', display_name: '', youtube_url: '', stream_url: '' };
+}
+
+function EarthLiveCameraEditor({ value, onChange }: { value: string; onChange: (json: string) => void }) {
+    const [row, setRow] = useState<LiveRow>(() => parseLiveRow(value));
+
+    const update = (field: keyof LiveRow, val: string) => {
+        const next = { ...row, [field]: val };
+        setRow(next);
+        onChange(JSON.stringify(next));
+    };
+
+    return (
+        <div className="space-y-4">
+            <label className="block text-xs font-mono font-medium text-white uppercase tracking-wider">
+                📡 LIVE CAMERA
+            </label>
+
+            <div className="bg-[#0a0a0a] border-2 border-[#00ff00] p-3 space-y-2">
+                <div>
+                    <label className="block text-[10px] font-mono text-[#888] uppercase tracking-wider mb-1">
+                        LOCATION (COORDINATES)
+                    </label>
+                    <input
+                        type="text"
+                        value={row.location}
+                        onChange={(e) => update('location', e.target.value)}
+                        placeholder="e.g., 51.5074,-0.1278  or  London, UK"
+                        className="w-full px-3 py-2 bg-[#1a1a1a] border-2 border-[#333] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00ff00]"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-[10px] font-mono text-[#888] uppercase tracking-wider mb-1">
+                        DISPLAY NAME (shown on screen)
+                    </label>
+                    <input
+                        type="text"
+                        value={row.display_name}
+                        onChange={(e) => update('display_name', e.target.value)}
+                        placeholder="e.g., London"
+                        className="w-full px-3 py-2 bg-[#1a1a1a] border-2 border-[#333] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00ff00]"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-[10px] font-mono text-[#888] uppercase tracking-wider mb-1">
+                        YOUTUBE LIVE URL
+                    </label>
+                    <input
+                        type="text"
+                        value={row.youtube_url}
+                        onChange={(e) => update('youtube_url', e.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=VIDEO_ID"
+                        className="w-full px-3 py-2 bg-[#1a1a1a] border-2 border-[#333] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00ff00]"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-[10px] font-mono text-[#888] uppercase tracking-wider mb-1">
+                        STREAM URL — HLS / MP4 / RTMP-to-HLS
+                        <span className="ml-2 text-[#555] normal-case">(alternative to YouTube)</span>
+                    </label>
+                    <input
+                        type="text"
+                        value={row.stream_url}
+                        onChange={(e) => update('stream_url', e.target.value)}
+                        placeholder="https://example.com/stream.m3u8"
+                        className="w-full px-3 py-2 bg-[#1a1a1a] border-2 border-[#333] text-white placeholder-[#666] font-mono text-xs focus:outline-none focus:border-[#00ff00]"
+                    />
+                </div>
+            </div>
+
+            <p className="text-[#888] text-xs font-mono uppercase tracking-wider">
+                THE CAMERA STAYS OPEN PERMANENTLY — DURATION IS SET BY THE SLIDE TIMER.
             </p>
         </div>
     );

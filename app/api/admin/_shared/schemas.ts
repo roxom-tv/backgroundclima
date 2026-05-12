@@ -20,6 +20,7 @@ const slideTypeSchema = z.enum([
     'market',
     'earth',
     'earthcam',
+    'earthlive',
 ]);
 
 const layoutOrientationSchema = z.enum(['horizontal', 'vertical']);
