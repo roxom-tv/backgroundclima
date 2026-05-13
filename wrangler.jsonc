@@ -26,25 +26,8 @@
     "observability": {
         "enabled": true,
     },
-    "vars": {
-        "FX_API_URL": "https://api.exchangerate.host/latest",
-        "OPENWEATHER_LANG": "en",
-        "OPENWEATHER_UNITS": "metric",
-        "SLACK_ALERTS_ENABLED": "false",
-        "LOGO_TOKEN": "pk_Uy3CvqjnTC2x-VW70T1fVQ",
-        "RTV_API_URL": "https://api.roxom.tv",
-    },
     "env": {
         "preview": {
-            "vars": {
-                "NEXT_PUBLIC_SUPABASE_URL": "SET_IN_CLOUDFLARE_ENV",
-                "FX_API_URL": "https://api.exchangerate.host/latest",
-                "OPENWEATHER_LANG": "en",
-                "OPENWEATHER_UNITS": "metric",
-                "SLACK_ALERTS_ENABLED": "false",
-                "LOGO_TOKEN": "pk_Uy3CvqjnTC2x-VW70T1fVQ",
-                "RTV_API_URL": "https://api.roxom.tv",
-                    },
             "services": [
                 { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-preview" },
             ],
@@ -57,15 +40,6 @@
             "images": { "binding": "IMAGES" },
         },
         "production": {
-            "vars": {
-                "NEXT_PUBLIC_SUPABASE_URL": "SET_IN_CLOUDFLARE_ENV",
-                "FX_API_URL": "https://api.exchangerate.host/latest",
-                "OPENWEATHER_LANG": "en",
-                "OPENWEATHER_UNITS": "metric",
-                "SLACK_ALERTS_ENABLED": "true",
-                "LOGO_TOKEN": "pk_Uy3CvqjnTC2x-VW70T1fVQ",
-                "RTV_API_URL": "https://api.roxom.tv",
-                    },
             "services": [
                 { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-production" },
             ],
