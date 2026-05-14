@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Slide } from '@/lib/supabase/types';
 import { normalizeYouTubeEmbedUrl } from '@/lib/youtube-utils';
 
+/** Tiempo desde que el feed es visible hasta que suele desaparecer la UI táctil de YouTube (no controlable por API). */
+const YOUTUBE_TOUCH_MASK_MS = 4300;
+
 interface RotatingBackgroundProps {
     activeIndex: number;
     slides: Slide[];
@@ -27,6 +30,12 @@ export default function RotatingBackground({
     const activeIndexRef = useRef(activeIndex);
     const channelChangeStartTimeRef = useRef<number | null>(null);
     const iframeLoadedRef = useRef<boolean>(false);
+    const playerVeilTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const playerVeilMaxTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    /** Cubre / difumina el iframe mientras YouTube muestra la UI táctil (onLoad llega antes que esa capa). */
+    const [playerVeilVisible, setPlayerVeilVisible] = useState(true);
+    const [youtubeEmbedReady, setYoutubeEmbedReady] = useState(false);
 
     // Get city index safely
     const getCityIndex = (index: number): number => {
@@ -36,6 +45,79 @@ export default function RotatingBackground({
 
         return index % slides.length;
     };
+
+    const cityIndex = getCityIndex(activeIndex);
+    const currentSlide = directSlide || slides[cityIndex];
+
+    const clearPlayerVeilTimers = () => {
+        if (playerVeilTimerRef.current) {
+            clearTimeout(playerVeilTimerRef.current);
+            playerVeilTimerRef.current = null;
+        }
+
+        if (playerVeilMaxTimerRef.current) {
+            clearTimeout(playerVeilMaxTimerRef.current);
+            playerVeilMaxTimerRef.current = null;
+        }
+    };
+
+    const clearPlayerVeilRevealTimerOnly = () => {
+        if (playerVeilTimerRef.current) {
+            clearTimeout(playerVeilTimerRef.current);
+            playerVeilTimerRef.current = null;
+        }
+    };
+
+    // Tapar el flash de UI de YouTube al cambiar de cámara / recargar iframe
+    useEffect(() => {
+        setPlayerVeilVisible(true);
+        setYoutubeEmbedReady(false);
+        clearPlayerVeilTimers();
+
+        playerVeilMaxTimerRef.current = setTimeout(() => {
+            setPlayerVeilVisible(false);
+            clearPlayerVeilRevealTimerOnly();
+            playerVeilMaxTimerRef.current = null;
+        }, 12000);
+
+        return () => {
+            clearPlayerVeilTimers();
+        };
+    }, [activeIndex, currentSlide?.youtube_url]);
+
+    // Enmascarar desde que el usuario *ve* el player: onLoad es demasiado pronto y la UI táctil llega después.
+    useEffect(() => {
+        if (showChannelChange || !youtubeEmbedReady) {
+            return;
+        }
+
+        let cancelled = false;
+        const paintDelayMs = 120;
+
+        const startId = window.setTimeout(() => {
+            if (cancelled) {
+                return;
+            }
+
+            setPlayerVeilVisible(true);
+            clearPlayerVeilRevealTimerOnly();
+            playerVeilTimerRef.current = setTimeout(() => {
+                setPlayerVeilVisible(false);
+                playerVeilTimerRef.current = null;
+
+                if (playerVeilMaxTimerRef.current) {
+                    clearTimeout(playerVeilMaxTimerRef.current);
+                    playerVeilMaxTimerRef.current = null;
+                }
+            }, YOUTUBE_TOUCH_MASK_MS);
+        }, paintDelayMs);
+
+        return () => {
+            cancelled = true;
+            window.clearTimeout(startId);
+            clearPlayerVeilRevealTimerOnly();
+        };
+    }, [showChannelChange, youtubeEmbedReady, activeIndex, currentSlide?.youtube_url]);
 
     // Limpiar efecto cuando llegamos a una ciudad - esperar a que el iframe cargue
     useEffect(() => {
@@ -110,13 +192,10 @@ export default function RotatingBackground({
         activeIndexRef.current = activeIndex;
     }, [activeIndex, disableInternalOverlay]);
 
-    // Use direct slide if provided, otherwise calculate from slides array
-    const cityIndex = getCityIndex(activeIndex);
-    const currentSlide = directSlide || slides[cityIndex];
-
     // Handler para detectar cuando el iframe ha cargado
     const handleIframeLoad = () => {
         iframeLoadedRef.current = true;
+        setYoutubeEmbedReady(true);
 
         if (showChannelChange && !disableInternalOverlay) {
             setTimeout(() => {
@@ -128,7 +207,9 @@ export default function RotatingBackground({
 
     // Handler para errores del iframe
     const handleIframeError = () => {
-        // Error cargando iframe - silently handle
+        clearPlayerVeilTimers();
+        setYoutubeEmbedReady(false);
+        setPlayerVeilVisible(false);
     };
 
     // Don't render if no slides
@@ -179,11 +260,17 @@ export default function RotatingBackground({
                             height: '100%',
                         }}
                     >
+                        {playerVeilVisible && (
+                            <div
+                                className="youtube-touch-mask absolute inset-0 z-[6]"
+                                aria-hidden
+                            />
+                        )}
                         <iframe
                             key={`${activeIndex}-${currentSlide.name}`}
                             ref={iframeRef}
                             src={iframeSrc}
-                            className={`youtube-iframe ${getZoomClass()}`}
+                            className={`youtube-iframe ${getZoomClass()}${playerVeilVisible ? ' youtube-iframe-touch-masked' : ''}`}
                             frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen

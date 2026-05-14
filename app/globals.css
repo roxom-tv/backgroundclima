@@ -293,6 +293,12 @@
         border: none;
         margin: 0;
         padding: 0;
+        /* Evita que hover/tap reactive la UI táctil de YouTube encima del vídeo */
+        pointer-events: none;
+    }
+
+    .youtube-iframe-touch-masked {
+        filter: blur(16px) saturate(0.85);
     }
 
     .youtube-iframe.necochea-zoom {
@@ -303,6 +309,14 @@
     .youtube-iframe.hongkong-zoom {
         transform: scale(1.5);
         transform-origin: center center;
+    }
+
+    /* Velo sobre el embed: difumina la UI táctil de YouTube sin pantalla negra total */
+    .youtube-touch-mask {
+        pointer-events: auto;
+        background: rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
     }
 
     .centered-logo {
