@@ -70,6 +70,10 @@ export interface Slide {
     // Video slide fields
     video_url: string | null;
     loop_count: number | null;
+    // UTC schedule: active days (0=Sun…6=Sat) and time window (HH:MM)
+    active_days: number[] | null;
+    active_time_start: string | null;
+    active_time_end: string | null;
     created_at: string;
     updated_at: string;
 }
@@ -142,6 +146,10 @@ export interface SlideInsert {
     // Video slide fields
     video_url?: string | null;
     loop_count?: number | null;
+    // UTC schedule
+    active_days?: number[] | null;
+    active_time_start?: string | null;
+    active_time_end?: string | null;
 }
 
 export interface SlideUpdate {
@@ -186,6 +194,10 @@ export interface SlideUpdate {
     // Video slide fields
     video_url?: string | null;
     loop_count?: number | null;
+    // UTC schedule
+    active_days?: number[] | null;
+    active_time_start?: string | null;
+    active_time_end?: string | null;
 }
 
 export interface SponsorInsert {

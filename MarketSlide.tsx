@@ -79,7 +79,7 @@ function IndexItem({ idx }: { idx: IndexData }) {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexShrink: 0 }}>
             <span
                 style={{
-                    fontSize: 22,
+                    fontSize: 21,
                     fontWeight: 700,
                     letterSpacing: '0.12em',
                     color: T.text3,
@@ -91,7 +91,7 @@ function IndexItem({ idx }: { idx: IndexData }) {
             </span>
             <span
                 style={{
-                    fontSize: 25,
+                    fontSize: 24,
                     fontWeight: 800,
                     letterSpacing: '-0.02em',
                     fontFamily: T.mono,
@@ -101,7 +101,7 @@ function IndexItem({ idx }: { idx: IndexData }) {
             </span>
             <span
                 style={{
-                    fontSize: 18,
+                    fontSize: 17,
                     fontWeight: 700,
                     padding: '3px 10px',
                     borderRadius: 9999,
@@ -555,7 +555,7 @@ export default function MarketSlide() {
                     <div
                         style={{
                             flexShrink: 0,
-                            marginRight: 48,
+                            marginRight: 40,
                             display: 'flex',
                             alignItems: 'center',
                         }}
