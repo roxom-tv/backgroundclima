@@ -10,14 +10,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const router = useRouter();
     const pathname = usePathname();
 
-    // Redirect to login if not authenticated (except for login page)
     useEffect(() => {
         if (!isLoading && !user && pathname !== '/admin/login') {
-            router.push('/admin/login');
+            router.push('/auth/okta');
         }
     }, [user, isLoading, router, pathname]);
 
-    // Show loading state
     if (isLoading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
@@ -28,31 +26,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         );
     }
 
-    // If on login page, render without layout
     if (pathname === '/admin/login') {
         return <>{children}</>;
     }
 
-    // If not authenticated, show nothing (redirect will happen)
-    // But check for environment variable errors first
-    if (!user && !isLoading) {
-        // Check if it's an environment variable issue
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-            return (
-                <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4 px-4">
-                    <div className="text-red-500 text-2xl font-mono font-bold uppercase tracking-wider text-center">
-                        CONFIGURATION ERROR
-                    </div>
-                    <div className="text-white text-lg font-mono text-center max-w-2xl">
-                        Supabase environment variables are not configured.
-                        <br />
-                        Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in
-                        Vercel.
-                    </div>
-                </div>
-            );
-        }
-
+    if (!user) {
         return null;
     }
 
@@ -66,7 +44,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const handleSignOut = async () => {
         await signOut();
-        router.push('/admin/login');
     };
 
     return (

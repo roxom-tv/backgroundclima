@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import type { CalendarEvent, CalendarEventInsert, CalendarEventUpdate } from '@/lib/supabase/types';
+import type { CalendarEvent, CalendarEventInsert, CalendarEventUpdate } from '@/lib/types/admin';
 
 export function useEvents() {
     const [events, setEvents] = useState<CalendarEvent[]>([]);

@@ -1,21 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createServerAdminSupabaseClient } from '@/lib/supabase/admin';
+import { getDb } from '@/lib/db/client';
+import { slidesTable } from '@/lib/db/schema';
+import {
+    stringifySlideScheduleTimes,
+    stringifySelectedEventIds,
+    stringifyActiveDays,
+    parseSlideScheduleTimes,
+    parseSelectedEventIds,
+    parseActiveDays,
+} from '@/lib/db/schema/slides';
+import { asc } from 'drizzle-orm';
 import { slideInsertSchema } from '../_shared/schemas';
+import { requireAdmin, withRenewal } from '@/lib/auth/require-admin';
 
-export async function GET() {
+function serializeSlideForResponse(row: typeof slidesTable.$inferSelect) {
+    return {
+        ...row,
+        schedule_times: parseSlideScheduleTimes(row.schedule_times ?? null),
+        selected_event_ids: parseSelectedEventIds(row.selected_event_ids ?? null),
+        active_days: parseActiveDays(row.active_days ?? null),
+    };
+}
+
+export async function GET(request: NextRequest) {
+    const auth = await requireAdmin(request);
+
+    if (auth.denied) {
+        return auth.response;
+    }
+
     try {
-        const supabase = createServerAdminSupabaseClient();
-        const { data, error } = await supabase
-            .from('slides')
-            .select('*')
-            .order('order_index', { ascending: true });
+        const db = await getDb();
+        const rows = await db.select().from(slidesTable).orderBy(asc(slidesTable.order_index));
 
-        if (error) {
-            return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-        }
-
-        return NextResponse.json({ success: true, data: data ?? [] });
+        return withRenewal(
+            NextResponse.json({ success: true, data: rows.map(serializeSlideForResponse) }),
+            auth.setCookie,
+        );
     } catch (error) {
         return NextResponse.json(
             {
@@ -28,21 +50,34 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+    const auth = await requireAdmin(request);
+
+    if (auth.denied) {
+        return auth.response;
+    }
+
     try {
         const body = await request.json();
         const payload = slideInsertSchema.parse(body);
-        const supabase = createServerAdminSupabaseClient();
+        const db = await getDb();
 
-        // Workaround for strict Supabase generic inference in route handlers.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const slidesTable = supabase.from('slides') as any;
-        const { data, error } = await slidesTable.insert(payload).select().single();
+        const [inserted] = await db
+            .insert(slidesTable)
+            .values({
+                ...payload,
+                schedule_times: stringifySlideScheduleTimes(payload.schedule_times ?? null),
+                selected_event_ids: stringifySelectedEventIds(payload.selected_event_ids ?? null),
+                active_days: stringifyActiveDays(payload.active_days ?? null),
+            })
+            .returning();
 
-        if (error) {
-            return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-        }
-
-        return NextResponse.json({ success: true, data }, { status: 201 });
+        return withRenewal(
+            NextResponse.json(
+                { success: true, data: serializeSlideForResponse(inserted) },
+                { status: 201 },
+            ),
+            auth.setCookie,
+        );
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(

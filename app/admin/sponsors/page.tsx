@@ -12,7 +12,7 @@ import {
     Modal,
     InfoBox,
 } from '../components/ui';
-import type { Sponsor, SponsorInsert } from '@/lib/supabase/types';
+import type { Sponsor, SponsorInsert } from '@/lib/types/admin';
 
 export default function SponsorsPage() {
     const {

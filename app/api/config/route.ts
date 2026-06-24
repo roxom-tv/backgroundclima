@@ -7,14 +7,14 @@ export const revalidate = 0;
 function buildConfigErrorResponse(error: unknown) {
     const traceId = crypto.randomUUID();
     const rawMessage = error instanceof Error ? error.message : 'Unknown error';
-    const isFetchFailure = rawMessage.includes('fetch failed');
-    const isMissingEnv = rawMessage.includes('Missing Supabase environment variables');
+    const isMissingBinding =
+        rawMessage.includes('D1') ||
+        rawMessage.includes('database') ||
+        rawMessage.includes('binding');
 
-    const hint = isMissingEnv
-        ? 'Set SUPABASE_URL/SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY.'
-        : isFetchFailure
-          ? 'Cannot reach Supabase. Check URL/key values and network access.'
-          : 'Check API logs using traceId for more details.';
+    const hint = isMissingBinding
+        ? 'Check the D1 database binding (DB) in wrangler.jsonc and that migrations are applied.'
+        : 'Check API logs using traceId for more details.';
 
     return NextResponse.json(
         {

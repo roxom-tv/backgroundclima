@@ -31,9 +31,9 @@ export default function Error({
             <div className="mt-8 text-[#888] text-xs font-mono text-center max-w-xl">
                 If this error persists, please check:
                 <br />
-                1. Environment variables are configured in Vercel
+                1. Cloudflare bindings (D1, R2) are configured
                 <br />
-                2. Supabase project is accessible
+                2. The D1 database is accessible
                 <br />
                 3. Browser console for detailed error messages
             </div>

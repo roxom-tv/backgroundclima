@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useSlides } from '@/hooks/useSlides';
 import SlideForm from '../components/SlideForm';
-import type { Slide, SlideInsert } from '@/lib/supabase/types';
+import type { Slide, SlideInsert } from '@/lib/types/admin';
 import { isSlideScheduledNow, hasSchedule, formatScheduleSummary } from '@/lib/schedule-utils';
 
 export default function SlidesPage() {
@@ -43,6 +43,7 @@ export default function SlidesPage() {
     const [nowUtc, setNowUtc] = useState(() => new Date());
     useEffect(() => {
         const id = setInterval(() => setNowUtc(new Date()), 60_000);
+
         return () => clearInterval(id);
     }, []);
 
@@ -469,8 +470,7 @@ export default function SlidesPage() {
                                     {filteredSlides.map((slide, index) => {
                                         const typeInfo = getTypeInfo(slide.type);
                                         const sched = slideScheduleStatus.get(slide.id);
-                                        const schedOff =
-                                            sched?.hasSchedule && !sched?.isActive;
+                                        const schedOff = sched?.hasSchedule && !sched?.isActive;
 
                                         return (
                                             <Draggable
@@ -911,8 +911,8 @@ export default function SlidesPage() {
                                         type="button"
                                         onClick={() => {
                                             const hasSchedule =
-                                                debtActiveDays !== null ||
-                                                debtTimeStart !== null;
+                                                debtActiveDays !== null || debtTimeStart !== null;
+
                                             if (hasSchedule) {
                                                 setDebtActiveDays(null);
                                                 setDebtTimeStart(null);
@@ -952,9 +952,10 @@ export default function SlidesPage() {
                                                     { label: 'FRI', value: 5 },
                                                     { label: 'SAT', value: 6 },
                                                 ].map((day) => {
-                                                    const active = (
-                                                        debtActiveDays ?? []
-                                                    ).includes(day.value);
+                                                    const active = (debtActiveDays ?? []).includes(
+                                                        day.value,
+                                                    );
+
                                                     return (
                                                         <button
                                                             key={day.value}
@@ -966,10 +967,9 @@ export default function SlidesPage() {
                                                                     ? current.filter(
                                                                           (d) => d !== day.value,
                                                                       )
-                                                                    : [
-                                                                          ...current,
-                                                                          day.value,
-                                                                      ].sort((a, b) => a - b);
+                                                                    : [...current, day.value].sort(
+                                                                          (a, b) => a - b,
+                                                                      );
                                                                 setDebtActiveDays(next);
                                                             }}
                                                             className={`px-2 py-1 font-mono text-[10px] uppercase tracking-wider border transition-all ${
@@ -999,9 +999,7 @@ export default function SlidesPage() {
                                                         type="time"
                                                         value={debtTimeStart ?? ''}
                                                         onChange={(e) =>
-                                                            setDebtTimeStart(
-                                                                e.target.value || null,
-                                                            )
+                                                            setDebtTimeStart(e.target.value || null)
                                                         }
                                                         className="px-2 py-1 bg-[#111] border border-[#00aaff]/50 text-white font-mono text-xs focus:outline-none focus:border-[#00aaff]"
                                                     />

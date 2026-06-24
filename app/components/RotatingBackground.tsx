@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Slide } from '@/lib/supabase/types';
+import type { Slide } from '@/lib/types/admin';
 import { normalizeYouTubeEmbedUrl } from '@/lib/youtube-utils';
 
 /** Tiempo desde que el feed es visible hasta que suele desaparecer la UI táctil de YouTube (no controlable por API). */

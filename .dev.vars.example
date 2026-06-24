@@ -1,0 +1,51 @@
+# =============================================
+# Okta SSO — Cloudflare Workers secrets
+# Copy to .dev.vars for local wrangler dev.
+# In production, set via: wrangler secret put <KEY>
+# NEVER commit .dev.vars to git.
+# =============================================
+
+# Your Okta org issuer URL.
+# Must EXACTLY match the `iss` claim in the id_token.
+# Org-level (no custom auth server): https://dev-xxxxxxxx.okta.com
+# Custom auth server (e.g. "default"): https://dev-xxxxxxxx.okta.com/oauth2/default
+# If these don't match, id_token validation will fail with an iss mismatch error.
+OKTA_ISSUER=https://your-org.okta.com/oauth2/default
+
+# OAuth 2.0 / OIDC Client ID from the Okta application.
+OKTA_CLIENT_ID=0oaXXXXXXXXXXXXXXXXX
+
+# OAuth 2.0 / OIDC Client Secret from the Okta application.
+# Store as a Wrangler secret in production, never in wrangler.jsonc vars.
+OKTA_CLIENT_SECRET=your-okta-client-secret
+
+# The redirect URI registered in the Okta application's "Sign-in redirect URIs".
+# Must match exactly (scheme, host, path) — no trailing slash.
+# Example: https://backgroundclima.roxom.tv/auth/okta/callback
+OKTA_CALLBACK_URL=https://your-domain.com/auth/okta/callback
+
+# Where the app sends the user after a successful login.
+# Typically the admin root or dashboard.
+# Example: https://backgroundclima.roxom.tv/admin
+OKTA_REDIRECT_URL=https://your-domain.com/admin
+
+# Where Okta sends the user after the Okta-side session ends.
+# Must be registered in the Okta application's "Sign-out redirect URIs".
+# Example: https://backgroundclima.roxom.tv/admin/login
+OKTA_POST_LOGOUT_REDIRECT_URI=https://your-domain.com/admin/login
+
+# Comma-separated allowlist of email addresses permitted to log in.
+# Only these identities will pass the allowlist gate after id_token validation.
+# Example: alice@roxom.tv,bob@roxom.tv
+OKTA_ALLOWED_EMAILS=your-email@yourcompany.com
+
+# Domain for the session cookie (must match the Worker's hostname).
+# For local wrangler dev: localhost
+# For production: your-domain.com (note: no leading dot needed — the browser adds it)
+COOKIE_DOMAIN=your-domain.com
+
+# Optional: session lifetime in days (default: 7)
+# SESSION_TTL_DAYS=7
+
+# Optional: PKCE/CSRF state TTL in seconds (default: 600 = 10 minutes)
+# STATE_TTL_SEC=600

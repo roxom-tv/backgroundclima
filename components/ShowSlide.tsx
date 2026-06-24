@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import type { Slide } from '@/lib/supabase/types';
+import type { Slide } from '@/lib/types/admin';
 
 interface ShowSlideProps {
     slide: Slide;

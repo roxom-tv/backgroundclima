@@ -1,6 +1,20 @@
 {
     "$schema": "node_modules/wrangler/config-schema.json",
+    // NOTE(PRO-486 cron): main points to .open-next/worker.js (the OpenNext bundle).
+    // The `scheduled` export for auth cleanup lives in workers/index.ts, which
+    // re-exports the OpenNext default handler AND adds the scheduled trigger.
+    // To activate it, change "main" to "workers/index.ts" and ensure the
+    // opennextjs-cloudflare build runs BEFORE wrangler deploy so that
+    // .open-next/worker.js exists for the re-export to resolve.
+    // Current value keeps the OpenNext default so the HTTP surface is unchanged.
+    // Switch to "workers/index.ts" once the D1 database IDs are real and the
+    // build pipeline is confirmed end-to-end.
     "main": ".open-next/worker.js",
+    // Daily cron at 03:00 UTC — runs auth session + state cleanup via `scheduled`.
+    // Requires "main" to point to workers/index.ts (see note above).
+    "triggers": {
+        "crons": ["0 3 * * *"],
+    },
     "name": "backgroundclima",
     "compatibility_date": "2026-03-10",
     "compatibility_flags": ["nodejs_compat"],
@@ -14,10 +28,22 @@
             "service": "backgroundclima-production",
         },
     ],
+    "d1_databases": [
+        {
+            "binding": "DB",
+            "database_name": "backgroundclima",
+            "database_id": "7ca91ef0-1741-4ce1-974f-d7450bbd806d",
+            "migrations_dir": "migrations",
+        },
+    ],
     "r2_buckets": [
         {
             "binding": "NEXT_INC_CACHE_R2_BUCKET",
             "bucket_name": "backgroundclima-opennext-cache",
+        },
+        {
+            "binding": "MEDIA_BUCKET",
+            "bucket_name": "backgroundclima-media",
         },
     ],
     "images": {
@@ -31,10 +57,22 @@
             "services": [
                 { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-preview" },
             ],
+            "d1_databases": [
+                {
+                    "binding": "DB",
+                    "database_name": "backgroundclima-dev",
+                    "database_id": "40d54d52-f031-406a-97df-8799001f08df",
+                    "migrations_dir": "migrations",
+                },
+            ],
             "r2_buckets": [
                 {
                     "binding": "NEXT_INC_CACHE_R2_BUCKET",
                     "bucket_name": "backgroundclima-opennext-cache",
+                },
+                {
+                    "binding": "MEDIA_BUCKET",
+                    "bucket_name": "backgroundclima-media-dev",
                 },
             ],
             "images": { "binding": "IMAGES" },
@@ -43,10 +81,22 @@
             "services": [
                 { "binding": "WORKER_SELF_REFERENCE", "service": "backgroundclima-production" },
             ],
+            "d1_databases": [
+                {
+                    "binding": "DB",
+                    "database_name": "backgroundclima",
+                    "database_id": "7ca91ef0-1741-4ce1-974f-d7450bbd806d",
+                    "migrations_dir": "migrations",
+                },
+            ],
             "r2_buckets": [
                 {
                     "binding": "NEXT_INC_CACHE_R2_BUCKET",
                     "bucket_name": "backgroundclima-opennext-cache",
+                },
+                {
+                    "binding": "MEDIA_BUCKET",
+                    "bucket_name": "backgroundclima-media",
                 },
             ],
             "images": { "binding": "IMAGES" },

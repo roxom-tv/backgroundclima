@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Slide } from '@/lib/supabase/types';
+import type { Slide } from '@/lib/types/admin';
 
 interface SlideCardProps {
     slide: Slide;

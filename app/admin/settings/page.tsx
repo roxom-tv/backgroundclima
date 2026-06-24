@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import type { GlobalSettings, TransitionEffect } from '@/lib/supabase/types';
+import type { GlobalSettings, TransitionEffect } from '@/lib/types/admin';
 
 const DEFAULT_SETTINGS: GlobalSettings = {
     show_sponsors: true,

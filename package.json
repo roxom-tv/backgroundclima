@@ -13,13 +13,13 @@
         "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
         "deploy": "opennextjs-cloudflare build && wrangler deploy --keep-vars",
         "upload": "opennextjs-cloudflare build && wrangler deploy --keep-vars",
-        "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+        "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+        "db:generate": "drizzle-kit generate"
     },
     "dependencies": {
         "@hello-pangea/dnd": "^18.0.1",
         "@opennextjs/cloudflare": "^1.17.1",
-        "@supabase/ssr": "^0.8.0",
-        "@supabase/supabase-js": "^2.89.0",
+        "drizzle-orm": "^0.45.2",
         "framer-motion": "^10.16.16",
         "next": "15.5.10",
         "react": "^18",
@@ -28,10 +28,12 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.39.4",
+        "@supabase/supabase-js": "^2.89.0",
         "@types/node": "20.19.27",
         "@types/react": "18.3.27",
         "@types/react-dom": "^18",
         "autoprefixer": "^10.0.1",
+        "drizzle-kit": "^0.31.10",
         "eslint": "^9.39.4",
         "eslint-config-next": "^15.5.10",
         "eslint-config-prettier": "^10.1.8",

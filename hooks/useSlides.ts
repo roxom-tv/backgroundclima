@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import type { Slide, SlideInsert, SlideUpdate } from '@/lib/supabase/types';
+import type { Slide, SlideInsert, SlideUpdate } from '@/lib/types/admin';
 
 interface UseSlidesReturn {
     slides: Slide[];

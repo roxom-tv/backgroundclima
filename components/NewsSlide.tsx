@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import type { Slide } from '@/lib/supabase/types';
+import type { Slide } from '@/lib/types/admin';
 
 interface NewsSlideProps {
     slide: Slide;

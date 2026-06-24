@@ -1,4 +1,4 @@
-import type { Slide } from '@/lib/supabase/types';
+import type { Slide } from '@/lib/types/admin';
 
 /**
  * Returns true if the slide should appear right now based on its UTC schedule.
@@ -11,11 +11,14 @@ export function isSlideScheduledNow(slide: Slide, now: Date): boolean {
     const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
 
     if (slide.active_days && slide.active_days.length > 0) {
-        if (!slide.active_days.includes(utcDay)) return false;
+        if (!slide.active_days.includes(utcDay)) {
+            return false;
+        }
     }
 
     const parseHHMM = (hhmm: string): number => {
         const [h, m] = hhmm.split(':').map(Number);
+
         return h * 60 + (m || 0);
     };
 
@@ -24,19 +27,27 @@ export function isSlideScheduledNow(slide: Slide, now: Date): boolean {
         const end = parseHHMM(slide.active_time_end);
 
         if (start <= end) {
-            if (utcMinutes < start || utcMinutes >= end) return false;
+            if (utcMinutes < start || utcMinutes >= end) {
+                return false;
+            }
         } else {
             // Crosses midnight
-            if (utcMinutes < start && utcMinutes >= end) return false;
+            if (utcMinutes < start && utcMinutes >= end) {
+                return false;
+            }
         }
     } else if (slide.active_time_start && !slide.active_time_end) {
         const start = parseHHMM(slide.active_time_start);
 
-        if (utcMinutes < start) return false;
+        if (utcMinutes < start) {
+            return false;
+        }
     } else if (!slide.active_time_start && slide.active_time_end) {
         const end = parseHHMM(slide.active_time_end);
 
-        if (utcMinutes >= end) return false;
+        if (utcMinutes >= end) {
+            return false;
+        }
     }
 
     return true;

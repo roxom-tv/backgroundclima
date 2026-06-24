@@ -18,7 +18,7 @@ import StrcSlide from '@/components/StrcSlide';
 import SataSlide from '@/components/SataSlide';
 import MarketSlide from '@/MarketSlide';
 import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
-import type { Slide, Sponsor } from '@/lib/supabase/types';
+import type { Slide, Sponsor } from '@/lib/types/admin';
 
 export default function SlidePreviewPage() {
     const params = useParams();

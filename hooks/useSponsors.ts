@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import type { Sponsor, SponsorInsert, SponsorUpdate } from '@/lib/supabase/types';
+import type { Sponsor, SponsorInsert, SponsorUpdate } from '@/lib/types/admin';
 
 interface UseSponsorsReturn {
     sponsors: Sponsor[];

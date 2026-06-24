@@ -7,7 +7,7 @@ import type {
     CalendarEventInsert,
     EventTextSize,
     ScheduleTime,
-} from '@/lib/supabase/types';
+} from '@/lib/types/admin';
 
 interface EventFormProps {
     event?: CalendarEvent | null;

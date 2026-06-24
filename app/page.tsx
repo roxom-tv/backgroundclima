@@ -23,7 +23,7 @@ import MarketSlide, { prefetchMarketData } from '@/MarketSlide';
 import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
 import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
 import { prefetchMarketsData } from '@/hooks/useMarketsSats';
-import type { Slide, Sponsor, SponsorPosition } from '@/lib/supabase/types';
+import type { Slide, Sponsor, SponsorPosition } from '@/lib/types/admin';
 import { isSlideScheduledNow } from '@/lib/schedule-utils';
 
 export default function Home() {
@@ -34,7 +34,7 @@ export default function Home() {
     const [showTransition, setShowTransition] = useState(false);
     const [transitionText, setTransitionText] = useState('');
 
-    // Get configuration from Supabase with real-time updates
+    // Get configuration from the D1-backed config API with version polling
     // slides array is already ordered by order_index and contains only active slides
     const { slides, settings, sponsors, events, isLoading, error, errorInfo, retry } =
         useRealtimeConfig();
@@ -43,6 +43,7 @@ export default function Home() {
     const [nowUtc, setNowUtc] = useState(() => new Date());
     useEffect(() => {
         const id = setInterval(() => setNowUtc(new Date()), 60_000);
+
         return () => clearInterval(id);
     }, []);
 
