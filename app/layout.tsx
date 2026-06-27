@@ -4,7 +4,7 @@ import localFont from 'next/font/local';
 import Script from 'next/script';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const ibmPlexMono = IBM_Plex_Mono({
     subsets: ['latin'],
     weight: ['400', '500', '600', '700'],
@@ -33,7 +33,9 @@ export const viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en">
-            <body className={`${inter.className} ${pixelFont.variable} ${ibmPlexMono.variable}`}>
+            <body
+                className={`${inter.variable} ${inter.className} ${pixelFont.variable} ${ibmPlexMono.variable}`}
+            >
                 <Script
                     src="https://kit.fontawesome.com/090ca49637.js"
                     crossOrigin="anonymous"
