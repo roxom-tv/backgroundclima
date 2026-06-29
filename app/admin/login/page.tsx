@@ -2,12 +2,10 @@
 
 import { useCallback, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 type LoginResponse = { success: boolean };
 
 export default function AdminLoginPage() {
-    const router = useRouter();
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -31,17 +29,21 @@ export default function AdminLoginPage() {
                 const data = (await res.json()) as LoginResponse;
 
                 if (data.success) {
-                    router.push('/admin');
-                } else {
-                    setError('Incorrect password');
+                    // Full-page navigation (not router.push) so the admin layout
+                    // re-renders server-side in its authenticated branch. A soft
+                    // nav would reuse the cached login-branch layout (no nav/chrome).
+                    window.location.assign('/admin');
+                    return;
                 }
+
+                setError('Incorrect password');
             } catch {
                 setError('Something went wrong. Please try again.');
             } finally {
                 setIsLoading(false);
             }
         },
-        [password, router],
+        [password],
     );
 
     return (
