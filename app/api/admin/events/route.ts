@@ -1,21 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createServerAdminSupabaseClient } from '@/lib/supabase/admin';
+import { asc } from 'drizzle-orm';
+import { getDb } from '@/lib/db/client';
+import { eventsTable } from '@/lib/db/schema';
+import { parseScheduleTimes, stringifyScheduleTimes } from '@/lib/db/schema/events';
 import { eventInsertSchema } from '../_shared/schemas';
+import { requireAdmin, withRenewal } from '@/lib/auth/require-admin';
 
-export async function GET() {
+function serializeEventForResponse(row: typeof eventsTable.$inferSelect) {
+    return {
+        ...row,
+        schedule_times: parseScheduleTimes(row.schedule_times ?? null),
+    };
+}
+
+export async function GET(request: NextRequest) {
+    const auth = await requireAdmin(request);
+
+    if (auth.denied) {
+        return auth.response;
+    }
+
     try {
-        const supabase = createServerAdminSupabaseClient();
-        const { data, error } = await supabase
-            .from('events')
-            .select('*')
-            .order('order_index', { ascending: true });
+        const db = await getDb();
+        const rows = await db.select().from(eventsTable).orderBy(asc(eventsTable.order_index));
 
-        if (error) {
-            return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-        }
-
-        return NextResponse.json({ success: true, data: data ?? [] });
+        return withRenewal(
+            NextResponse.json({ success: true, data: rows.map(serializeEventForResponse) }),
+            auth.setCookie,
+        );
     } catch (error) {
         return NextResponse.json(
             {
@@ -28,21 +41,32 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+    const auth = await requireAdmin(request);
+
+    if (auth.denied) {
+        return auth.response;
+    }
+
     try {
         const body = await request.json();
         const payload = eventInsertSchema.parse(body);
-        const supabase = createServerAdminSupabaseClient();
+        const db = await getDb();
 
-        // Workaround for strict Supabase generic inference in route handlers.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const eventsTable = supabase.from('events') as any;
-        const { data, error } = await eventsTable.insert(payload).select().single();
+        const [inserted] = await db
+            .insert(eventsTable)
+            .values({
+                ...payload,
+                schedule_times: stringifyScheduleTimes(payload.schedule_times ?? null),
+            })
+            .returning();
 
-        if (error) {
-            return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-        }
-
-        return NextResponse.json({ success: true, data }, { status: 201 });
+        return withRenewal(
+            NextResponse.json(
+                { success: true, data: serializeEventForResponse(inserted) },
+                { status: 201 },
+            ),
+            auth.setCookie,
+        );
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(

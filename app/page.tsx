@@ -21,9 +21,8 @@ import StrcSlide, { prefetchStrcData } from '@/components/StrcSlide';
 import SataSlide, { prefetchSataData } from '@/components/SataSlide';
 import MarketSlide, { prefetchMarketData } from '@/MarketSlide';
 import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
-import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
 import { prefetchMarketsData } from '@/hooks/useMarketsSats';
-import type { Slide, Sponsor, SponsorPosition } from '@/lib/supabase/types';
+import type { Slide, Sponsor, SponsorPosition } from '@/lib/types/admin';
 import { isSlideScheduledNow } from '@/lib/schedule-utils';
 
 export default function Home() {
@@ -34,7 +33,7 @@ export default function Home() {
     const [showTransition, setShowTransition] = useState(false);
     const [transitionText, setTransitionText] = useState('');
 
-    // Get configuration from Supabase with real-time updates
+    // Get configuration from the D1-backed config API with version polling
     // slides array is already ordered by order_index and contains only active slides
     const { slides, settings, sponsors, events, isLoading, error, errorInfo, retry } =
         useRealtimeConfig();
@@ -43,6 +42,7 @@ export default function Home() {
     const [nowUtc, setNowUtc] = useState(() => new Date());
     useEffect(() => {
         const id = setInterval(() => setNowUtc(new Date()), 60_000);
+
         return () => clearInterval(id);
     }, []);
 
@@ -148,10 +148,12 @@ export default function Home() {
     // Legacy: Get sponsor for current slide (for backward compat with bottom-right only)
     const currentSlideSponsor = getSponsorForPosition(currentSlide, 'bottom_right');
 
-    // Pre-fetch weather data if there are YouTube slides
+    // Pre-fetch weather data if there are YouTube slides. Runs server-side
+    // (D1 access is server-only) — fire-and-forget so the client bundle never
+    // pulls in getCloudflareContext.
     useEffect(() => {
         if (hasYouTubeSlides) {
-            prefetchAllWeatherData().catch((err) => console.warn('Weather prefetch failed:', err));
+            fetch('/api/weather/prefetch', { method: 'POST' }).catch(() => {});
         }
     }, [hasYouTubeSlides]);
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Slide, Sponsor, GlobalSettings, CalendarEvent } from '@/lib/supabase/types';
+import type { Slide, Sponsor, GlobalSettings, CalendarEvent } from '@/lib/types/admin';
 
 interface RealtimeConfig {
     slides: Slide[];

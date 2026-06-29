@@ -128,18 +128,23 @@ function ensureEmbedParams(url: string): string {
 }
 
 function resolveEmbedOrigin(): string | null {
+    // Prefer the actual runtime origin so the YouTube `origin` param always
+    // matches the host serving the page (prod, preview, localhost). The iframe
+    // renders client-side, so window is available. A build-time
+    // NEXT_PUBLIC_SITE_URL baked to one host would break every other host
+    // (e.g. prod URL baked into a preview build → YouTube blocks the embed).
+    if (typeof window !== 'undefined' && window.location?.origin) {
+        return window.location.origin;
+    }
+
     const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
     if (configuredOrigin) {
         try {
             return new URL(configuredOrigin).origin;
         } catch {
-            // Fall back to browser origin when env var is malformed.
+            return null;
         }
-    }
-
-    if (typeof window !== 'undefined' && window.location?.origin) {
-        return window.location.origin;
     }
 
     return null;

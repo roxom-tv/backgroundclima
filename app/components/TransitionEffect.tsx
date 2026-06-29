@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import type { TransitionEffect } from '@/lib/supabase/types';
+import type { TransitionEffect } from '@/lib/types/admin';
 
 interface TransitionEffectProps {
     effect: TransitionEffect;

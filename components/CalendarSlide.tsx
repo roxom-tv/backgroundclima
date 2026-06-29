@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import type { CalendarEvent } from '@/lib/supabase/types';
+import type { CalendarEvent } from '@/lib/types/admin';
 
 interface CalendarSlideProps {
     events: CalendarEvent[];

@@ -2,7 +2,7 @@
 
 import { useMemo, memo } from 'react';
 import { motion } from 'framer-motion';
-import type { Slide, CalendarEvent, ScheduleTime } from '@/lib/supabase/types';
+import type { Slide, CalendarEvent, ScheduleTime } from '@/lib/types/admin';
 import EventSlideModern from './EventSlideModern';
 
 interface EventSlideProps {

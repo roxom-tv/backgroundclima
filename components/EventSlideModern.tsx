@@ -3,7 +3,7 @@
 import { useMemo, memo } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import type { Slide, CalendarEvent } from '@/lib/supabase/types';
+import type { Slide, CalendarEvent } from '@/lib/types/admin';
 
 interface EventSlideModernProps {
     slide: Slide;

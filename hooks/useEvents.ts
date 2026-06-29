@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import type { CalendarEvent, CalendarEventInsert, CalendarEventUpdate } from '@/lib/supabase/types';
+import { adminFetch } from '@/lib/admin-fetch';
+import type { CalendarEvent, CalendarEventInsert, CalendarEventUpdate } from '@/lib/types/admin';
 
 export function useEvents() {
     const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -14,7 +15,7 @@ export function useEvents() {
         setError(null);
 
         try {
-            const response = await fetch('/api/admin/events', { cache: 'no-store' });
+            const response = await adminFetch('/api/admin/events', { cache: 'no-store' });
             const result = await response.json();
 
             if (!response.ok || !result.success) {
@@ -36,7 +37,7 @@ export function useEvents() {
                     (max, current) => Math.max(max, current.order_index),
                     -1,
                 );
-                const response = await fetch('/api/admin/events', {
+                const response = await adminFetch('/api/admin/events', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ...eventData, order_index: maxOrderIndex + 1 }),
@@ -62,7 +63,7 @@ export function useEvents() {
     // Update event
     const updateEvent = useCallback(async (id: string, updates: CalendarEventUpdate) => {
         try {
-            const response = await fetch(`/api/admin/events/${id}`, {
+            const response = await adminFetch(`/api/admin/events/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updates),
@@ -88,7 +89,7 @@ export function useEvents() {
     // Delete event
     const deleteEvent = useCallback(async (id: string) => {
         try {
-            const response = await fetch(`/api/admin/events/${id}`, {
+            const response = await adminFetch(`/api/admin/events/${id}`, {
                 method: 'DELETE',
             });
             const result = await response.json();
@@ -125,7 +126,7 @@ export function useEvents() {
                 }));
 
                 for (const update of updates) {
-                    const response = await fetch(`/api/admin/events/${update.id}`, {
+                    const response = await adminFetch(`/api/admin/events/${update.id}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ order_index: update.order_index }),
@@ -157,7 +158,7 @@ export function useEvents() {
                 const formData = new FormData();
                 formData.append('file', file);
 
-                const response = await fetch('/api/admin/events/upload', {
+                const response = await adminFetch('/api/admin/events/upload', {
                     method: 'POST',
                     body: formData,
                 });
