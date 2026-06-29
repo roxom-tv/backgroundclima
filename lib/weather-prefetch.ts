@@ -33,8 +33,6 @@ export async function prefetchAllWeatherData(): Promise<void> {
             );
 
         if (slides.length === 0) {
-            console.log('No slides with weather queries found');
-
             return;
         }
 
@@ -57,8 +55,6 @@ export async function prefetchAllWeatherData(): Promise<void> {
         );
 
         await Promise.allSettled(promises);
-
-        console.log(`Weather data prefetch completed for ${uniqueQueries.length} locations`);
     } catch (error) {
         console.warn('Weather prefetch failed:', error);
     }
