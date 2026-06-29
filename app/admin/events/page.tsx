@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { useEvents } from '@/hooks/useEvents';
 import EventForm from '../components/EventForm';
-import type { CalendarEvent, CalendarEventInsert } from '@/lib/supabase/types';
+import type { CalendarEvent, CalendarEventInsert } from '@/lib/types/admin';
 
 export default function EventsPage() {
     const {

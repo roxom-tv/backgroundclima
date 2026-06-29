@@ -152,7 +152,6 @@ async function fetchMarketsDataInternal(
             } else {
                 // No data at all: usar datos de demostración para que siempre se vea contenido
                 if (!sharedMarketsData) {
-                    console.warn('No market data available, using demo data.');
                     const fallback = generateDummyData(result?.btcUsd || 95000);
                     sharedMarketsData = fallback;
                     sharedError = null;
@@ -169,7 +168,6 @@ async function fetchMarketsDataInternal(
             console.error('Error fetching markets data:', err);
 
             if (!sharedMarketsData) {
-                console.warn('Using demo data after fetch error.');
                 const fallback = generateDummyData(95000);
                 sharedMarketsData = fallback;
                 sharedError = null;

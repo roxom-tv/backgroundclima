@@ -6,20 +6,10 @@ const nextConfig = {
         ignoreDuringBuilds: true,
     },
     images: {
-        remotePatterns: [
-            {
-                protocol: 'https',
-                hostname: '*.supabase.co',
-                port: '',
-                pathname: '/storage/v1/object/public/**',
-            },
-            {
-                protocol: 'https',
-                hostname: 'daolkfjwksbiofsrmuju.supabase.co',
-                port: '',
-                pathname: '/**',
-            },
-        ],
+        // Images are served from R2 via the /api/media route (already sized) and
+        // the Next image optimizer is not wired on OpenNext/Cloudflare Workers.
+        // Disable optimization so <Image> serves these URLs directly.
+        unoptimized: true,
     },
     async headers() {
         return [

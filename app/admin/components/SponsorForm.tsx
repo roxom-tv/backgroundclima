@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { getSupabaseClient } from '@/lib/supabase/client';
-import type { Sponsor, SponsorInsert } from '@/lib/supabase/types';
+import { adminFetch } from '@/lib/admin-fetch';
+import type { Sponsor, SponsorInsert } from '@/lib/types/admin';
 
 interface SponsorFormProps {
     sponsor?: Sponsor | null;
@@ -88,27 +88,22 @@ export default function SponsorForm({
         setUploadError(null);
 
         try {
-            const supabase = getSupabaseClient();
+            const body = new FormData();
+            body.append('file', file);
+            body.append('prefix', 'sponsors');
 
-            // Generate unique filename
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const response = await adminFetch('/api/admin/upload', { method: 'POST', body });
+            const result = (await response.json()) as {
+                success: boolean;
+                data?: { url: string; key: string };
+                error?: string;
+            };
 
-            // Upload to Supabase Storage
-            const { data, error } = await supabase.storage.from('sponsors').upload(fileName, file, {
-                cacheControl: '3600',
-                upsert: false,
-            });
-
-            if (error) {
-                throw error;
+            if (!response.ok || !result.success) {
+                throw new Error(result.error ?? 'Upload failed');
             }
 
-            // Get public URL
-            const { data: urlData } = supabase.storage.from('sponsors').getPublicUrl(data.path);
-
-            // Update form with the new URL
-            setFormData((prev) => ({ ...prev, logo_url: urlData.publicUrl }));
+            setFormData((prev) => ({ ...prev, logo_url: result.data!.url }));
         } catch (err) {
             console.error('Upload error:', err);
             setUploadError(err instanceof Error ? err.message : 'Failed to upload file');

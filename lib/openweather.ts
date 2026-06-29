@@ -147,8 +147,6 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
     );
 
     if (RATE_LIMIT.calls.length >= RATE_LIMIT.maxCalls) {
-        console.warn('Rate limit reached, returning cached data');
-
         if (cached) {
             return cached.data;
         }
@@ -164,8 +162,6 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
         const coords = cityCoordinates[query];
 
         if (!coords) {
-            console.warn(`Coordenadas no encontradas para: ${query}, usando datos de fallback`);
-
             return fallbackData;
         }
 
@@ -179,10 +175,6 @@ export async function fetchCurrentWeather(query: string): Promise<WeatherData | 
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-            console.warn(
-                `⚠️ API no disponible (${response.status}), usando datos de fallback para ${query}`,
-            );
-
             return fallbackData;
         }
 

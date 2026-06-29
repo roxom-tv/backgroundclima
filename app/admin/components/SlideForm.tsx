@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { adminFetch } from '@/lib/admin-fetch';
 import Image from 'next/image';
-import { getSupabaseClient } from '@/lib/supabase/client';
 import type {
     Slide,
     SlideInsert,
@@ -11,7 +11,7 @@ import type {
     CalendarEvent,
     LayoutOrientation,
     EventSlideStyle,
-} from '@/lib/supabase/types';
+} from '@/lib/types/admin';
 import { convertYouTubeUrlToEmbed, convertEmbedUrlToSimple } from '@/lib/youtube-utils';
 
 interface SlideFormProps {
@@ -109,29 +109,33 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
 
     // Fetch sponsors and events on mount
     useEffect(() => {
-        const supabase = getSupabaseClient();
-
         const fetchSponsors = async () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data } = await (supabase.from('sponsors') as any)
-                .select('*')
-                .eq('is_active', true)
-                .order('name');
+            try {
+                const response = await adminFetch('/api/admin/sponsors', { cache: 'no-store' });
+                const result = (await response.json()) as { success: boolean; data?: Sponsor[] };
 
-            if (data) {
-                setSponsors(data as Sponsor[]);
+                if (response.ok && result.success && result.data) {
+                    setSponsors(result.data);
+                }
+            } catch {
+                // AdminAuthError redirects to login; other errors are silently ignored here
+                // since this data is supplementary to the form
             }
         };
 
         const fetchEvents = async () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data } = await (supabase.from('events') as any)
-                .select('*')
-                .eq('is_active', true)
-                .order('start_date', { ascending: true });
+            try {
+                const response = await adminFetch('/api/admin/events', { cache: 'no-store' });
+                const result = (await response.json()) as {
+                    success: boolean;
+                    data?: CalendarEvent[];
+                };
 
-            if (data) {
-                setAvailableEvents(data as CalendarEvent[]);
+                if (response.ok && result.success && result.data) {
+                    setAvailableEvents(result.data);
+                }
+            } catch {
+                // AdminAuthError redirects to login; other errors are silently ignored here
             }
         };
 
@@ -334,24 +338,22 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
         setUploadError(null);
 
         try {
-            const supabase = getSupabaseClient();
-            const fileExt = file.name.split('.').pop();
-            const fileName = `slide-${Date.now()}.${fileExt}`;
-            const filePath = `slides/${fileName}`;
+            const body = new FormData();
+            body.append('file', file);
+            body.append('prefix', 'sponsors');
 
-            const { error: uploadError } = await supabase.storage
-                .from('sponsors')
-                .upload(filePath, file);
+            const response = await adminFetch('/api/admin/upload', { method: 'POST', body });
+            const result = (await response.json()) as {
+                success: boolean;
+                data?: { url: string; key: string };
+                error?: string;
+            };
 
-            if (uploadError) {
-                throw uploadError;
+            if (!response.ok || !result.success) {
+                throw new Error(result.error ?? 'Upload failed');
             }
 
-            const {
-                data: { publicUrl },
-            } = supabase.storage.from('sponsors').getPublicUrl(filePath);
-
-            setFormData((prev) => ({ ...prev, image_url: publicUrl }));
+            setFormData((prev) => ({ ...prev, image_url: result.data!.url }));
         } catch (err) {
             setUploadError(err instanceof Error ? err.message : 'Upload failed');
         } finally {
@@ -1335,6 +1337,7 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
                                 const hasSchedule =
                                     formData.active_days !== null ||
                                     formData.active_time_start !== null;
+
                                 if (hasSchedule) {
                                     setFormData((prev) => ({
                                         ...prev,
@@ -1383,6 +1386,7 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
                                         const active = (formData.active_days ?? []).includes(
                                             day.value,
                                         );
+
                                         return (
                                             <button
                                                 key={day.value}

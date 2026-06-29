@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerAdminSupabaseClient } from '@/lib/supabase/admin';
+
+import { getMediaBucket } from '@/lib/storage/r2';
+import { requireAdmin, withRenewal } from '@/lib/auth/require-admin';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+const MIME_TO_EXT: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/gif': 'gif',
+    'image/webp': 'webp',
+    'image/svg+xml': 'svg',
+};
+
 export async function POST(request: NextRequest) {
+    const auth = await requireAdmin(request);
+
+    if (auth.denied) {
+        return auth.response;
+    }
+
     try {
         const formData = await request.formData();
         const file = formData.get('file') as File | null;
@@ -30,31 +46,21 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const fileExt = file.name.split('.').pop();
-        const fileName = `event-${Date.now()}.${fileExt}`;
-        const filePath = `events/${fileName}`;
+        const ext = MIME_TO_EXT[file.type] ?? file.name.split('.').pop() ?? 'bin';
+        const fileName = `${crypto.randomUUID()}.${ext}`;
+        const key = `events/${fileName}`;
 
-        const supabase = createServerAdminSupabaseClient();
-
+        const bucket = await getMediaBucket();
         const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
 
-        const { error: uploadError } = await supabase.storage
-            .from('sponsors')
-            .upload(filePath, buffer, { contentType: file.type });
+        await bucket.put(key, arrayBuffer, { httpMetadata: { contentType: file.type } });
 
-        if (uploadError) {
-            return NextResponse.json(
-                { success: false, error: uploadError.message },
-                { status: 500 },
-            );
-        }
+        const url = `/api/media/${key}`;
 
-        const {
-            data: { publicUrl },
-        } = supabase.storage.from('sponsors').getPublicUrl(filePath);
-
-        return NextResponse.json({ success: true, data: { url: publicUrl } }, { status: 201 });
+        return withRenewal(
+            NextResponse.json({ success: true, data: { url } }, { status: 201 }),
+            auth.setCookie,
+        );
     } catch (error) {
         return NextResponse.json(
             {

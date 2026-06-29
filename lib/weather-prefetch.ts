@@ -3,47 +3,43 @@
  * This ensures all weather data is cached before users need it
  */
 
+import { and, eq, isNotNull } from 'drizzle-orm';
 import { fetchCurrentWeather } from './openweather';
-import { createServerAdminSupabaseClient } from '@/lib/supabase/admin';
-
-interface SlideWithWeather {
-    id: string;
-    name: string;
-    weather_query: string | null;
-}
+import { getDb } from '@/lib/db/client';
+import { slidesTable } from '@/lib/db/schema';
 
 /**
- * Pre-fetch weather data for all active YouTube slides from Supabase
+ * Pre-fetch weather data for all active YouTube slides from D1
  * This should be called once when the app starts
  */
 export async function prefetchAllWeatherData(): Promise<void> {
     try {
-        const supabase = createServerAdminSupabaseClient();
+        const db = await getDb();
 
         // Fetch all active YouTube slides that have weather queries
-        const { data: slides, error } = await supabase
-            .from('slides')
-            .select('id, name, weather_query')
-            .eq('type', 'youtube')
-            .eq('is_active', true)
-            .not('weather_query', 'is', null);
+        const slides = await db
+            .select({
+                id: slidesTable.id,
+                name: slidesTable.name,
+                weather_query: slidesTable.weather_query,
+            })
+            .from(slidesTable)
+            .where(
+                and(
+                    eq(slidesTable.type, 'youtube'),
+                    eq(slidesTable.is_active, true),
+                    isNotNull(slidesTable.weather_query),
+                ),
+            );
 
-        if (error) {
-            console.warn('Failed to fetch slides for weather prefetch:', error);
-
-            return;
-        }
-
-        if (!slides || slides.length === 0) {
-            console.log('No slides with weather queries found');
-
+        if (slides.length === 0) {
             return;
         }
 
         // Get unique weather queries (avoid duplicate fetches)
         const uniqueQueries = [
             ...new Set(
-                (slides as SlideWithWeather[])
+                slides
                     .map((s) => s.weather_query)
                     .filter((q): q is string => q !== null && q.trim() !== ''),
             ),
@@ -59,8 +55,6 @@ export async function prefetchAllWeatherData(): Promise<void> {
         );
 
         await Promise.allSettled(promises);
-
-        console.log(`Weather data prefetch completed for ${uniqueQueries.length} locations`);
     } catch (error) {
         console.warn('Weather prefetch failed:', error);
     }

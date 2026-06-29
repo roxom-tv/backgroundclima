@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import type { GlobalSettings, TransitionEffect } from '@/lib/supabase/types';
+import { adminFetch } from '@/lib/admin-fetch';
+import type { GlobalSettings, TransitionEffect } from '@/lib/types/admin';
 
 const DEFAULT_SETTINGS: GlobalSettings = {
     show_sponsors: true,
@@ -30,7 +31,7 @@ export default function SettingsPage() {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const response = await fetch('/api/admin/settings', { cache: 'no-store' });
+                const response = await adminFetch('/api/admin/settings', { cache: 'no-store' });
                 const result = await response.json();
 
                 if (!response.ok || !result.success) {
@@ -67,7 +68,7 @@ export default function SettingsPage() {
         setIsSaving(true);
 
         try {
-            const response = await fetch('/api/admin/settings', {
+            const response = await adminFetch('/api/admin/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ key: 'global', value: settings }),

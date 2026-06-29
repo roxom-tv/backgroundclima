@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import type { Sponsor, SponsorPosition } from '@/lib/supabase/types';
+import type { Sponsor, SponsorPosition } from '@/lib/types/admin';
 
 interface SponsorDisplayProps {
     sponsor?: Sponsor | null;

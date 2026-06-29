@@ -1,0 +1,11 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "lib": ["es2022"],
+        "jsx": "react-jsx",
+        "noEmit": true,
+        "types": ["@cloudflare/workers-types"]
+    },
+    "include": ["./**/*.ts", "../lib/**/*.ts", "../.wrangler/types/**/*.d.ts"],
+    "exclude": ["../node_modules"]
+}

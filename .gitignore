@@ -72,3 +72,6 @@ docs/*.md
 .dev.vars*
 !.dev.vars.example
 !.env.example
+
+# generated prod data dump (regenerate via scripts/backfill-d1.mjs)
+scripts/backfill-d1-output.sql

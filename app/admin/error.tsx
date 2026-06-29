@@ -40,9 +40,9 @@ export default function AdminError({
             <div className="mt-8 text-[#888] text-xs font-mono text-center max-w-xl">
                 If this error persists, please check:
                 <br />
-                1. Environment variables are configured in Vercel
+                1. Cloudflare bindings (D1, R2) are configured
                 <br />
-                2. NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set
+                2. The D1 database binding (DB) is set and migrations are applied
                 <br />
                 3. Browser console for detailed error messages
             </div>

@@ -1,31 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createServerAdminSupabaseClient } from '@/lib/supabase/admin';
+import { eq } from 'drizzle-orm';
+import { getDb } from '@/lib/db/client';
+import { sponsorsTable } from '@/lib/db/schema';
 import { sponsorUpdateSchema } from '../../_shared/schemas';
+import { requireAdmin, withRenewal } from '@/lib/auth/require-admin';
 
 const idParamSchema = z.object({ id: z.string().uuid() });
 
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+    const auth = await requireAdmin(request);
+
+    if (auth.denied) {
+        return auth.response;
+    }
+
     try {
         const params = idParamSchema.parse(await context.params);
         const body = await request.json();
         const payload = sponsorUpdateSchema.parse(body);
-        const supabase = createServerAdminSupabaseClient();
+        const db = await getDb();
 
-        // Workaround for strict Supabase generic inference in route handlers.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const sponsorsTable = supabase.from('sponsors') as any;
-        const { data, error } = await sponsorsTable
-            .update(payload)
-            .eq('id', params.id)
-            .select()
-            .single();
+        const [updated] = await db
+            .update(sponsorsTable)
+            .set(payload)
+            .where(eq(sponsorsTable.id, params.id))
+            .returning();
 
-        if (error) {
-            return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+        if (!updated) {
+            return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
         }
 
-        return NextResponse.json({ success: true, data });
+        return withRenewal(NextResponse.json({ success: true, data: updated }), auth.setCookie);
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(
@@ -44,18 +50,20 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     }
 }
 
-export async function DELETE(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+    const auth = await requireAdmin(request);
+
+    if (auth.denied) {
+        return auth.response;
+    }
+
     try {
         const params = idParamSchema.parse(await context.params);
-        const supabase = createServerAdminSupabaseClient();
+        const db = await getDb();
 
-        const { error } = await supabase.from('sponsors').delete().eq('id', params.id);
+        await db.delete(sponsorsTable).where(eq(sponsorsTable.id, params.id));
 
-        if (error) {
-            return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-        }
-
-        return NextResponse.json({ success: true });
+        return withRenewal(NextResponse.json({ success: true }), auth.setCookie);
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(

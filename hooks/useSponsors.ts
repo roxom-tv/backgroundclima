@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import type { Sponsor, SponsorInsert, SponsorUpdate } from '@/lib/supabase/types';
+import { adminFetch } from '@/lib/admin-fetch';
+import type { Sponsor, SponsorInsert, SponsorUpdate } from '@/lib/types/admin';
 
 interface UseSponsorsReturn {
     sponsors: Sponsor[];
@@ -28,7 +29,7 @@ export function useSponsors(): UseSponsorsReturn {
         setError(null);
 
         try {
-            const response = await fetch('/api/admin/sponsors', { cache: 'no-store' });
+            const response = await adminFetch('/api/admin/sponsors', { cache: 'no-store' });
             const result = await response.json();
 
             if (!response.ok || !result.success) {
@@ -53,7 +54,7 @@ export function useSponsors(): UseSponsorsReturn {
                     (max, current) => Math.max(max, current.order_index),
                     -1,
                 );
-                const response = await fetch('/api/admin/sponsors', {
+                const response = await adminFetch('/api/admin/sponsors', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ...sponsor, order_index: maxOrderIndex + 1 }),
@@ -82,7 +83,7 @@ export function useSponsors(): UseSponsorsReturn {
     // Update a sponsor
     const updateSponsor = useCallback(async (id: string, updates: SponsorUpdate) => {
         try {
-            const response = await fetch(`/api/admin/sponsors/${id}`, {
+            const response = await adminFetch(`/api/admin/sponsors/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updates),
@@ -110,7 +111,7 @@ export function useSponsors(): UseSponsorsReturn {
     // Delete a sponsor
     const deleteSponsor = useCallback(async (id: string) => {
         try {
-            const response = await fetch(`/api/admin/sponsors/${id}`, {
+            const response = await adminFetch(`/api/admin/sponsors/${id}`, {
                 method: 'DELETE',
             });
             const result = await response.json();
@@ -141,7 +142,7 @@ export function useSponsors(): UseSponsorsReturn {
 
             const results = await Promise.all(
                 updates.map(({ id, order_index }) =>
-                    fetch(`/api/admin/sponsors/${id}`, {
+                    adminFetch(`/api/admin/sponsors/${id}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ order_index }),
