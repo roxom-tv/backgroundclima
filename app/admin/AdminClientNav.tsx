@@ -3,6 +3,7 @@
 import { memo, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { adminFetch } from '@/lib/admin-fetch';
 
 type NavItemDef = {
     readonly href: string;
@@ -33,7 +34,7 @@ const AdminClientNavInternal = () => {
     const router = useRouter();
 
     const handleSignOut = useCallback(async () => {
-        await fetch('/api/admin/signout', { method: 'POST' });
+        await adminFetch('/api/admin/signout', { method: 'POST' });
         router.push('/admin/login');
     }, [router]);
 

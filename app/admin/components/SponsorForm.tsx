@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { adminFetch } from '@/lib/admin-fetch';
 import type { Sponsor, SponsorInsert } from '@/lib/types/admin';
 
 interface SponsorFormProps {
@@ -91,7 +92,7 @@ export default function SponsorForm({
             body.append('file', file);
             body.append('prefix', 'sponsors');
 
-            const response = await fetch('/api/admin/upload', { method: 'POST', body });
+            const response = await adminFetch('/api/admin/upload', { method: 'POST', body });
             const result = (await response.json()) as {
                 success: boolean;
                 data?: { url: string; key: string };
