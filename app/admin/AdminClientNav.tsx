@@ -2,7 +2,7 @@
 
 import { memo, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { adminFetch } from '@/lib/admin-fetch';
 
 type NavItemDef = {
@@ -31,12 +31,14 @@ function linkIsActive(href: string, pathname: string): boolean {
 
 const AdminClientNavInternal = () => {
     const pathname = usePathname();
-    const router = useRouter();
 
     const handleSignOut = useCallback(async () => {
         await adminFetch('/api/admin/signout', { method: 'POST' });
-        router.push('/admin/login');
-    }, [router]);
+        // Full-page navigation (not router.push) so the admin layout re-renders
+        // server-side in its unauthenticated branch — a soft nav would reuse the
+        // cached authed layout and keep the nav bar on the login page.
+        window.location.assign('/admin/login');
+    }, []);
 
     return (
         <nav className="flex-shrink-0 bg-[#0a0a0a] border-b-2 border-[#00ff00]">
