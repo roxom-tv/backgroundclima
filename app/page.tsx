@@ -21,7 +21,6 @@ import StrcSlide, { prefetchStrcData } from '@/components/StrcSlide';
 import SataSlide, { prefetchSataData } from '@/components/SataSlide';
 import MarketSlide, { prefetchMarketData } from '@/MarketSlide';
 import { useRealtimeConfig } from '@/hooks/useRealtimeConfig';
-import { prefetchAllWeatherData } from '@/lib/weather-prefetch';
 import { prefetchMarketsData } from '@/hooks/useMarketsSats';
 import type { Slide, Sponsor, SponsorPosition } from '@/lib/types/admin';
 import { isSlideScheduledNow } from '@/lib/schedule-utils';
@@ -149,10 +148,12 @@ export default function Home() {
     // Legacy: Get sponsor for current slide (for backward compat with bottom-right only)
     const currentSlideSponsor = getSponsorForPosition(currentSlide, 'bottom_right');
 
-    // Pre-fetch weather data if there are YouTube slides
+    // Pre-fetch weather data if there are YouTube slides. Runs server-side
+    // (D1 access is server-only) — fire-and-forget so the client bundle never
+    // pulls in getCloudflareContext.
     useEffect(() => {
         if (hasYouTubeSlides) {
-            prefetchAllWeatherData().catch((err) => console.warn('Weather prefetch failed:', err));
+            fetch('/api/weather/prefetch', { method: 'POST' }).catch(() => {});
         }
     }, [hasYouTubeSlides]);
 
