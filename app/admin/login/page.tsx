@@ -1,12 +1,12 @@
 'use client';
 
-import { memo, useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 type LoginResponse = { success: boolean };
 
-const AdminLoginPageInternal = () => {
+export default function AdminLoginPage() {
     const router = useRouter();
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -96,9 +96,4 @@ const AdminLoginPageInternal = () => {
             </div>
         </div>
     );
-};
-
-export const AdminLoginPage = memo(AdminLoginPageInternal);
-AdminLoginPage.displayName = 'AdminLoginPage';
-
-export default AdminLoginPage;
+}
