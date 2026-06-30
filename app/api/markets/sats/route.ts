@@ -170,8 +170,6 @@ async function fetchMetals(
         const cachedSilver = metalsCache.data.silver?.usd || 0;
 
         if (cachedGold > 0 || cachedSilver > 0) {
-            console.log('Using cached Metals.dev data (valid values)');
-
             return {
                 ...metalsCache.data,
                 rateLimitInfo: {
@@ -180,8 +178,6 @@ async function fetchMetals(
                     limitReached: false,
                 },
             };
-        } else {
-            console.warn('Cache exists but contains invalid values (both 0), fetching fresh data');
         }
     }
 
@@ -192,18 +188,12 @@ async function fetchMetals(
     const requestsPerDay = getMetalsRequestsPerDay();
 
     if (!canMakeRequest || remaining < 1) {
-        console.warn(
-            `Metals.dev rate limit reached. Remaining: ${remaining}, Requests per day: ${requestsPerDay}`,
-        );
-
         // Si hay cache expirado, usarlo SOLO si tiene valores válidos
         if (metalsCache) {
             const cachedGold = metalsCache.data.gold?.usd || 0;
             const cachedSilver = metalsCache.data.silver?.usd || 0;
 
             if (cachedGold > 0 || cachedSilver > 0) {
-                console.log('Using expired Metals cache due to rate limit (has valid values)');
-
                 return {
                     ...metalsCache.data,
                     rateLimitInfo: {
@@ -212,10 +202,6 @@ async function fetchMetals(
                         limitReached: true,
                     },
                 };
-            } else {
-                console.warn(
-                    'Cache exists but contains invalid values (both 0), cannot use as fallback',
-                );
             }
         }
 
@@ -239,8 +225,6 @@ async function fetchMetals(
         const baseUrl =
             apiUrl && apiUrl.trim() ? apiUrl.replace(/\/$/, '') : 'https://api.metals.dev';
         const url = `${baseUrl}/v1/latest?api_key=${apiKey}&currency=USD&unit=toz`;
-
-        console.log('Metals API URL:', url.replace(apiKey, '***'));
 
         const response = await fetch(url, {
             next: { revalidate: 0 },
@@ -278,20 +262,6 @@ async function fetchMetals(
 
         const json = await response.json();
 
-        // Debug: Log raw API response completo para diagnóstico
-        console.log('Metals.dev full response:', JSON.stringify(json, null, 2));
-        console.log('Metals.dev response keys:', Object.keys(json));
-
-        if (json.metals) {
-            console.log('Metals.dev metals keys:', Object.keys(json.metals));
-            console.log('Metals.dev metals values:', {
-                gold: json.metals.gold,
-                goldType: typeof json.metals.gold,
-                silver: json.metals.silver,
-                silverType: typeof json.metals.silver,
-            });
-        }
-
         // Verificar si la respuesta tiene status de error
         if (json.status === 'error' || json.status === 'failure') {
             const errorMsg = json.message || json.error || 'Unknown error from Metals.dev API';
@@ -320,14 +290,6 @@ async function fetchMetals(
         const goldPrice = metals.gold;
         const silverPrice = metals.silver;
 
-        // Log valores raw antes de parsear
-        console.log('Raw metals prices from API:', {
-            goldPrice,
-            goldPriceType: typeof goldPrice,
-            silverPrice,
-            silverPriceType: typeof silverPrice,
-        });
-
         // Validar que los precios sean números válidos
         const goldUsd =
             goldPrice != null && !isNaN(Number(goldPrice)) && Number(goldPrice) > 0
@@ -342,17 +304,12 @@ async function fetchMetals(
         const goldChange = null;
         const silverChange = null;
 
-        console.log('Parsed metals:', { goldUsd, silverUsd, goldChange, silverChange });
-
         // Si los precios son 0 o inválidos, lanzar error para usar cache (si existe y es válido)
         if (goldUsd <= 0 && silverUsd <= 0) {
             console.warn('⚠️ Metals.dev API returned invalid prices (both zero or invalid)');
-            console.warn('Raw response metals object:', metals);
 
             // No lanzar error inmediatamente - verificar si hay cache válido primero
             if (metalsCache && metalsCache.data.gold.usd > 0) {
-                console.log('Using cached metals data instead of invalid API response');
-
                 return {
                     ...metalsCache.data,
                     rateLimitInfo: {
@@ -393,7 +350,6 @@ async function fetchMetals(
         return result;
     } catch (error) {
         console.error('Error fetching metals:', error);
-        console.error('Error details:', error instanceof Error ? error.message : String(error));
 
         // Si hay cache disponible (incluso expirado), usarlo SOLO si tiene valores válidos
         if (metalsCache) {
@@ -401,8 +357,6 @@ async function fetchMetals(
             const cachedSilver = metalsCache.data.silver?.usd || 0;
 
             if (cachedGold > 0 || cachedSilver > 0) {
-                console.log('Using expired Metals cache due to error (has valid values)');
-
                 return {
                     ...metalsCache.data,
                     rateLimitInfo: {
@@ -411,10 +365,6 @@ async function fetchMetals(
                         limitReached: false,
                     },
                 };
-            } else {
-                console.warn(
-                    'Cache exists but contains invalid values (both 0), cannot use as fallback',
-                );
             }
         }
 
@@ -451,8 +401,6 @@ async function fetchOil(
 
     // Verificar cache de Oil primero (15 minutos)
     if (oilCache && now - oilCache.timestamp < OIL_CACHE_DURATION) {
-        console.log('Using cached Oil data');
-
         return oilCache.data;
     }
 
@@ -487,7 +435,6 @@ async function fetchOil(
 
         if (wtiResponse.status === 'fulfilled' && wtiResponse.value.ok) {
             const wtiJson = await wtiResponse.value.json();
-            console.log('OilPriceAPI WTI response:', JSON.stringify(wtiJson).substring(0, 500));
 
             if (wtiJson.status === 'success' && wtiJson.data) {
                 // Cuando se usa by_code, los datos vienen directamente en data, no en data.CODE
@@ -504,7 +451,6 @@ async function fetchOil(
                 } else {
                     wtiChange = null;
                 }
-                console.log('WTI parsed:', { price: wtiPrice, change: wtiChange });
             } else {
                 console.warn('WTI response format unexpected:', wtiJson);
             }
@@ -522,7 +468,6 @@ async function fetchOil(
 
         if (brentResponse.status === 'fulfilled' && brentResponse.value.ok) {
             const brentJson = await brentResponse.value.json();
-            console.log('OilPriceAPI Brent response:', JSON.stringify(brentJson).substring(0, 500));
 
             if (brentJson.status === 'success' && brentJson.data) {
                 // Cuando se usa by_code, los datos vienen directamente en data, no en data.CODE
@@ -543,7 +488,6 @@ async function fetchOil(
                 } else {
                     brentChange = null;
                 }
-                console.log('Brent parsed:', { price: brentPrice, change: brentChange });
             } else {
                 console.warn('Brent response format unexpected:', brentJson);
             }
@@ -566,10 +510,6 @@ async function fetchOil(
 
                     if (fallbackResponse.ok) {
                         const fallbackJson = await fallbackResponse.json();
-                        console.log(
-                            'OilPriceAPI Brent fallback (BRENT_CRUDE_USD) response:',
-                            JSON.stringify(fallbackJson).substring(0, 500),
-                        );
 
                         if (fallbackJson.status === 'success' && fallbackJson.data) {
                             // Los datos vienen directamente en data cuando se usa by_code
@@ -587,10 +527,6 @@ async function fetchOil(
                             } else {
                                 brentChange = null;
                             }
-                            console.log('Brent data found using BRENT_CRUDE_USD code:', {
-                                price: brentPrice,
-                                change: brentChange,
-                            });
                         }
                     }
                 } catch (fallbackError) {
@@ -610,8 +546,6 @@ async function fetchOil(
             },
         };
 
-        console.log('Oil data parsed:', { wti: result.wti.usd, brent: result.brent.usd });
-
         // Actualizar cache de Oil (15 minutos)
         oilCache = {
             data: result,
@@ -624,8 +558,6 @@ async function fetchOil(
 
         // Si hay cache disponible (incluso expirado), usarlo
         if (oilCache) {
-            console.log('Using expired Oil cache due to error');
-
             return oilCache.data;
         }
 
@@ -655,8 +587,6 @@ async function fetchFX(
 
     // Verificar cache de FX primero (30 minutos)
     if (fxCache && now - fxCache.timestamp < FX_CACHE_DURATION) {
-        console.log('Using cached FX data');
-
         return fxCache.data;
     }
 
@@ -674,8 +604,6 @@ async function fetchFX(
             url = `${apiUrl}?base=USD`;
         }
 
-        console.log('FX API URL:', url.replace(apiKey || '', '***'));
-
         const response = await fetch(url, {
             next: { revalidate: 0 },
             cache: 'no-store',
@@ -690,9 +618,6 @@ async function fetchFX(
         }
 
         const json = await response.json();
-
-        // Debug: Log raw API response
-        console.log('ExchangeRate.host response:', JSON.stringify(json).substring(0, 500));
 
         // exchangerate.host puede devolver diferentes formatos
         // Verificar si tiene success: false
@@ -713,17 +638,13 @@ async function fetchFX(
             eurRate = parseFloat(json.quotes.USDEUR || '0');
             jpyRate = parseFloat(json.quotes.USDJPY || '0');
             gbpRate = parseFloat(json.quotes.USDGBP || '0');
-            console.log('FX quotes format (with API key):', { eurRate, jpyRate, gbpRate });
         } else if (json.rates) {
             // Formato sin API key: rates.EUR = EUR per 1 USD
             const rates = json.rates || {};
             eurRate = parseFloat(rates.EUR || '0');
             jpyRate = parseFloat(rates.JPY || '0');
             gbpRate = parseFloat(rates.GBP || '0');
-            console.log('FX rates format (free tier):', { eurRate, jpyRate, gbpRate });
         }
-
-        console.log('FX rates parsed:', { eurRate, jpyRate, gbpRate });
 
         const result = {
             EUR: { usdPerUnit: eurRate > 0 ? 1 / eurRate : 0 }, // Invert: EUR per USD → USD per EUR
@@ -743,8 +664,6 @@ async function fetchFX(
 
         // Si hay cache disponible (incluso expirado), usarlo
         if (fxCache) {
-            console.log('Using expired FX cache due to error');
-
             return fxCache.data;
         }
 
@@ -797,10 +716,6 @@ async function fetchCopperFromRtvApi(): Promise<{
 
             return { usd: 0, change24hPct: null };
         }
-        console.log('Copper (ICOP) from rtv-api:', {
-            usd: icop.priceUSD,
-            change: icop.changePercentUSD,
-        });
 
         return { usd: icop.priceUSD, change24hPct: icop.changePercentUSD ?? null };
     } catch (error) {
@@ -914,13 +829,6 @@ async function fetchPyth(): Promise<{
                 : defaultResult.brent,
         };
 
-        console.log('Pyth prices fetched:', {
-            gold: result.gold.usd,
-            silver: result.silver.usd,
-            wti: result.wti.usd,
-            brent: result.brent.usd,
-        });
-
         return result;
     } catch (error) {
         console.error('Error fetching Pyth data:', error);
@@ -955,8 +863,6 @@ export async function GET() {
         if (!btcUsd || btcUsd <= 0) {
             throw new Error('Invalid BTC price');
         }
-
-        console.log('BTC Price fetched:', btcUsd);
 
         // Pyth + FX + Copper (rtv-api) en paralelo
         const [pythData, fxData, copperData] = await Promise.allSettled([
@@ -1028,12 +934,7 @@ export async function GET() {
 
                 if (cachedGold > 0 || cachedSilver > 0) {
                     // Use cache even if expired (up to 2x duration) as fallback
-                    console.log('Using cached metals data as fallback (has valid values)');
                     metals = metalsCache.data;
-                } else {
-                    console.warn(
-                        'Metals cache exists but contains invalid values (both 0), skipping fallback',
-                    );
                 }
             } else if (marketsCache && marketsCache.data.metals) {
                 // Fallback to general cache if individual cache not available
@@ -1042,9 +943,6 @@ export async function GET() {
                 const cachedSilver = cachedMetals.silver?.usd || 0;
 
                 if (cachedGold > 0 || cachedSilver > 0) {
-                    console.log(
-                        'Using metals data from general cache as fallback (has valid values)',
-                    );
                     metals.gold = {
                         usd: cachedMetals.gold.usd,
                         change24hPct: cachedMetals.gold.change24hPct,
@@ -1053,10 +951,6 @@ export async function GET() {
                         usd: cachedMetals.silver.usd,
                         change24hPct: cachedMetals.silver.change24hPct,
                     };
-                } else {
-                    console.warn(
-                        'General cache metals data is invalid (both 0), skipping fallback',
-                    );
                 }
             }
         }
@@ -1064,10 +958,8 @@ export async function GET() {
         // Oil fallback
         if ((oil.wti.usd === 0 && oil.brent.usd === 0) || pythData.status === 'rejected') {
             if (oilCache && now - oilCache.timestamp < OIL_CACHE_DURATION * 2) {
-                console.log('Using cached oil data as fallback');
                 oil = oilCache.data;
             } else if (marketsCache && marketsCache.data.oil) {
-                console.log('Using oil data from general cache as fallback');
                 const cachedOil = marketsCache.data.oil;
                 oil.wti = { usd: cachedOil.wti.usd, change24hPct: cachedOil.wti.change24hPct };
                 oil.brent = {
@@ -1083,10 +975,8 @@ export async function GET() {
             fxData.status === 'rejected'
         ) {
             if (fxCache && now - fxCache.timestamp < FX_CACHE_DURATION * 2) {
-                console.log('Using cached FX data as fallback');
                 fx = fxCache.data;
             } else if (marketsCache && marketsCache.data.fx) {
-                console.log('Using FX data from general cache as fallback');
                 const cachedFx = marketsCache.data.fx;
                 fx.EUR = { usdPerUnit: cachedFx.EUR.usdPerUnit };
                 fx.JPY = { usdPerUnit: cachedFx.JPY.usdPerUnit };

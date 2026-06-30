@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { adminFetch } from '@/lib/admin-fetch';
 import Image from 'next/image';
 import type {
     Slide,
@@ -109,20 +110,32 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
     // Fetch sponsors and events on mount
     useEffect(() => {
         const fetchSponsors = async () => {
-            const response = await fetch('/api/admin/sponsors', { cache: 'no-store' });
-            const result = (await response.json()) as { success: boolean; data?: Sponsor[] };
+            try {
+                const response = await adminFetch('/api/admin/sponsors', { cache: 'no-store' });
+                const result = (await response.json()) as { success: boolean; data?: Sponsor[] };
 
-            if (response.ok && result.success && result.data) {
-                setSponsors(result.data);
+                if (response.ok && result.success && result.data) {
+                    setSponsors(result.data);
+                }
+            } catch {
+                // AdminAuthError redirects to login; other errors are silently ignored here
+                // since this data is supplementary to the form
             }
         };
 
         const fetchEvents = async () => {
-            const response = await fetch('/api/admin/events', { cache: 'no-store' });
-            const result = (await response.json()) as { success: boolean; data?: CalendarEvent[] };
+            try {
+                const response = await adminFetch('/api/admin/events', { cache: 'no-store' });
+                const result = (await response.json()) as {
+                    success: boolean;
+                    data?: CalendarEvent[];
+                };
 
-            if (response.ok && result.success && result.data) {
-                setAvailableEvents(result.data);
+                if (response.ok && result.success && result.data) {
+                    setAvailableEvents(result.data);
+                }
+            } catch {
+                // AdminAuthError redirects to login; other errors are silently ignored here
             }
         };
 
@@ -329,7 +342,7 @@ export default function SlideForm({ slide, onSubmit, onCancel, isSubmitting }: S
             body.append('file', file);
             body.append('prefix', 'sponsors');
 
-            const response = await fetch('/api/admin/upload', { method: 'POST', body });
+            const response = await adminFetch('/api/admin/upload', { method: 'POST', body });
             const result = (await response.json()) as {
                 success: boolean;
                 data?: { url: string; key: string };

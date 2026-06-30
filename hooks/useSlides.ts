@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { adminFetch } from '@/lib/admin-fetch';
 import type { Slide, SlideInsert, SlideUpdate } from '@/lib/types/admin';
 
 interface UseSlidesReturn {
@@ -27,7 +28,7 @@ export function useSlides(): UseSlidesReturn {
         setError(null);
 
         try {
-            const response = await fetch('/api/admin/slides', { cache: 'no-store' });
+            const response = await adminFetch('/api/admin/slides', { cache: 'no-store' });
             const result = await response.json();
 
             if (!response.ok || !result.success) {
@@ -50,7 +51,7 @@ export function useSlides(): UseSlidesReturn {
                 (max, current) => Math.max(max, current.order_index),
                 -1,
             );
-            const response = await fetch('/api/admin/slides', {
+            const response = await adminFetch('/api/admin/slides', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ...slide, order_index: maxOrderIndex + 1 }),
@@ -96,7 +97,7 @@ export function useSlides(): UseSlidesReturn {
                 }
             });
 
-            const response = await fetch(`/api/admin/slides/${id}`, {
+            const response = await adminFetch(`/api/admin/slides/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(cleanUpdates),
@@ -128,7 +129,7 @@ export function useSlides(): UseSlidesReturn {
     // Delete a slide
     const deleteSlide = useCallback(async (id: string) => {
         try {
-            const response = await fetch(`/api/admin/slides/${id}`, {
+            const response = await adminFetch(`/api/admin/slides/${id}`, {
                 method: 'DELETE',
             });
             const result = await response.json();
@@ -168,7 +169,7 @@ export function useSlides(): UseSlidesReturn {
                     order_index: newOrderIndex,
                 };
 
-                const response = await fetch('/api/admin/slides', {
+                const response = await adminFetch('/api/admin/slides', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newSlide),
@@ -206,7 +207,7 @@ export function useSlides(): UseSlidesReturn {
             // Use Promise.all to update all slides
             const results = await Promise.all(
                 updates.map(({ id, order_index }) =>
-                    fetch(`/api/admin/slides/${id}`, {
+                    adminFetch(`/api/admin/slides/${id}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ order_index }),

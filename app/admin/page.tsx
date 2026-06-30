@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { adminFetch } from '@/lib/admin-fetch';
 import { StatCard, QuickAction, PageHeader, InfoBox } from './components/ui';
 
 interface Stats {
@@ -25,8 +26,8 @@ export default function AdminDashboard() {
         const fetchStats = async () => {
             try {
                 const [slidesResponse, sponsorsResponse] = await Promise.all([
-                    fetch('/api/admin/slides', { cache: 'no-store' }),
-                    fetch('/api/admin/sponsors', { cache: 'no-store' }),
+                    adminFetch('/api/admin/slides', { cache: 'no-store' }),
+                    adminFetch('/api/admin/sponsors', { cache: 'no-store' }),
                 ]);
                 const [slidesResult, sponsorsResult] = await Promise.all([
                     slidesResponse.json(),
