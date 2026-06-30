@@ -78,6 +78,7 @@ describe('adminFetch', () => {
 
         it('redirects window.location.href to /admin/login on 401', async () => {
             mockFetch.mockResolvedValue(new Response('Unauthorized', { status: 401 }));
+
             try {
                 await adminFetch('http://localhost/api/data');
             } catch {
