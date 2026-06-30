@@ -1,5 +1,5 @@
 /**
- * GET /auth/okta/callback
+ * GET /api/auth/callback/okta
  * Handles the Okta OIDC redirect: validates CSRF state, exchanges authorization
  * code (PKCE), validates id_token via JWKS, enforces email allowlist, and
  * issues a session cookie on success.

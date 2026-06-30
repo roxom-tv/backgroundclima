@@ -46,14 +46,24 @@ export function useAuth(): UseAuthReturn {
     }, []);
 
     const signOut = useCallback(async () => {
+        let location = '/admin/login';
+
         try {
-            await fetch('/auth/signout', { method: 'POST' });
+            const res = await fetch('/auth/signout', { method: 'POST' });
+
+            if (res.ok) {
+                const data = (await res.json()) as { location?: string };
+
+                if (data.location) {
+                    location = data.location;
+                }
+            }
         } catch (err) {
             console.error('Sign out error:', err);
         }
 
         setUser(null);
-        window.location.href = '/auth/okta';
+        window.location.href = location;
     }, []);
 
     return {

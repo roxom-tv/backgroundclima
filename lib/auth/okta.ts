@@ -294,7 +294,7 @@ type JwtHeader = {
  * 2. Fetches/caches the JWK for that kid.
  * 3. Verifies the RS256 signature with Web Crypto.
  * 4. Validates iss, aud, exp, iat, nonce claims.
- * 5. Rejects if email_verified !== true.
+ * 5. Rejects only if email_verified is explicitly false (absent claim is allowed).
  *
  * Accepts `now` in milliseconds so tests can inject a fixed time.
  * Returns the validated claims on success, or a failure result.
@@ -392,7 +392,11 @@ export async function validateIdToken(
         return { success: false, error: 'id_token: nonce mismatch' };
     }
 
-    if (claims.email_verified !== true) {
+    // Reject only an explicit `false`. Okta org authorization servers omit the
+    // email_verified claim entirely (undefined); identity is still pinned by the
+    // signed id_token + the downstream email allowlist, so an absent claim is
+    // treated as acceptable for this internal-tools kit.
+    if (claims.email_verified === false) {
         return { success: false, error: 'id_token: email not verified' };
     }
 

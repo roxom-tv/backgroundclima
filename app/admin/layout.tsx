@@ -12,7 +12,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     useEffect(() => {
         if (!isLoading && !user && pathname !== '/admin/login') {
-            router.push('/auth/okta');
+            router.push('/admin/login');
         }
     }, [user, isLoading, router, pathname]);
 

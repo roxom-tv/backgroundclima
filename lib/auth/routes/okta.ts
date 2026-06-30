@@ -2,12 +2,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { getConfig } from '../config';
 import { buildAuthUrl } from '../okta';
-import {
-    computeCodeChallenge,
-    createState,
-    generateCodeVerifier,
-    generateNonce,
-} from '../state';
+import { computeCodeChallenge, createState, generateCodeVerifier, generateNonce } from '../state';
 
 /**
  * GET /auth/okta
