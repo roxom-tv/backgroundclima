@@ -1,50 +1,33 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
-
-type LoginResponse = { success: boolean };
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function AdminLoginPage() {
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const { user, isLoading } = useAuth();
+    const router = useRouter();
 
-    const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        setPassword(e.target.value);
-    }, []);
+    useEffect(() => {
+        if (!isLoading && user) {
+            router.push('/admin');
+        }
+    }, [user, isLoading, router]);
 
-    const handleSubmit = useCallback(
-        async (e: React.FormEvent<HTMLFormElement>) => {
-            e.preventDefault();
-            setError(null);
-            setIsLoading(true);
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="text-white text-xl font-mono uppercase tracking-wider animate-pulse">
+                    LOADING...
+                </div>
+            </div>
+        );
+    }
 
-            try {
-                const res = await fetch('/api/admin/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password }),
-                });
-                const data = (await res.json()) as LoginResponse;
-
-                if (data.success) {
-                    // Full-page navigation (not router.push) so the admin layout
-                    // re-renders server-side in its authenticated branch. A soft
-                    // nav would reuse the cached login-branch layout (no nav/chrome).
-                    window.location.assign('/admin');
-                    return;
-                }
-
-                setError('Incorrect password');
-            } catch {
-                setError('Something went wrong. Please try again.');
-            } finally {
-                setIsLoading(false);
-            }
-        },
-        [password],
-    );
+    if (user) {
+        return null;
+    }
 
     return (
         <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
@@ -60,30 +43,12 @@ export default function AdminLoginPage() {
                 <div className="bg-gray-800 rounded-lg p-8 shadow-xl">
                     <h2 className="text-xl font-semibold text-white mb-6">Sign In</h2>
 
-                    <form onSubmit={handleSubmit}>
-                        <div className="mb-4">
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={handlePasswordChange}
-                                placeholder="Password"
-                                disabled={isLoading}
-                                className="w-full bg-gray-700 text-white border border-gray-600 rounded px-3 py-2 font-mono text-sm placeholder-gray-400 focus:outline-none focus:border-[#00ff00]"
-                            />
-                        </div>
-
-                        {error !== null && (
-                            <p className="text-red-400 text-xs font-mono mb-4">{error}</p>
-                        )}
-
-                        <button
-                            type="submit"
-                            disabled={isLoading || password.length === 0}
-                            className="w-full bg-[#00ff00] hover:bg-[#00cc00] disabled:opacity-50 text-black font-mono text-xs uppercase tracking-wider py-2 px-4 transition-colors flex items-center justify-center gap-2 border-2 border-[#00ff00]"
-                        >
-                            {isLoading ? 'SIGNING IN...' : 'SIGN IN'}
-                        </button>
-                    </form>
+                    <a
+                        href="/auth/okta"
+                        className="w-full bg-[#00ff00] hover:bg-[#00cc00] text-black font-mono text-xs uppercase tracking-wider py-2 px-4 transition-colors flex items-center justify-center gap-2 border-2 border-[#00ff00]"
+                    >
+                        Sign in with Okta
+                    </a>
                 </div>
 
                 {/* Back to display link */}

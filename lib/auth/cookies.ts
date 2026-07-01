@@ -3,32 +3,16 @@ import type { Config } from './config';
 const COOKIE_NAME = 'x-session-data';
 const SEC_PER_DAY = 60 * 60 * 24;
 
-function isLocalDomain(domain: string | null): boolean {
-    return domain === 'localhost' || domain === '127.0.0.1';
-}
-
-/**
- * Cookie security attributes.
- * - localhost/127.0.0.1: no Secure (http dev), no Domain.
- * - explicit non-local domain: Secure + Domain=<domain>.
- * - no domain configured (null): Secure, host-only (no Domain) — safe default
- *   for https deployments on any host.
- */
-function cookieSecurity(cfg: Config): { secure: string; domain: string } {
-    if (isLocalDomain(cfg.cookieDomain)) {
-        return { secure: '', domain: '' };
-    }
-
-    const domain = cfg.cookieDomain ? `; Domain=${cfg.cookieDomain}` : '';
-
-    return { secure: '; Secure', domain };
+function isProduction(domain: string): boolean {
+    return domain !== 'localhost' && domain !== '127.0.0.1';
 }
 
 /**
  * Appends a Set-Cookie header for the session ID to the provided Headers object.
  */
 export function setSessionCookie(headers: Headers, sessionId: string, cfg: Config): void {
-    const { secure, domain } = cookieSecurity(cfg);
+    const secure = isProduction(cfg.cookieDomain) ? '; Secure' : '';
+    const domain = isProduction(cfg.cookieDomain) ? `; Domain=${cfg.cookieDomain}` : '';
 
     const cookie = [
         `${COOKIE_NAME}=${sessionId}`,
@@ -72,7 +56,8 @@ export function readSessionCookie(req: Request): string | null {
  * Appends a Set-Cookie header that clears the session cookie.
  */
 export function clearSessionCookie(headers: Headers, cfg: Config): void {
-    const { secure, domain } = cookieSecurity(cfg);
+    const secure = isProduction(cfg.cookieDomain) ? '; Secure' : '';
+    const domain = isProduction(cfg.cookieDomain) ? `; Domain=${cfg.cookieDomain}` : '';
 
     const cookie = [
         `${COOKIE_NAME}=`,
