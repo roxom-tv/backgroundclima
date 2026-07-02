@@ -22,7 +22,7 @@ OKTA_CLIENT_SECRET=your-okta-client-secret
 # The redirect URI registered in the Okta application's "Sign-in redirect URIs".
 # Must match exactly (scheme, host, path) — no trailing slash.
 # Example: https://backgroundclima.roxom.tv/api/auth/callback/okta
-OKTA_CALLBACK_URL=https://your-domain.com/api/auth/callback/okta
+OKTA_CALLBACK_URL=https://your-domain.com/auth/okta/callback
 
 # Where the app sends the user after a successful login.
 # Typically the admin root or dashboard.
