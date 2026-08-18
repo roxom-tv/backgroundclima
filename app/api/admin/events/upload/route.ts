@@ -1,18 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getMediaBucket } from '@/lib/storage/r2';
+import { buildObjectKey, validateUpload } from '@/lib/storage/media-upload';
 import { requireAdmin, withRenewal } from '@/lib/auth/require-admin';
-
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-
-const MIME_TO_EXT: Record<string, string> = {
-    'image/jpeg': 'jpg',
-    'image/png': 'png',
-    'image/gif': 'gif',
-    'image/webp': 'webp',
-    'image/svg+xml': 'svg',
-};
 
 export async function POST(request: NextRequest) {
     const auth = await requireAdmin(request);
@@ -32,28 +22,21 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-            return NextResponse.json(
-                { success: false, error: 'Invalid file type' },
-                { status: 400 },
-            );
+        const validated = await validateUpload(file);
+
+        if (!validated.ok) {
+            return NextResponse.json({ success: false, error: validated.error }, { status: 400 });
         }
 
-        if (file.size > MAX_FILE_SIZE) {
-            return NextResponse.json(
-                { success: false, error: 'File exceeds 5MB limit' },
-                { status: 400 },
-            );
-        }
-
-        const ext = MIME_TO_EXT[file.type] ?? file.name.split('.').pop() ?? 'bin';
-        const fileName = `${crypto.randomUUID()}.${ext}`;
-        const key = `events/${fileName}`;
+        const key = buildObjectKey('events', validated.extension);
 
         const bucket = await getMediaBucket();
-        const arrayBuffer = await file.arrayBuffer();
 
-        await bucket.put(key, arrayBuffer, { httpMetadata: { contentType: file.type } });
+        // contentType comes from the validated allowlist, never from file.type
+        // directly — the serving route echoes this value back as a header.
+        await bucket.put(key, validated.bytes, {
+            httpMetadata: { contentType: validated.contentType },
+        });
 
         const url = `/api/media/${key}`;
 
