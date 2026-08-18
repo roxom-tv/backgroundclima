@@ -4,6 +4,9 @@ import { getMediaBucket } from '@/lib/storage/r2';
 
 export const dynamic = 'force-dynamic';
 
+/** Mirrors ALLOWED_MIME_TYPES in lib/storage/media-upload.ts. Notably no SVG. */
+const SERVABLE_INLINE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+
 type RouteContext = {
     params: Promise<{ path: string[] }>;
 };
@@ -33,10 +36,20 @@ export async function GET(_request: NextRequest, { params }: RouteContext) {
         const headers = new Headers();
         const contentType = obj.httpMetadata?.contentType;
 
-        if (contentType) {
+        // Serve only the image types the upload route validates. Anything else
+        // in the bucket (legacy objects predating that validation, e.g. stored
+        // SVGs) is served as a plain download rather than rendered inline, so a
+        // document that can execute script cannot do so on our origin.
+        if (contentType && SERVABLE_INLINE_TYPES.has(contentType)) {
             headers.set('content-type', contentType);
+        } else {
+            headers.set('content-type', 'application/octet-stream');
+            headers.set('content-disposition', 'attachment');
         }
 
+        // Stops the browser second-guessing the declared type and rendering,
+        // say, a sniffed SVG as markup.
+        headers.set('x-content-type-options', 'nosniff');
         headers.set('content-length', String(obj.size));
         headers.set('cache-control', 'public, max-age=31536000, immutable');
 
