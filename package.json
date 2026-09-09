@@ -51,6 +51,7 @@
         "wrangler": "^4.72.0"
     },
     "overrides": {
-        "postcss": "$postcss"
+        "postcss": "$postcss",
+        "sharp": "0.35.4"
     }
 }
