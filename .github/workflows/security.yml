@@ -1,0 +1,64 @@
+# Canonical Roxom.TV security. Copy to <repo>/.github/workflows/security.yml
+#
+# Secret scan on every PR and push (fetch-depth: 0 so TruffleHog can
+# diff commit ranges). Weekly scheduled audit so an advisory disclosed
+# against a pinned dependency is found without waiting for a PR.
+#
+# Dependency audit fails on high and critical. Do not require this check
+# on branch protection: a newly disclosed high advisory would wedge every
+# merge, including an urgent on-air fix. The check still reports on every PR.
+
+name: Security
+
+on:
+    pull_request:
+    push:
+        branches: [dev, main]
+    schedule:
+        - cron: '0 6 * * 1'
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+jobs:
+    secrets:
+        name: Secret scan
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: TruffleHog
+              uses: trufflesecurity/trufflehog@main
+              with:
+                  extra_args: --only-verified
+
+    audit:
+        name: Dependency audit
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+                  cache: npm
+
+            - name: Install
+              run: npm ci
+
+            - name: Audit high and critical
+              run: npm audit --audit-level=high
+
+            - name: Full audit report
+              if: always()
+              continue-on-error: true
+              run: npm audit

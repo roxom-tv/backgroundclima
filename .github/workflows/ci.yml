@@ -1,0 +1,51 @@
+# Canonical Roxom.TV CI. Copy to <repo>/.github/workflows/ci.yml
+#
+# Bare `pull_request:` (no branch filter) so stacked PRs still get checks.
+# Work is stacked, and a stacked PR with no checks is a PR nobody has verified.
+# Push covers the default branch and the production branch.
+
+name: CI
+
+on:
+    pull_request:
+    push:
+        branches: [dev, main]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+jobs:
+    ci:
+        name: Lint, typecheck, test, build
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+                  cache: npm
+
+            - name: Install
+              run: npm ci
+
+            - name: Lint
+              run: npm run lint
+
+            - name: Format
+              run: npm run format:check
+
+            - name: Typecheck
+              run: npm run typecheck
+
+            - name: Test
+              run: npm test
+
+            - name: Build
+              run: npm run build
